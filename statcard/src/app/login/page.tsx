@@ -93,13 +93,13 @@ export default function LoginPage() {
         <form onSubmit={handleSubmit} className="space-y-5">
           {isSignUp && (
             <div className="grid grid-cols-2 gap-4">
-              <Field label="First name"><input value={firstName} onChange={(event) => setFirstName(event.target.value)} className="input" placeholder="Jordan" required /></Field>
-              <Field label="Last name"><input value={lastName} onChange={(event) => setLastName(event.target.value)} className="input" placeholder="Lee" required /></Field>
+              <Field label="First name"><input value={firstName} onChange={(event) => setFirstName(event.target.value)} className="input" placeholder="John" required /></Field>
+              <Field label="Last name"><input value={lastName} onChange={(event) => setLastName(event.target.value)} className="input" placeholder="Doe" required /></Field>
             </div>
           )}
-          {isSignUp && <Field label="Username"><input value={username} onChange={(event) => setUsername(event.target.value)} className="input" placeholder="jordan-lee" autoComplete="username" required /><span className="mt-2 block text-xs text-slate-500">This becomes your permanent public profile handle.</span></Field>}
+          {isSignUp && <Field label="Username"><input value={username} onChange={(event) => setUsername(event.target.value)} className="input" placeholder="john-doe" autoComplete="username" required /><span className="mt-2 block text-xs text-slate-500">This becomes your permanent public profile handle.</span></Field>}
           <Field label="Email address"><input type="email" value={email} onChange={(event) => setEmail(event.target.value)} className="input" placeholder="athlete@example.com" autoComplete="email" required /></Field>
-          <Field label="Password"><input type="password" value={password} onChange={(event) => setPassword(event.target.value)} className="input" placeholder="At least 6 characters" autoComplete={isSignUp ? 'new-password' : 'current-password'} minLength={6} required /></Field>
+          <Field label="Password"><input type="password" value={password} onChange={(event) => setPassword(event.target.value)} className="input" placeholder="At least 8 characters" autoComplete={isSignUp ? 'new-password' : 'current-password'} minLength={8} required /></Field>
 
           {error && <p role="alert" className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
           {message && <p role="status" className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{message}</p>}

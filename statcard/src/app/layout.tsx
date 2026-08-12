@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import SiteNav from "@/components/SiteNav";
 
 // This optimizes and loads the Inter font
 const inter = Inter({ subsets: ["latin"] });
@@ -19,7 +20,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        {/* If you wanted a global Nav bar, you would put it here before children */}
+        <SiteNav />
         {children}
         {/* A subtle global footer */}
         <footer className="text-center py-6 text-sm text-gray-400">

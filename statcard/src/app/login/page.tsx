@@ -1,113 +1,117 @@
 'use client';
 
-import { useState } from 'react';
+import { FormEvent, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 
-// Initialize the Supabase client
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
+type Mode = 'sign-in' | 'sign-up';
+
 export default function LoginPage() {
   const router = useRouter();
+  const [mode, setMode] = useState<Mode>('sign-in');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const selectMode = (nextMode: Mode) => {
+    setMode(nextMode);
+    setError(null);
+    setMessage(null);
+  };
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     setLoading(true);
     setError(null);
-    
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-    });
+    setMessage(null);
 
-    if (error) setError(error.message);
-    else setError('Check your email for the confirmation link!');
+    if (mode === 'sign-up') {
+      const publicUsername = username.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+      if (publicUsername.length < 3) {
+        setError('Choose a username with at least 3 letters or numbers.');
+        setLoading(false);
+        return;
+      }
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            first_name: firstName.trim(),
+            last_name: lastName.trim(),
+            username: publicUsername,
+          },
+          emailRedirectTo: `${window.location.origin}/dashboard`,
+        },
+      });
+
+      if (signUpError) {
+        setError(signUpError.message);
+      } else if (data.session) {
+        router.push('/dashboard');
+      } else {
+        setMessage('Your account is ready. Check your email to confirm it, then sign in.');
+      }
+    } else {
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+
+      if (signInError) setError(signInError.message);
+      else router.push('/dashboard');
+    }
+
     setLoading(false);
   };
 
-  const handleSignIn = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
-      setError(error.message);
-      setLoading(false);
-    } else {
-      // On success, redirect the user to their dashboard
-      router.push('/dashboard');
-    }
-  };
+  const isSignUp = mode === 'sign-up';
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-extrabold text-slate-900">StatCard Access</h1>
-          <p className="text-gray-500 mt-2">Sign in or create an account to manage your profile.</p>
+    <main className="relative isolate flex min-h-screen items-center justify-center overflow-hidden bg-slate-950 px-4 py-12">
+      <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,_#1d4ed8_0%,_transparent_32%),radial-gradient(circle_at_bottom_right,_#0f766e_0%,_transparent_28%)] opacity-60" />
+      <section className="w-full max-w-md rounded-3xl border border-white/15 bg-white p-6 shadow-2xl shadow-slate-950/40 sm:p-8">
+        <div className="mb-8 text-center">
+          <div className="mx-auto mb-5 grid size-12 place-items-center rounded-2xl bg-blue-600 text-xl font-black text-white shadow-lg shadow-blue-600/30">S</div>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-950">Welcome to StatCard</h1>
+          <p className="mt-2 text-sm leading-6 text-slate-500">Manage your athlete profile and share your progress with confidence.</p>
         </div>
 
-        <form className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-              placeholder="athlete@example.com"
-              required
-            />
-          </div>
+        <div className="mb-7 grid grid-cols-2 rounded-xl bg-slate-100 p-1" role="tablist" aria-label="Account access">
+          <button type="button" role="tab" aria-selected={!isSignUp} onClick={() => selectMode('sign-in')} className={`rounded-lg px-3 py-2.5 text-sm font-semibold transition ${!isSignUp ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>Sign in</button>
+          <button type="button" role="tab" aria-selected={isSignUp} onClick={() => selectMode('sign-up')} className={`rounded-lg px-3 py-2.5 text-sm font-semibold transition ${isSignUp ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>Create account</button>
+        </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-              placeholder="••••••••"
-              required
-            />
-          </div>
-
-          {error && (
-            <div className="p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100">
-              {error}
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {isSignUp && (
+            <div className="grid grid-cols-2 gap-4">
+              <Field label="First name"><input value={firstName} onChange={(event) => setFirstName(event.target.value)} className="input" placeholder="Jordan" required /></Field>
+              <Field label="Last name"><input value={lastName} onChange={(event) => setLastName(event.target.value)} className="input" placeholder="Lee" required /></Field>
             </div>
           )}
+          {isSignUp && <Field label="Username"><input value={username} onChange={(event) => setUsername(event.target.value)} className="input" placeholder="jordan-lee" autoComplete="username" required /><span className="mt-2 block text-xs text-slate-500">This becomes your permanent public profile handle.</span></Field>}
+          <Field label="Email address"><input type="email" value={email} onChange={(event) => setEmail(event.target.value)} className="input" placeholder="athlete@example.com" autoComplete="email" required /></Field>
+          <Field label="Password"><input type="password" value={password} onChange={(event) => setPassword(event.target.value)} className="input" placeholder="At least 6 characters" autoComplete={isSignUp ? 'new-password' : 'current-password'} minLength={6} required /></Field>
 
-          <div className="flex gap-4 pt-2">
-            <button
-              onClick={handleSignIn}
-              disabled={loading}
-              className="flex-1 bg-slate-900 text-white py-2.5 rounded-lg font-semibold hover:bg-slate-800 transition-colors disabled:opacity-50"
-            >
-              Sign In
-            </button>
-            <button
-              onClick={handleSignUp}
-              disabled={loading}
-              className="flex-1 bg-blue-50 text-blue-700 py-2.5 rounded-lg font-semibold hover:bg-blue-100 transition-colors disabled:opacity-50"
-            >
-              Sign Up
-            </button>
-          </div>
+          {error && <p role="alert" className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
+          {message && <p role="status" className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{message}</p>}
+
+          <button disabled={loading} className="flex w-full items-center justify-center rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-600/25 transition hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-200 disabled:cursor-not-allowed disabled:opacity-60">
+            {loading ? 'Please wait…' : isSignUp ? 'Create your account' : 'Sign in to your dashboard'}
+          </button>
         </form>
-      </div>
+      </section>
     </main>
   );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return <label className="block text-sm font-medium text-slate-700"><span className="mb-2 block">{label}</span>{children}</label>;
 }

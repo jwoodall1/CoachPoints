@@ -1,88 +1,28 @@
-import Image from "next/image";
 import { createClient } from '@supabase/supabase-js';
 import { notFound } from 'next/navigation';
+import ProfileShareCard from '@/components/ProfileShareCard';
+import ProfileAvatar from '@/components/ProfileAvatar';
 
-// Initialize the Supabase client
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 
-// In Next.js App Router, dynamic route parameters are passed as 'params'
-export default async function AthleteProfile({ params }: { params: { username: string } }) {
-  // 1. Read the parameter from the URL
-  const { username } = params;
-
-  // 2. Query Supabase for the profile
+export default async function AthleteProfile({ params }: { params: Promise<{ username: string }> }) {
+  const { username } = await params;
   const { data: profile, error } = await supabase
     .from('profiles')
-    .select('full_name, sport, bio, stats')
+    .select('first_name, last_name, sport, bio, stats')
     .eq('username', username)
-    .single();
+    .maybeSingle();
 
-  // If the query fails or no user is found, trigger the Next.js 404 page
-  if (error || !profile) {
-    notFound();
-  }
+  if (error || !profile) notFound();
+  const name = [profile.first_name, profile.last_name].filter(Boolean).join(' ') || username;
+  const stats = profile.stats && typeof profile.stats === 'object' && !Array.isArray(profile.stats) ? Object.entries(profile.stats) : [];
+  const { data: { publicUrl: avatarUrl } } = supabase.storage.from('avatars').getPublicUrl(`${username}/profile.png`);
 
-  // 3. Render the data dynamically with professional Tailwind styling
-  return (
-    <main className="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
-      <article className="max-w-3xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
-        
-        {/* Header Section with Gradient */}
-        <header className="bg-gradient-to-r from-slate-900 to-slate-800 px-8 py-12 text-center text-white">
-          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight mb-2">
-            {profile.full_name || username}
-          </h1>
-          {profile.sport && (
-            <span className="inline-block px-4 py-1 bg-blue-600/30 text-blue-200 rounded-full text-sm font-semibold tracking-widest uppercase border border-blue-500/30">
-              {profile.sport}
-            </span>
-          )}
-        </header>
-
-        <div className="p-8 sm:p-10">
-          {/* Bio Section */}
-          <section className="mb-12">
-            <h2 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4 border-b pb-2">
-              Athlete Bio
-            </h2>
-            <p className="text-gray-700 leading-relaxed text-lg whitespace-pre-wrap">
-              {profile.bio || "No biography available at this time."}
-            </p>
-          </section>
-
-          {/* Stats Section */}
-          <section>
-            <h2 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-6 border-b pb-2">
-              Performance Stats
-            </h2>
-            
-            {profile.stats ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
-                {Object.entries(profile.stats).map(([statName, statValue]) => (
-                  <div 
-                    key={statName} 
-                    className="bg-gray-50 rounded-xl p-6 border border-gray-100 hover:border-blue-200 hover:shadow-md transition-all duration-200"
-                  >
-                    <dt className="text-xs font-semibold text-gray-500 uppercase tracking-wider truncate mb-1">
-                      {statName}
-                    </dt>
-                    <dd className="text-3xl font-bold text-slate-900">
-                      {String(statValue)}
-                    </dd>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="bg-gray-50 rounded-xl p-8 text-center text-gray-500 border border-dashed border-gray-200">
-                Performance data has not been uploaded yet.
-              </div>
-            )}
-          </section>
-        </div>
-      </article>
-    </main>
-  );
+  return <main className="min-h-screen bg-slate-50 px-4 py-8 sm:px-6 lg:py-12"><article className="mx-auto max-w-4xl overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl shadow-slate-200/60">
+    <header className="relative overflow-hidden bg-slate-950 px-6 py-12 text-center text-white sm:px-10 sm:py-16"><div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_#2563eb_0%,_transparent_48%)] opacity-70" /><div className="relative"><div className="mx-auto inline-flex rounded-full border-4 border-white/15"><ProfileAvatar src={avatarUrl} name={name} /></div><p className="mt-5 text-sm font-semibold uppercase tracking-[0.2em] text-blue-200">Athlete profile</p><h1 className="mt-2 text-4xl font-bold tracking-tight sm:text-5xl">{name}</h1>{profile.sport && <span className="mt-5 inline-flex rounded-full border border-blue-300/30 bg-blue-400/15 px-4 py-1.5 text-sm font-semibold text-blue-100">{profile.sport}</span>}</div></header>
+    <div className="space-y-10 p-6 sm:p-10"><section><h2 className="text-sm font-bold uppercase tracking-[0.14em] text-slate-400">About</h2><p className="mt-4 max-w-3xl whitespace-pre-wrap text-base leading-8 text-slate-700">{profile.bio || 'This athlete has not added a biography yet.'}</p></section>
+      <section><div className="flex items-end justify-between gap-4"><div><h2 className="text-sm font-bold uppercase tracking-[0.14em] text-slate-400">Performance stats</h2><p className="mt-2 text-sm text-slate-500">Highlights shared by {profile.first_name || 'this athlete'}.</p></div></div>{stats.length ? <dl className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">{stats.map(([label, value]) => <div key={label} className="rounded-2xl border border-slate-200 bg-slate-50 p-5"><dt className="truncate text-xs font-bold uppercase tracking-wider text-slate-500">{label}</dt><dd className="mt-2 text-3xl font-bold tracking-tight text-slate-950">{String(value)}</dd></div>)}</dl> : <div className="mt-6 rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center text-sm text-slate-500">Performance statistics will be added soon.</div>}</section>
+      <ProfileShareCard username={username} />
+    </div>
+  </article></main>;
 }

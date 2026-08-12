@@ -1,6 +1,7 @@
 'use client';
 
 import { FormEvent, useState } from 'react';
+import Image from 'next/image';
 import { createClient } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 
@@ -79,7 +80,7 @@ export default function LoginPage() {
       <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,_#1d4ed8_0%,_transparent_32%),radial-gradient(circle_at_bottom_right,_#0f766e_0%,_transparent_28%)] opacity-60" />
       <section className="w-full max-w-md rounded-3xl border border-white/15 bg-white p-6 shadow-2xl shadow-slate-950/40 sm:p-8">
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-5 grid size-12 place-items-center rounded-2xl bg-blue-600 text-xl font-black text-white shadow-lg shadow-blue-600/30">S</div>
+          <Image src="/athlio-mark.png" alt="Athlio" width={96} height={64} className="mx-auto mb-5 size-12 rounded-2xl object-cover shadow-lg shadow-blue-600/30" priority />
           <h1 className="text-3xl font-bold tracking-tight text-slate-950">Welcome to Athlio</h1>
           <p className="mt-2 text-sm leading-6 text-slate-500">Manage your athlete profile and share your progress with confidence.</p>
         </div>

@@ -83,7 +83,7 @@ export default function DashboardPage() {
 
   return <main className="min-h-screen bg-slate-50 px-4 py-8 sm:px-6 lg:py-12"><div className="mx-auto max-w-5xl">
     <header className="mb-8 flex flex-col gap-5 rounded-3xl bg-slate-950 px-6 py-7 text-white shadow-xl shadow-slate-200 sm:flex-row sm:items-center sm:justify-between sm:px-8">
-      <div><p className="text-sm font-medium text-blue-300">Athlete dashboard</p><h1 className="mt-1 text-3xl font-bold tracking-tight">Build your StatCard</h1><p className="mt-2 text-sm text-slate-300">{user?.email}</p></div>
+      <div><p className="text-sm font-medium text-blue-300">Athlete dashboard</p><h1 className="mt-1 text-3xl font-bold tracking-tight">Build your Athlio profile</h1><p className="mt-2 text-sm text-slate-300">{user?.email}</p></div>
       <button type="button" onClick={async () => { await supabase.auth.signOut(); router.replace('/login'); }} className="rounded-xl border border-white/15 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10">Sign out</button>
     </header>
     <form onSubmit={saveProfile} className="space-y-6">

@@ -8,7 +8,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 // This metadata improves SEO and tab titles
 export const metadata: Metadata = {
-  title: "StatCard | Athlete Profiles",
+  title: "Athlio | Athlete Profiles",
   description: "Dynamic performance tracking and digital profiles for athletes.",
 };
 
@@ -24,7 +24,7 @@ export default function RootLayout({
         {children}
         {/* A subtle global footer */}
         <footer className="text-center py-6 text-sm text-gray-400">
-          Powered by StatCard
+          Powered by Athlio
         </footer>
       </body>
     </html>

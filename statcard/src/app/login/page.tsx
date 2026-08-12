@@ -80,7 +80,7 @@ export default function LoginPage() {
       <section className="w-full max-w-md rounded-3xl border border-white/15 bg-white p-6 shadow-2xl shadow-slate-950/40 sm:p-8">
         <div className="mb-8 text-center">
           <div className="mx-auto mb-5 grid size-12 place-items-center rounded-2xl bg-blue-600 text-xl font-black text-white shadow-lg shadow-blue-600/30">S</div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-950">Welcome to StatCard</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-950">Welcome to Athlio</h1>
           <p className="mt-2 text-sm leading-6 text-slate-500">Manage your athlete profile and share your progress with confidence.</p>
         </div>
 

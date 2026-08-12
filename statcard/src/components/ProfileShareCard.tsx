@@ -21,7 +21,7 @@ export default function ProfileShareCard({ username }: { username: string }) {
   };
 
   return <aside className="rounded-3xl border border-slate-200 bg-slate-50 p-6 sm:p-7">
-    <p className="text-xs font-bold uppercase tracking-[0.16em] text-blue-700">Share this StatCard</p>
+    <p className="text-xs font-bold uppercase tracking-[0.16em] text-blue-700">Share this NextUp profile</p>
     <h2 className="mt-2 text-xl font-bold text-slate-950">Make your progress easy to find.</h2>
     <p className="mt-2 text-sm leading-6 text-slate-600">Share the link or scan the code to open this public athlete profile.</p>
     <div className="mt-5 flex flex-col items-center gap-5 sm:flex-row sm:items-start">

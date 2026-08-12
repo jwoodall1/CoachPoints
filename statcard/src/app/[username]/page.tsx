@@ -11,14 +11,15 @@ export default async function AthleteProfile({ params }: { params: Promise<{ use
   const { username } = await params;
   const { data: profile, error } = await supabase
     .from('profiles')
-    .select('first_name, last_name, sport, bio, hudl_highlight_url, instagram_url, tiktok_url, youtube_url, x_url, stats')
+    .select('first_name, last_name, sport, bio, avatar_url, hudl_highlight_url, instagram_url, tiktok_url, youtube_url, x_url, stats')
     .eq('username', username)
     .maybeSingle();
 
   if (error || !profile) notFound();
   const name = [profile.first_name, profile.last_name].filter(Boolean).join(' ') || username;
   const stats = profile.stats && typeof profile.stats === 'object' && !Array.isArray(profile.stats) ? Object.entries(profile.stats) : [];
-  const { data: { publicUrl: avatarUrl } } = supabase.storage.from('avatars').getPublicUrl(`${username}/profile.png`);
+  const { data: { publicUrl: fallbackAvatarUrl } } = supabase.storage.from('avatars').getPublicUrl(`${username}/profile.png`);
+  const avatarUrl = profile.avatar_url ?? fallbackAvatarUrl;
 
   return <main className="min-h-screen bg-slate-50 px-4 py-8 sm:px-6 lg:py-12"><article className="mx-auto max-w-4xl overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl shadow-slate-200/60">
     <header className="relative overflow-hidden bg-slate-950 px-6 py-12 text-center text-white sm:px-10 sm:py-16"><div className="absolute inset-0 bg-[radial-gradient(circle_at_top,#2563eb_0%,transparent_48%)] opacity-70" /><div className="relative"><div className="mx-auto inline-flex rounded-full border-4 border-white/15"><ProfileAvatar src={avatarUrl} name={name} /></div><p className="mt-5 text-sm font-semibold uppercase tracking-[0.2em] text-blue-200">Athlete profile</p><h1 className="mt-2 text-4xl font-bold tracking-tight sm:text-5xl">{name}</h1>{profile.sport && <span className="mt-5 inline-flex rounded-full border border-blue-300/30 bg-blue-400/15 px-4 py-1.5 text-sm font-semibold text-blue-100">{profile.sport}</span>}<SocialLinks links={{ instagramUrl: profile.instagram_url, tiktokUrl: profile.tiktok_url, youtubeUrl: profile.youtube_url, xUrl: profile.x_url }} /></div></header>

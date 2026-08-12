@@ -55,14 +55,14 @@ export default function DashboardPage() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return router.replace('/login');
       setUser(session.user);
-      const { data } = await supabase.from('profiles').select('first_name, last_name, username, sport, bio, hudl_highlight_url, instagram_url, tiktok_url, youtube_url, x_url, stats').eq('id', session.user.id).maybeSingle();
+      const { data } = await supabase.from('profiles').select('first_name, last_name, username, sport, bio, avatar_url, hudl_highlight_url, instagram_url, tiktok_url, youtube_url, x_url, stats').eq('id', session.user.id).maybeSingle();
       const loaded: Profile = { firstName: data?.first_name ?? session.user.user_metadata.first_name ?? '', lastName: data?.last_name ?? session.user.user_metadata.last_name ?? '', username: data?.username ?? session.user.user_metadata.username ?? '', sport: data?.sport ?? '', bio: data?.bio ?? '', hudl_highlight_url: data?.hudl_highlight_url ?? '', instagram_url: data?.instagram_url ?? '', tiktok_url: data?.tiktok_url ?? '', youtube_url: data?.youtube_url ?? '', x_url: data?.x_url ?? '', stats: asStats(data?.stats) };
       setProfile(loaded);
       setSavedProfile(loaded);
       const avatarPath = loaded.username ? `${loaded.username}/profile.png` : '';
       const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(avatarPath);
-      setAvatarUrl(avatarPath ? publicUrl : null);
-      setSavedAvatarUrl(avatarPath ? publicUrl : null);
+      setAvatarUrl(data?.avatar_url ?? (avatarPath ? publicUrl : null));
+      setSavedAvatarUrl(data?.avatar_url ?? (avatarPath ? publicUrl : null));
       setLoading(false);
     };
     load();
@@ -74,15 +74,16 @@ export default function DashboardPage() {
 
   const saveAvatar = async (image: string) => {
     if (!user) return;
-    if (hudlUrlError) return;
     const imageBlob = await (await fetch(image)).blob();
     const path = `${profile.username}/profile.png`;
     const { error: uploadError } = await supabase.storage.from('avatars').upload(path, imageBlob, { contentType: 'image/png', upsert: true });
     if (uploadError) throw new Error(uploadError.message);
-    const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path);
-    const avatarWithVersion = `${publicUrl}?v=${Date.now()}`;
-    setAvatarUrl(avatarWithVersion);
-    setSavedAvatarUrl(avatarWithVersion);
+    const { data: { publicUrl: uploadedImageUrl } } = supabase.storage.from('avatars').getPublicUrl(path);
+    const finalUrl = `${uploadedImageUrl}?v=${Date.now()}`;
+    const { error: profileError } = await supabase.from('profiles').update({ avatar_url: finalUrl }).eq('id', user.id);
+    if (profileError) throw new Error(profileError.message);
+    setAvatarUrl(finalUrl);
+    setSavedAvatarUrl(finalUrl);
     setNotice('Profile photo updated successfully.');
   };
 

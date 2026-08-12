@@ -19,7 +19,7 @@ export default function HomePage() {
       const { data: { session } } = await supabase.auth.getSession();
       setIsSignedIn(Boolean(session));
       if (session) {
-        const { data, error: profilesError } = await supabase.from('profiles').select('first_name, last_name, username').order('last_name', { ascending: true });
+        const { data, error: profilesError } = await supabase.from('profiles').select('first_name, last_name, username, avatar_url').order('last_name', { ascending: true });
         if (profilesError) setError('Unable to load athlete profiles right now.');
         else setAthletes((data ?? []).filter((athlete) => athlete.username));
       }

@@ -12,9 +12,7 @@ type Profile = { firstName: string; lastName: string; username: string; sport: s
 const emptyProfile: Profile = { firstName: '', lastName: '', username: '', sport: '', bio: '', hudl_highlight_url: '', instagram_url: '', tiktok_url: '', youtube_url: '', x_url: '', stats: [] };
 
 const collegiateSports = [
-  'Baseball', 'Basketball', 'Beach volleyball', 'Cross country', 'Fencing', 'Field hockey', 'Football',
-  'Golf', 'Gymnastics', 'Ice hockey', 'Lacrosse', 'Rowing', 'Soccer', 'Softball', 'Swimming and diving',
-  'Tennis', 'Track and field', 'Volleyball', 'Water polo', 'Wrestling',
+  'Baseball', 'Beach volleyball', 'Fencing', 'Field hockey', 'Football', 'Gymnastics', 'Softball',
   "Men's basketball", "Women's basketball", "Men's cross country", "Women's cross country",
   "Men's golf", "Women's golf", "Men's ice hockey", "Women's ice hockey", "Men's lacrosse", "Women's lacrosse",
   "Men's rowing", "Women's rowing", "Men's soccer", "Women's soccer", "Men's swimming and diving",
@@ -130,5 +128,5 @@ export default function DashboardPage() {
 }
 
 function Input({ label, value, onChange, placeholder, hint, required = false }: { label: string; value: string; onChange: (value: string) => void; placeholder: string; hint?: string; required?: boolean }) {
-  return <label className="block text-sm font-semibold text-slate-700"><span className="mb-2 block">{label}</span>{label === 'Sport' ? <select value={value} onChange={(event) => onChange(event.target.value)} className="input" aria-label="Sport"><option value="">Select a sport</option>{collegiateSports.map((sport) => <option key={sport} value={sport}>{sport}</option>)}</select> : <input value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} required={required} className="input" />}{hint && <span className="mt-2 block text-xs font-normal text-slate-500">{hint}</span>}</label>;
+  return <label className="block text-sm font-semibold text-slate-700"><span className="mb-2 block">{label}</span>{label === 'Sport' ? <select value={value} onChange={(event) => onChange(event.target.value)} className="input [&:disabled]:appearance-none" aria-label="Sport"><option value="">Select a sport</option>{collegiateSports.map((sport) => <option key={sport} value={sport}>{sport}</option>)}</select> : <input value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} required={required} className="input" />}{hint && <span className="mt-2 block text-xs font-normal text-slate-500">{hint}</span>}</label>;
 }

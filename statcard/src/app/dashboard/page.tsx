@@ -8,8 +8,8 @@ import ProfileAvatar from '@/components/ProfileAvatar';
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 type Stat = { id: string; label: string; value: string };
-type Profile = { firstName: string; lastName: string; username: string; sport: string; bio: string; stats: Stat[] };
-const emptyProfile: Profile = { firstName: '', lastName: '', username: '', sport: '', bio: '', stats: [] };
+type Profile = { firstName: string; lastName: string; username: string; sport: string; bio: string; hudl_highlight_url: string; stats: Stat[] };
+const emptyProfile: Profile = { firstName: '', lastName: '', username: '', sport: '', bio: '', hudl_highlight_url: '', stats: [] };
 
 const asStats = (stats: unknown): Stat[] => stats && typeof stats === 'object' && !Array.isArray(stats)
   ? Object.entries(stats as Record<string, unknown>).map(([label, value]) => ({ id: crypto.randomUUID(), label, value: String(value) })) : [];
@@ -26,14 +26,17 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const hudlUrlError = profile.hudl_highlight_url.trim() && !profile.hudl_highlight_url.trim().startsWith('https://www.hudl.com/')
+    ? 'Enter a Hudl link that starts with https://www.hudl.com/.'
+    : null;
 
   useEffect(() => {
     const load = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return router.replace('/login');
       setUser(session.user);
-      const { data } = await supabase.from('profiles').select('first_name, last_name, username, sport, bio, stats').eq('id', session.user.id).maybeSingle();
-      const loaded: Profile = { firstName: data?.first_name ?? session.user.user_metadata.first_name ?? '', lastName: data?.last_name ?? session.user.user_metadata.last_name ?? '', username: data?.username ?? session.user.user_metadata.username ?? '', sport: data?.sport ?? '', bio: data?.bio ?? '', stats: asStats(data?.stats) };
+      const { data } = await supabase.from('profiles').select('first_name, last_name, username, sport, bio, hudl_highlight_url, stats').eq('id', session.user.id).maybeSingle();
+      const loaded: Profile = { firstName: data?.first_name ?? session.user.user_metadata.first_name ?? '', lastName: data?.last_name ?? session.user.user_metadata.last_name ?? '', username: data?.username ?? session.user.user_metadata.username ?? '', sport: data?.sport ?? '', bio: data?.bio ?? '', hudl_highlight_url: data?.hudl_highlight_url ?? '', stats: asStats(data?.stats) };
       setProfile(loaded);
       setSavedProfile(loaded);
       const avatarPath = loaded.username ? `${loaded.username}/profile.png` : '';
@@ -51,6 +54,7 @@ export default function DashboardPage() {
 
   const saveAvatar = async (image: string) => {
     if (!user) return;
+    if (hudlUrlError) return;
     const imageBlob = await (await fetch(image)).blob();
     const path = `${profile.username}/profile.png`;
     const { error: uploadError } = await supabase.storage.from('avatars').upload(path, imageBlob, { contentType: 'image/png', upsert: true });
@@ -69,7 +73,7 @@ export default function DashboardPage() {
     if (username.length < 3) return setNotice('Choose a public handle with at least 3 letters or numbers.');
     setSaving(true); setNotice(null);
     const stats = Object.fromEntries(profile.stats.filter(({ label }) => label.trim()).map(({ label, value }) => [label.trim(), value.trim()]));
-    const { error } = await supabase.from('profiles').upsert({ id: user.id, first_name: profile.firstName.trim(), last_name: profile.lastName.trim(), username, sport: profile.sport.trim(), bio: profile.bio.trim(), stats }, { onConflict: 'id' });
+    const { error } = await supabase.from('profiles').upsert({ id: user.id, first_name: profile.firstName.trim(), last_name: profile.lastName.trim(), username, sport: profile.sport.trim(), bio: profile.bio.trim(), hudl_highlight_url: profile.hudl_highlight_url.trim() || null, stats }, { onConflict: 'id' });
     if (error) setNotice(error.message);
     else {
       const saved = { ...profile, username };
@@ -91,13 +95,13 @@ export default function DashboardPage() {
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"><div><h2 className="text-xl font-bold text-slate-950">Personal information</h2><p className="mt-1 text-sm text-slate-500">This is what visitors see on your public profile.</p></div>{isEditing ? <button type="button" onClick={stopEditing} className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">Stop editing</button> : <button type="button" onClick={() => { setIsEditing(true); setNotice(null); }} className="rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800">Edit profile</button>}</div>
         <div className="mb-7 flex items-center gap-4">{avatarUrl ? <ProfileAvatar src={avatarUrl} name={profile.firstName || 'Profile'} size="small" /> : <div className="grid size-20 place-items-center rounded-full bg-slate-100 text-xl font-bold text-slate-400">{profile.firstName.slice(0, 1).toUpperCase()}</div>}<div><p className="text-sm font-semibold text-slate-800">Profile photo</p><p className="mt-1 text-sm text-slate-500">A 512 × 512 circular image.</p>{isEditing && <button type="button" onClick={() => setIsPhotoModalOpen(true)} className="mt-2 text-sm font-semibold text-blue-600 hover:text-blue-700">{avatarUrl ? 'Change photo' : 'Upload photo'}</button>}</div></div>
         <div className="mb-5 sm:max-w-sm"><label className="block text-sm font-semibold text-slate-700"><span className="mb-2 block">Public handle</span><input value={profile.username} readOnly aria-readonly="true" className="input cursor-not-allowed bg-slate-100 text-slate-500" /><span className="mt-2 block text-xs font-normal text-slate-500">Your permanent profile handle.</span></label></div>
-        <fieldset disabled={!isEditing} className="grid gap-5 sm:grid-cols-2 disabled:opacity-70"><Input label="First name" value={profile.firstName} onChange={(value) => update('firstName', value)} placeholder="Jordan" required /><Input label="Last name" value={profile.lastName} onChange={(value) => update('lastName', value)} placeholder="Lee" required /><Input label="Sport" value={profile.sport} onChange={(value) => update('sport', value)} placeholder="Basketball" /><label className="sm:col-span-2 block text-sm font-semibold text-slate-700"><span className="mb-2 block">Bio</span><textarea value={profile.bio} onChange={(event) => update('bio', event.target.value)} rows={4} className="input resize-y" placeholder="A short introduction, goals, and accomplishments." /></label></fieldset>
+        <fieldset disabled={!isEditing} className="grid gap-5 sm:grid-cols-2 disabled:opacity-70"><Input label="First name" value={profile.firstName} onChange={(value) => update('firstName', value)} placeholder="Jordan" required /><Input label="Last name" value={profile.lastName} onChange={(value) => update('lastName', value)} placeholder="Lee" required /><Input label="Sport" value={profile.sport} onChange={(value) => update('sport', value)} placeholder="Basketball" /><label className="sm:col-span-2 block text-sm font-semibold text-slate-700"><span className="mb-2 block">Bio</span><textarea value={profile.bio} onChange={(event) => update('bio', event.target.value)} rows={4} className="input resize-y" placeholder="A short introduction, goals, and accomplishments." /></label><label className="sm:col-span-2 block text-sm font-semibold text-slate-700"><span className="mb-2 block">Hudl Highlight URL</span><input type="url" value={profile.hudl_highlight_url} onChange={(event) => update('hudl_highlight_url', event.target.value)} placeholder="https://www.hudl.com/video/..." className={`input ${hudlUrlError ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-100' : ''}`} aria-invalid={Boolean(hudlUrlError)} aria-describedby="hudl-highlight-help hudl-highlight-error" />{hudlUrlError && <span id="hudl-highlight-error" className="mt-2 block text-xs font-normal text-rose-600">{hudlUrlError}</span>}<span id="hudl-highlight-help" className="mt-2 block text-xs font-normal text-slate-500">Paste your full Hudl video link here (e.g., https://www.hudl.com/video/...)</span></label></fieldset>
       </section>
       <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
         <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div><h2 className="text-xl font-bold text-slate-950">Performance stats</h2><p className="mt-1 text-sm text-slate-500">Add the metrics that best tell your story.</p></div><button type="button" disabled={!isEditing} onClick={() => update('stats', [...profile.stats, { id: crypto.randomUUID(), label: '', value: '' }])} className="rounded-xl bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-800 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50">+ Add stat</button></div>
         <fieldset disabled={!isEditing} className="space-y-3 disabled:opacity-70">{profile.stats.length === 0 && <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center text-sm text-slate-500">No stats yet. Add your first performance metric.</div>}{profile.stats.map((stat) => <div key={stat.id} className="grid gap-3 rounded-2xl bg-slate-50 p-3 sm:grid-cols-[1fr_1fr_auto]"><input aria-label="Stat name" className="input" value={stat.label} onChange={(event) => updateStat(stat.id, 'label', event.target.value)} placeholder="Points per game" /><input aria-label="Stat value" className="input" value={stat.value} onChange={(event) => updateStat(stat.id, 'value', event.target.value)} placeholder="18.4" /><button type="button" onClick={() => update('stats', profile.stats.filter((item) => item.id !== stat.id))} className="rounded-xl px-3 py-2 text-sm font-semibold text-rose-600 hover:bg-rose-50">Remove</button></div>)}</fieldset>
       </section>
-      <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">{notice ? <p role="status" className={`text-sm font-medium ${notice.includes('successfully') ? 'text-emerald-600' : 'text-rose-600'}`}>{notice}</p> : <span />}{isEditing && <button disabled={saving} className="rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-600/25 transition hover:bg-blue-700 disabled:opacity-60">{saving ? 'Saving…' : 'Save changes'}</button>}</div>
+      <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">{notice ? <p role="status" className={`text-sm font-medium ${notice.includes('successfully') ? 'text-emerald-600' : 'text-rose-600'}`}>{notice}</p> : <span />}{isEditing && <button disabled={saving || Boolean(hudlUrlError)} className="rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-600/25 transition hover:bg-blue-700 disabled:opacity-60">{saving ? 'Saving…' : 'Save changes'}</button>}</div>
     </form>
   <UploadModal isOpen={isPhotoModalOpen} onClose={() => setIsPhotoModalOpen(false)} onSave={saveAvatar} />
   </div></main>;

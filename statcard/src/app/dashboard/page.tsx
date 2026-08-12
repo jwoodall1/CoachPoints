@@ -11,6 +11,16 @@ type Stat = { id: string; label: string; value: string };
 type Profile = { firstName: string; lastName: string; username: string; sport: string; bio: string; hudl_highlight_url: string; stats: Stat[] };
 const emptyProfile: Profile = { firstName: '', lastName: '', username: '', sport: '', bio: '', hudl_highlight_url: '', stats: [] };
 
+const isValidHudlUrl = (value: string) => {
+  if (!value.trim()) return true;
+  try {
+    const url = new URL(value.trim());
+    return ['http:', 'https:'].includes(url.protocol) && url.hostname === 'www.hudl.com' && (url.pathname.includes('/video/') || url.pathname.includes('/v/') || url.pathname.includes('/embed/'));
+  } catch {
+    return false;
+  }
+};
+
 const asStats = (stats: unknown): Stat[] => stats && typeof stats === 'object' && !Array.isArray(stats)
   ? Object.entries(stats as Record<string, unknown>).map(([label, value]) => ({ id: crypto.randomUUID(), label, value: String(value) })) : [];
 
@@ -26,8 +36,8 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
-  const hudlUrlError = profile.hudl_highlight_url.trim() && !profile.hudl_highlight_url.trim().startsWith('https://www.hudl.com/')
-    ? 'Enter a Hudl link that starts with https://www.hudl.com/.'
+  const hudlUrlError = profile.hudl_highlight_url.trim() && !isValidHudlUrl(profile.hudl_highlight_url)
+    ? 'Enter a valid Hudl video link, such as http://www.hudl.com/v/2JrhL4 or https://www.hudl.com/video/....'
     : null;
 
   useEffect(() => {

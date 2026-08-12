@@ -3,7 +3,10 @@ type HudlHighlightProps = {
 };
 
 function formatHudlEmbedUrl(url: string) {
-  return url.includes('/embed/') ? url : url.replace('/video/', '/embed/video/');
+  const secureUrl = url.replace(/^http:\/\//i, 'https://');
+  if (secureUrl.includes('/embed/')) return secureUrl;
+  if (secureUrl.includes('/video/')) return secureUrl.replace('/video/', '/embed/video/');
+  return secureUrl.replace('/v/', '/embed/v/');
 }
 
 export default function HudlHighlight({ url }: HudlHighlightProps) {

@@ -6,7 +6,7 @@ import { createClient } from '@supabase/supabase-js';
 import ProfileAvatar from '@/components/ProfileAvatar';
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
-type Athlete = { first_name: string | null; last_name: string | null; username: string; avatar_url: string | null; sport: string | null };
+type Athlete = { first_name: string | null; last_name: string | null; username: string; avatar_url: string | null; sport: string | null; account_type: 'athlete' | 'coach' | null };
 
 export default function HomePage() {
   const [loading, setLoading] = useState(true);
@@ -21,7 +21,7 @@ export default function HomePage() {
       const { data: { session } } = await supabase.auth.getSession();
       setIsSignedIn(Boolean(session));
       if (session) {
-        const { data, error: profilesError } = await supabase.from('profiles').select('first_name, last_name, username, avatar_url, sport').order('last_name', { ascending: true });
+        const { data, error: profilesError } = await supabase.from('profiles').select('first_name, last_name, username, avatar_url, sport, account_type').order('last_name', { ascending: true });
         if (profilesError) setError('Unable to load athlete profiles right now.');
         else setAthletes((data ?? []).filter((athlete) => athlete.username));
       }
@@ -40,7 +40,7 @@ export default function HomePage() {
   }, [athletes, search, sportFilter]);
 
   if (loading) return <main className="grid min-h-[calc(100vh-125px)] place-items-center bg-slate-50 text-sm font-medium text-slate-500">Loading Athlio…</main>;
-  if (!isSignedIn) return <main className="flex min-h-[calc(100vh-125px)] items-center justify-center bg-slate-50 p-4"><div className="max-w-xl text-center"><p className="text-sm font-bold uppercase tracking-[0.2em] text-blue-600">Athlete profiles, elevated</p><h1 className="mt-4 text-5xl font-extrabold tracking-tight text-slate-950 sm:text-6xl">Every stat tells a story.</h1><p className="mx-auto mt-6 max-w-md text-lg leading-8 text-slate-600">Athlio gives athletes one place to build, manage, and share their performance profile.</p><Link href="/login" className="mt-9 inline-flex rounded-xl bg-slate-950 px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-slate-300 transition hover:bg-slate-800">Get started</Link></div></main>;
+  if (!isSignedIn) return <main className="flex min-h-[calc(100vh-125px)] items-center justify-center bg-slate-50 p-4"><div className="max-w-xl text-center"><p className="text-sm font-bold uppercase tracking-[0.2em] text-blue-600">Athlio profiles, elevated</p><h1 className="mt-4 text-5xl font-extrabold tracking-tight text-slate-950 sm:text-6xl">Every stat tells a story.</h1><p className="mx-auto mt-6 max-w-md text-lg leading-8 text-slate-600">Athlio gives athletes and coaches one place to build, manage, and share a performance profile.</p><div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row"><Link href="/login?role=athlete" className="inline-flex rounded-xl bg-blue-600 px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-blue-200 transition hover:bg-blue-700">Athlete login / register</Link><Link href="/login?role=coach" className="inline-flex rounded-xl bg-slate-950 px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-slate-300 transition hover:bg-slate-800">Coach login / register</Link></div></div></main>;
 
   return <main className="min-h-[calc(100vh-125px)] bg-slate-50 px-4 py-10 sm:px-6 lg:py-14"><div className="mx-auto max-w-5xl">
     <header className="mb-8"><p className="text-sm font-bold uppercase tracking-[0.18em] text-blue-600">Athlete directory</p><h1 className="mt-2 text-4xl font-bold tracking-tight text-slate-950 sm:text-5xl">Explore Athlio</h1><p className="mt-3 max-w-2xl text-base leading-7 text-slate-600">Browse public athlete profiles and see the accomplishments behind every performance.</p></header>
@@ -56,7 +56,7 @@ function getName(athlete: Athlete) { return [athlete.first_name, athlete.last_na
 function AthleteCard({ athlete }: { athlete: Athlete }) {
   const name = getName(athlete);
   const { data: { publicUrl: fallbackAvatarUrl } } = supabase.storage.from('avatars').getPublicUrl(`${athlete.username}/profile.png`);
-  return <Link href={`/${athlete.username}`} className="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-lg hover:shadow-blue-100/50"><div className="flex items-start justify-between gap-3"><ProfileAvatar src={athlete.avatar_url || fallbackAvatarUrl} name={name} size="small" />{athlete.sport && <span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700">{athlete.sport}</span>}</div><h3 className="mt-4 text-lg font-bold text-slate-950 group-hover:text-blue-700">{name}</h3><p className="mt-1 text-sm text-slate-500">@{athlete.username}</p><span className="mt-5 inline-flex text-sm font-semibold text-blue-600">View profile <span aria-hidden="true" className="ml-1 transition group-hover:translate-x-0.5">→</span></span></Link>;
+  return <Link href={`/${athlete.username}`} className="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-lg hover:shadow-blue-100/50"><div className="flex items-start justify-between gap-3"><ProfileAvatar src={athlete.avatar_url || fallbackAvatarUrl} name={name} size="small" /><span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${athlete.account_type === 'coach' ? 'bg-emerald-50 text-emerald-700' : 'bg-blue-50 text-blue-700'}`}>{athlete.account_type === 'coach' ? 'Coach' : 'Athlete'}</span></div><h3 className="mt-4 text-lg font-bold text-slate-950 group-hover:text-blue-700">{name}</h3><p className="mt-1 text-sm text-slate-500">@{athlete.username}</p>{athlete.sport && <p className="mt-1 text-xs font-medium text-slate-400">{athlete.sport}</p>}<span className="mt-5 inline-flex text-sm font-semibold text-blue-600">View profile <span aria-hidden="true" className="ml-1 transition group-hover:translate-x-0.5">→</span></span></Link>;
 }
 
 function EmptyState() { return <div className="rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center"><h2 className="text-lg font-bold text-slate-900">No public Cards yet</h2><p className="mt-2 text-sm text-slate-500">Create and save your profile to become the first athlete in the directory.</p><Link href="/dashboard" className="mt-5 inline-flex text-sm font-semibold text-blue-600 hover:text-blue-700">Go to your dashboard →</Link></div>; }

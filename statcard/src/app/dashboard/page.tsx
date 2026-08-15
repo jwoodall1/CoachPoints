@@ -8,8 +8,9 @@ import ProfileAvatar from '@/components/ProfileAvatar';
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 type Stat = { id: string; label: string; value: string };
-type Profile = { firstName: string; lastName: string; username: string; sport: string; bio: string; hudl_highlight_url: string; instagram_url: string; tiktok_url: string; youtube_url: string; x_url: string; stats: Stat[] };
-const emptyProfile: Profile = { firstName: '', lastName: '', username: '', sport: '', bio: '', hudl_highlight_url: '', instagram_url: '', tiktok_url: '', youtube_url: '', x_url: '', stats: [] };
+type AccountType = 'athlete' | 'coach';
+type Profile = { firstName: string; lastName: string; username: string; accountType: AccountType; sport: string; bio: string; hudl_highlight_url: string; instagram_url: string; tiktok_url: string; youtube_url: string; x_url: string; stats: Stat[] };
+const emptyProfile: Profile = { firstName: '', lastName: '', username: '', accountType: 'athlete', sport: '', bio: '', hudl_highlight_url: '', instagram_url: '', tiktok_url: '', youtube_url: '', x_url: '', stats: [] };
 
 const collegiateSports = [
   'Baseball', 'Beach volleyball', 'Fencing', 'Field hockey', 'Football', 'Gymnastics', 'Softball',
@@ -55,8 +56,8 @@ export default function DashboardPage() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return router.replace('/login');
       setUser(session.user);
-      const { data } = await supabase.from('profiles').select('first_name, last_name, username, sport, bio, avatar_url, hudl_highlight_url, instagram_url, tiktok_url, youtube_url, x_url, stats').eq('id', session.user.id).maybeSingle();
-      const loaded: Profile = { firstName: data?.first_name ?? session.user.user_metadata.first_name ?? '', lastName: data?.last_name ?? session.user.user_metadata.last_name ?? '', username: data?.username ?? session.user.user_metadata.username ?? '', sport: data?.sport ?? '', bio: data?.bio ?? '', hudl_highlight_url: data?.hudl_highlight_url ?? '', instagram_url: data?.instagram_url ?? '', tiktok_url: data?.tiktok_url ?? '', youtube_url: data?.youtube_url ?? '', x_url: data?.x_url ?? '', stats: asStats(data?.stats) };
+      const { data } = await supabase.from('profiles').select('first_name, last_name, username, account_type, sport, bio, avatar_url, hudl_highlight_url, instagram_url, tiktok_url, youtube_url, x_url, stats').eq('id', session.user.id).maybeSingle();
+      const loaded: Profile = { firstName: data?.first_name ?? session.user.user_metadata.first_name ?? '', lastName: data?.last_name ?? session.user.user_metadata.last_name ?? '', username: data?.username ?? session.user.user_metadata.username ?? '', accountType: data?.account_type === 'coach' ? 'coach' : 'athlete', sport: data?.sport ?? '', bio: data?.bio ?? '', hudl_highlight_url: data?.hudl_highlight_url ?? '', instagram_url: data?.instagram_url ?? '', tiktok_url: data?.tiktok_url ?? '', youtube_url: data?.youtube_url ?? '', x_url: data?.x_url ?? '', stats: asStats(data?.stats) };
       setProfile(loaded);
       setSavedProfile(loaded);
       const avatarPath = loaded.username ? `${loaded.username}/profile.png` : '';
@@ -94,7 +95,7 @@ export default function DashboardPage() {
     if (username.length < 3) return setNotice('Choose a public handle with at least 3 letters or numbers.');
     setSaving(true); setNotice(null);
     const stats = Object.fromEntries(profile.stats.filter(({ label }) => label.trim()).map(({ label, value }) => [label.trim(), value.trim()]));
-    const { error } = await supabase.from('profiles').upsert({ id: user.id, first_name: profile.firstName.trim(), last_name: profile.lastName.trim(), username, sport: profile.sport.trim(), bio: profile.bio.trim(), hudl_highlight_url: profile.hudl_highlight_url.trim() || null, instagram_url: profile.instagram_url.trim() || null, tiktok_url: profile.tiktok_url.trim() || null, youtube_url: profile.youtube_url.trim() || null, x_url: profile.x_url.trim() || null, stats }, { onConflict: 'id' });
+    const { error } = await supabase.from('profiles').upsert({ id: user.id, first_name: profile.firstName.trim(), last_name: profile.lastName.trim(), username, account_type: profile.accountType, sport: profile.sport.trim(), bio: profile.bio.trim(), hudl_highlight_url: profile.hudl_highlight_url.trim() || null, instagram_url: profile.instagram_url.trim() || null, tiktok_url: profile.tiktok_url.trim() || null, youtube_url: profile.youtube_url.trim() || null, x_url: profile.x_url.trim() || null, stats }, { onConflict: 'id' });
     if (error) setNotice(error.message);
     else {
       const saved = { ...profile, username };
@@ -108,7 +109,7 @@ export default function DashboardPage() {
 
   return <main className="min-h-screen bg-slate-50 px-4 py-8 sm:px-6 lg:py-12"><div className="mx-auto max-w-5xl">
     <header className="mb-8 flex flex-col gap-5 rounded-3xl bg-slate-950 px-6 py-7 text-white shadow-xl shadow-slate-200 sm:flex-row sm:items-center sm:justify-between sm:px-8">
-      <div><p className="text-sm font-medium text-blue-300">Athlete dashboard</p><h1 className="mt-1 text-3xl font-bold tracking-tight">Build your Athlio profile</h1><p className="mt-2 text-sm text-slate-300">{user?.email}</p></div>
+      <div><p className="text-sm font-medium text-blue-300">{profile.accountType === 'coach' ? 'Coach dashboard' : 'Athlete dashboard'}</p><h1 className="mt-1 text-3xl font-bold tracking-tight">Build your Athlio profile</h1><p className="mt-2 text-sm text-slate-300">{user?.email}</p></div>
       <button type="button" onClick={async () => { await supabase.auth.signOut(); router.replace('/login'); }} className="rounded-xl border border-white/15 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10">Sign out</button>
     </header>
     <form onSubmit={saveProfile} className="space-y-6">

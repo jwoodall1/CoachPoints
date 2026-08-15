@@ -11,6 +11,7 @@ const supabase = createClient(
 );
 
 type Mode = 'sign-in' | 'sign-up';
+type AccountType = 'athlete' | 'coach';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -20,6 +21,7 @@ export default function LoginPage() {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [accountType] = useState<AccountType>(() => typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('role') === 'coach' ? 'coach' : 'athlete');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -51,6 +53,7 @@ export default function LoginPage() {
             first_name: firstName.trim(),
             last_name: lastName.trim(),
             username: publicUsername,
+            account_type: accountType,
           },
           emailRedirectTo: `${window.location.origin}/dashboard`,
         },
@@ -82,8 +85,10 @@ export default function LoginPage() {
         <div className="mb-8 text-center">
           <Image src="/athlio-mark.png" alt="Athlio" width={96} height={64} className="mx-auto mb-5 size-12 rounded-2xl object-cover shadow-lg shadow-blue-600/30" priority />
           <h1 className="text-3xl font-bold tracking-tight text-slate-950">Welcome to Athlio</h1>
-          <p className="mt-2 text-sm leading-6 text-slate-500">Manage your athlete profile and share your progress with confidence.</p>
+          <p className="mt-2 text-sm leading-6 text-slate-500">Manage your {accountType} profile and share your progress with confidence.</p>
         </div>
+
+        <div className="mb-5 flex items-center justify-between rounded-xl border border-blue-100 bg-blue-50 px-4 py-3"><span className="text-sm font-semibold text-slate-700">Account type</span><span className="rounded-full bg-white px-3 py-1 text-xs font-bold uppercase tracking-wide text-blue-700">{accountType}</span></div>
 
         <div className="mb-7 grid grid-cols-2 rounded-xl bg-slate-100 p-1" role="tablist" aria-label="Account access">
           <button type="button" role="tab" aria-selected={!isSignUp} onClick={() => selectMode('sign-in')} className={`rounded-lg px-3 py-2.5 text-sm font-semibold transition ${!isSignUp ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>Sign in</button>

@@ -55,6 +55,7 @@ export default function DashboardPage() {
     const load = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return router.replace('/login');
+      if (session.user.user_metadata.account_type === 'coach') return router.replace('/coach-dashboard');
       setUser(session.user);
       const accountType: AccountType = session.user.user_metadata.account_type === 'coach' ? 'coach' : 'athlete';
       let data: { first_name?: string | null; last_name?: string | null; username?: string | null; sport?: string | null; bio?: string | null; avatar_url?: string | null; hudl_highlight_url?: string | null; instagram_url?: string | null; tiktok_url?: string | null; youtube_url?: string | null; x_url?: string | null; stats?: unknown } | null = null;

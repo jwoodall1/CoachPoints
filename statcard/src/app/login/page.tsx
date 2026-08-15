@@ -1,9 +1,9 @@
 'use client';
 
-import { FormEvent, useState } from 'react';
+import { FormEvent, Suspense, useState } from 'react';
 import Image from 'next/image';
 import { createClient } from '@supabase/supabase-js';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -14,14 +14,19 @@ type Mode = 'sign-in' | 'sign-up';
 type AccountType = 'athlete' | 'coach';
 
 export default function LoginPage() {
+  return <Suspense fallback={<main className="grid min-h-screen place-items-center bg-slate-950 text-sm font-medium text-white">Loading…</main>}><LoginForm /></Suspense>;
+}
+
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [mode, setMode] = useState<Mode>('sign-in');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [accountType] = useState<AccountType>(() => typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('role') === 'coach' ? 'coach' : 'athlete');
+  const accountType: AccountType = searchParams.get('role') === 'coach' ? 'coach' : 'athlete';
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -56,14 +61,17 @@ export default function LoginPage() {
             username: publicUsername,
             account_type: accountType,
           },
-          emailRedirectTo: `${window.location.origin}/dashboard`,
+            emailRedirectTo: `${window.location.origin}/${accountType === 'coach' ? 'coach-dashboard' : 'dashboard'}`,
         },
       });
 
       if (signUpError) {
         setError(signUpError.message);
       } else if (data.session) {
-        router.push('/dashboard');
+        if (accountType === 'coach') {
+          await supabase.from('coachprofiles').upsert({ id: data.session.user.id, first_name: firstName.trim(), last_name: lastName.trim(), username: publicUsername }, { onConflict: 'id' });
+        }
+        router.push(accountType === 'coach' ? '/coach-dashboard' : '/dashboard');
       } else {
         setMessage('Your account is ready. Check your email to confirm it, then sign in.');
       }
@@ -71,7 +79,11 @@ export default function LoginPage() {
       const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
 
       if (signInError) setError(signInError.message);
-      else router.push('/dashboard');
+      else {
+        const { data: { user } } = await supabase.auth.getUser();
+        const signedInType = user?.user_metadata.account_type === 'coach' ? 'coach' : 'athlete';
+        router.push(signedInType === 'coach' ? '/coach-dashboard' : '/dashboard');
+      }
     }
 
     setLoading(false);

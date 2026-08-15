@@ -56,8 +56,16 @@ export default function DashboardPage() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return router.replace('/login');
       setUser(session.user);
-      const { data } = await supabase.from('profiles').select('first_name, last_name, username, account_type, sport, bio, avatar_url, hudl_highlight_url, instagram_url, tiktok_url, youtube_url, x_url, stats').eq('id', session.user.id).maybeSingle();
-      const loaded: Profile = { firstName: data?.first_name ?? session.user.user_metadata.first_name ?? '', lastName: data?.last_name ?? session.user.user_metadata.last_name ?? '', username: data?.username ?? session.user.user_metadata.username ?? '', accountType: data?.account_type === 'coach' ? 'coach' : 'athlete', sport: data?.sport ?? '', bio: data?.bio ?? '', hudl_highlight_url: data?.hudl_highlight_url ?? '', instagram_url: data?.instagram_url ?? '', tiktok_url: data?.tiktok_url ?? '', youtube_url: data?.youtube_url ?? '', x_url: data?.x_url ?? '', stats: asStats(data?.stats) };
+      const accountType: AccountType = session.user.user_metadata.account_type === 'coach' ? 'coach' : 'athlete';
+      let data: { first_name?: string | null; last_name?: string | null; username?: string | null; sport?: string | null; bio?: string | null; avatar_url?: string | null; hudl_highlight_url?: string | null; instagram_url?: string | null; tiktok_url?: string | null; youtube_url?: string | null; x_url?: string | null; stats?: unknown } | null = null;
+      if (accountType === 'coach') {
+        const result = await supabase.from('coachprofiles').select('first_name, last_name, username, sport, bio, avatar_url, instagram_url, tiktok_url, youtube_url, x_url').eq('id', session.user.id).maybeSingle();
+        data = result.data;
+      } else {
+        const result = await supabase.from('profiles').select('first_name, last_name, username, sport, bio, avatar_url, hudl_highlight_url, instagram_url, tiktok_url, youtube_url, x_url, stats').eq('id', session.user.id).maybeSingle();
+        data = result.data;
+      }
+      const loaded: Profile = { firstName: data?.first_name ?? session.user.user_metadata.first_name ?? '', lastName: data?.last_name ?? session.user.user_metadata.last_name ?? '', username: data?.username ?? session.user.user_metadata.username ?? '', accountType, sport: data?.sport ?? '', bio: data?.bio ?? '', hudl_highlight_url: data?.hudl_highlight_url ?? '', instagram_url: data?.instagram_url ?? '', tiktok_url: data?.tiktok_url ?? '', youtube_url: data?.youtube_url ?? '', x_url: data?.x_url ?? '', stats: asStats(data?.stats) };
       setProfile(loaded);
       setSavedProfile(loaded);
       const avatarPath = loaded.username ? `${loaded.username}/profile.png` : '';
@@ -81,7 +89,9 @@ export default function DashboardPage() {
     if (uploadError) throw new Error(uploadError.message);
     const { data: { publicUrl: uploadedImageUrl } } = supabase.storage.from('avatars').getPublicUrl(path);
     const finalUrl = `${uploadedImageUrl}?v=${Date.now()}`;
-    const { error: profileError } = await supabase.from('profiles').update({ avatar_url: finalUrl }).eq('id', user.id);
+    const profileError = profile.accountType === 'coach'
+      ? (await supabase.from('coachprofiles').update({ avatar_url: finalUrl }).eq('id', user.id)).error
+      : (await supabase.from('profiles').update({ avatar_url: finalUrl }).eq('id', user.id)).error;
     if (profileError) throw new Error(profileError.message);
     setAvatarUrl(finalUrl);
     setSavedAvatarUrl(finalUrl);
@@ -95,7 +105,9 @@ export default function DashboardPage() {
     if (username.length < 3) return setNotice('Choose a public handle with at least 3 letters or numbers.');
     setSaving(true); setNotice(null);
     const stats = Object.fromEntries(profile.stats.filter(({ label }) => label.trim()).map(({ label, value }) => [label.trim(), value.trim()]));
-    const { error } = await supabase.from('profiles').upsert({ id: user.id, first_name: profile.firstName.trim(), last_name: profile.lastName.trim(), username, account_type: profile.accountType, sport: profile.sport.trim(), bio: profile.bio.trim(), hudl_highlight_url: profile.hudl_highlight_url.trim() || null, instagram_url: profile.instagram_url.trim() || null, tiktok_url: profile.tiktok_url.trim() || null, youtube_url: profile.youtube_url.trim() || null, x_url: profile.x_url.trim() || null, stats }, { onConflict: 'id' });
+    const error = profile.accountType === 'coach'
+      ? (await supabase.from('coachprofiles').upsert({ id: user.id, first_name: profile.firstName.trim(), last_name: profile.lastName.trim(), username, sport: profile.sport.trim(), bio: profile.bio.trim(), instagram_url: profile.instagram_url.trim() || null, tiktok_url: profile.tiktok_url.trim() || null, youtube_url: profile.youtube_url.trim() || null, x_url: profile.x_url.trim() || null }, { onConflict: 'id' })).error
+      : (await supabase.from('profiles').upsert({ id: user.id, first_name: profile.firstName.trim(), last_name: profile.lastName.trim(), username, sport: profile.sport.trim(), bio: profile.bio.trim(), hudl_highlight_url: profile.hudl_highlight_url.trim() || null, instagram_url: profile.instagram_url.trim() || null, tiktok_url: profile.tiktok_url.trim() || null, youtube_url: profile.youtube_url.trim() || null, x_url: profile.x_url.trim() || null, stats }, { onConflict: 'id' })).error;
     if (error) setNotice(error.message);
     else {
       const saved = { ...profile, username };

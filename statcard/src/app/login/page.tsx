@@ -26,6 +26,7 @@ export default function LoginPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+
   const selectMode = (nextMode: Mode) => {
     setMode(nextMode);
     setError(null);

@@ -9,11 +9,23 @@ const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env
 
 export default async function AthleteProfile({ params }: { params: Promise<{ username: string }> }) {
   const { username } = await params;
-  const { data: profile, error } = await supabase
+  const { data: athleteProfile, error: athleteError } = await supabase
     .from('profiles')
     .select('first_name, last_name, account_type, sport, bio, avatar_url, hudl_highlight_url, instagram_url, tiktok_url, youtube_url, x_url, stats')
     .eq('username', username)
     .maybeSingle();
+
+  let profile = athleteProfile;
+  let error = athleteError;
+  if (!profile) {
+    const { data: coachProfile, error: coachError } = await supabase
+      .from('coachprofiles')
+      .select('first_name, last_name, sport, bio, avatar_url, instagram_url, tiktok_url, youtube_url, x_url')
+      .eq('username', username)
+      .maybeSingle();
+    profile = coachProfile ? { ...coachProfile, account_type: 'coach', hudl_highlight_url: null, stats: null } : null;
+    error = coachError;
+  }
 
   if (error || !profile) notFound();
   const name = [profile.first_name, profile.last_name].filter(Boolean).join(' ') || username;

@@ -21,9 +21,15 @@ export default function HomePage() {
       const { data: { session } } = await supabase.auth.getSession();
       setIsSignedIn(Boolean(session));
       if (session) {
-        const { data, error: profilesError } = await supabase.from('profiles').select('first_name, last_name, username, avatar_url, sport, account_type').order('last_name', { ascending: true });
-        if (profilesError) setError('Unable to load athlete profiles right now.');
-        else setAthletes((data ?? []).filter((athlete) => athlete.username));
+        const [{ data, error: profilesError }, { data: coachData, error: coachesError }] = await Promise.all([
+          supabase.from('profiles').select('first_name, last_name, username, avatar_url, sport').order('last_name', { ascending: true }),
+          supabase.from('coachprofiles').select('first_name, last_name, username, avatar_url, sport').order('last_name', { ascending: true }),
+        ]);
+        if (profilesError || coachesError) setError('Unable to load athlete and coach profiles right now.');
+        else setAthletes([
+          ...(data ?? []).map((athlete) => ({ ...athlete, account_type: 'athlete' as const })),
+          ...(coachData ?? []).map((coach) => ({ ...coach, account_type: 'coach' as const })),
+        ].filter((profile) => profile.username).sort((a, b) => (a.last_name ?? '').localeCompare(b.last_name ?? '')));
       }
       setLoading(false);
     };

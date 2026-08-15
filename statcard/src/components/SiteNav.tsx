@@ -23,9 +23,12 @@ export default function SiteNav() {
         return;
       }
 
-      const { data } = await supabase.from('profiles').select('username, account_type').eq('id', session.user.id).maybeSingle();
+      const isCoach = session.user.user_metadata.account_type === 'coach';
+      const { data } = isCoach
+        ? await supabase.from('coachprofiles').select('username').eq('id', session.user.id).maybeSingle()
+        : await supabase.from('profiles').select('username').eq('id', session.user.id).maybeSingle();
       setUsername(data?.username ?? session.user.user_metadata.username ?? null);
-      setAccountType(data?.account_type === 'coach' || session.user.user_metadata.account_type === 'coach' ? 'coach' : 'athlete');
+      setAccountType(isCoach ? 'coach' : 'athlete');
       setReady(true);
     };
 

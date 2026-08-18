@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 
 type CoachList = { id: string; name: string };
+let closeActivePicker: (() => void) | null = null;
 
 export default function AddToListButton({ athleteId, prominent = false }: { athleteId: string; prominent?: boolean }) {
-  const [isCoach, setIsCoach] = useState(false);
+  const [isCoach, setIsCoach] = useState<boolean | null>(null);
   const [open, setOpen] = useState(false);
   const [lists, setLists] = useState<CoachList[]>([]);
   const [memberListIds, setMemberListIds] = useState<string[]>([]);
@@ -14,12 +15,22 @@ export default function AddToListButton({ athleteId, prominent = false }: { athl
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const pickerRef = useRef<HTMLDivElement>(null);
+  const closePicker = useCallback(() => setOpen(false), []);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setIsCoach(session?.user.user_metadata.account_type === 'coach');
     });
-  }, []);
+    const handleOutsideClick = (event: PointerEvent) => {
+      if (open && pickerRef.current && !pickerRef.current.contains(event.target as Node)) {
+        closePicker();
+        if (closeActivePicker === closePicker) closeActivePicker = null;
+      }
+    };
+    document.addEventListener('pointerdown', handleOutsideClick);
+    return () => document.removeEventListener('pointerdown', handleOutsideClick);
+  }, [open, closePicker]);
 
   const loadLists = async () => {
     setLoading(true);
@@ -37,9 +48,21 @@ export default function AddToListButton({ athleteId, prominent = false }: { athl
   };
 
   const openPicker = async () => {
-    setOpen((current) => !current);
-    if (!open) await loadLists();
+    if (open) {
+      setOpen(false);
+      if (closeActivePicker === closePicker) closeActivePicker = null;
+      return;
+    }
+    closeActivePicker?.();
+    closeActivePicker = closePicker;
+    setError(null);
+    setOpen(true);
+    await loadLists();
   };
+
+  useEffect(() => () => {
+    if (closeActivePicker === closePicker) closeActivePicker = null;
+  }, []);
 
   const toggleMembership = async (list: CoachList) => {
     const isMember = memberListIds.includes(list.id);
@@ -74,9 +97,9 @@ export default function AddToListButton({ athleteId, prominent = false }: { athl
     setSaving(null);
   };
 
-  if (!isCoach) return null;
+  if (isCoach !== true) return null;
 
-  return <div className="relative" onClick={(event) => event.stopPropagation()}>
+  return <div ref={pickerRef} className="relative" onClick={(event) => event.stopPropagation()}>
     <button type="button" onClick={openPicker} className={prominent ? 'rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-600/20 transition hover:bg-emerald-700' : 'rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700 transition hover:bg-emerald-100'}>
       {open ? 'Close list picker' : '+ Add to list'}
     </button>

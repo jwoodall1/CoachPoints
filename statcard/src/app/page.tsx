@@ -3,8 +3,9 @@
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import ProfileAvatar from '@/components/ProfileAvatar';
+import AddToListButton from '@/components/AddToListButton';
 import { supabase } from '@/lib/supabase';
-type Athlete = { first_name: string | null; last_name: string | null; username: string; avatar_url: string | null; sport: string | null; position?: string | null; high_school?: string | null; college_university?: string | null; account_type: 'athlete' | 'coach' | null };
+type Athlete = { id: string; first_name: string | null; last_name: string | null; username: string; avatar_url: string | null; sport: string | null; position?: string | null; high_school?: string | null; college_university?: string | null; account_type: 'athlete' | 'coach' | null };
 
 export default function HomePage() {
   const [loading, setLoading] = useState(true);
@@ -21,8 +22,8 @@ export default function HomePage() {
       setIsSignedIn(Boolean(session));
       if (session) {
         const [{ data, error: profilesError }, { data: coachData, error: coachesError }] = await Promise.all([
-          supabase.from('profiles').select('first_name, last_name, username, avatar_url, sport, position, high_school').order('last_name', { ascending: true }).limit(1000),
-          supabase.from('coachprofiles').select('first_name, last_name, username, avatar_url, sport, college_university').order('last_name', { ascending: true }).limit(1000),
+          supabase.from('profiles').select('id, first_name, last_name, username, avatar_url, sport, position, high_school').order('last_name', { ascending: true }).limit(1000),
+          supabase.from('coachprofiles').select('id, first_name, last_name, username, avatar_url, sport, college_university').order('last_name', { ascending: true }).limit(1000),
         ]);
         if (profilesError || coachesError) setError('Unable to load athlete and coach profiles right now.');
         else setAthletes([
@@ -63,7 +64,7 @@ function getName(athlete: Athlete) { return [athlete.first_name, athlete.last_na
 function AthleteCard({ athlete }: { athlete: Athlete }) {
   const name = getName(athlete);
   const { data: { publicUrl: fallbackAvatarUrl } } = supabase.storage.from('avatars').getPublicUrl(`${athlete.username}/profile.png`);
-  return <Link href={`/${athlete.username}`} className="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-lg hover:shadow-blue-100/50"><div className="flex items-start justify-between gap-3"><ProfileAvatar src={athlete.avatar_url || fallbackAvatarUrl} name={name} size="small" /><span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${athlete.account_type === 'coach' ? 'bg-emerald-50 text-emerald-700' : 'bg-blue-50 text-blue-700'}`}>{athlete.account_type === 'coach' ? 'Coach' : 'Athlete'}</span></div><h3 className="mt-4 text-lg font-bold text-slate-950 group-hover:text-blue-700">{name}</h3><p className="mt-1 text-sm text-slate-500">@{athlete.username}</p>{athlete.sport && <p className="mt-1 text-xs font-medium text-slate-400">{athlete.sport}</p>}<span className="mt-5 inline-flex text-sm font-semibold text-blue-600">View profile <span aria-hidden="true" className="ml-1 transition group-hover:translate-x-0.5">→</span></span></Link>;
+  return <div className="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-lg hover:shadow-blue-100/50"><Link href={`/${athlete.username}`}><div className="flex items-start justify-between gap-3"><ProfileAvatar src={athlete.avatar_url || fallbackAvatarUrl} name={name} size="small" /><span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${athlete.account_type === 'coach' ? 'bg-emerald-50 text-emerald-700' : 'bg-blue-50 text-blue-700'}`}>{athlete.account_type === 'coach' ? 'Coach' : 'Athlete'}</span></div><h3 className="mt-4 text-lg font-bold text-slate-950 group-hover:text-blue-700">{name}</h3><p className="mt-1 text-sm text-slate-500">@{athlete.username}</p>{athlete.sport && <p className="mt-1 text-xs font-medium text-slate-400">{athlete.sport}</p>}<span className="mt-5 inline-flex text-sm font-semibold text-blue-600">View profile <span aria-hidden="true" className="ml-1 transition group-hover:translate-x-0.5">→</span></span></Link>{athlete.account_type === 'athlete' && <div className="mt-4 border-t border-slate-100 pt-4"><AddToListButton athleteId={athlete.id} /></div>}</div>;
 }
 
 function EmptyState() { return <div className="rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center"><h2 className="text-lg font-bold text-slate-900">No public Cards yet</h2><p className="mt-2 text-sm text-slate-500">Create and save your profile to become the first athlete in the directory.</p><Link href="/dashboard" className="mt-5 inline-flex text-sm font-semibold text-blue-600 hover:text-blue-700">Go to your dashboard →</Link></div>; }

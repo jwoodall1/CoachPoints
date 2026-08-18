@@ -24,6 +24,7 @@ function SocialIcon({ icon }: { icon: SocialLink['icon'] }) {
 export default function SocialLinks({ links }: { links: SocialLinks }) {
   const phoneNumber = links.phoneNumber?.trim();
   const contactEmail = links.contactEmail?.trim();
+  const phoneHref = phoneNumber ? `tel:${phoneNumber.replace(/[^+\d]/g, '')}` : '';
   const socialLinks = ([
     { label: 'Instagram', url: links.instagramUrl ?? '', color: 'text-pink-200 hover:text-white', icon: 'instagram' },
     { label: 'TikTok', url: links.tiktokUrl ?? '', color: 'text-cyan-200 hover:text-white', icon: 'tiktok' },
@@ -35,8 +36,8 @@ export default function SocialLinks({ links }: { links: SocialLinks }) {
 
   return <div className="mt-6 space-y-4">
     {(phoneNumber || contactEmail) && <div className="flex flex-wrap justify-center gap-2">
-      {phoneNumber && <a href={`tel:${phoneNumber}`} className="inline-flex items-center rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-slate-950 shadow-lg transition hover:bg-blue-50">☎ <span className="ml-2">{phoneNumber}</span></a>}
-      {contactEmail && <a href={`mailto:${contactEmail}`} className="inline-flex items-center rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-slate-950 shadow-lg transition hover:bg-blue-50">✉ <span className="ml-2">{contactEmail}</span></a>}
+      {phoneNumber && <a href={phoneHref} aria-label={`Call ${phoneNumber}`} className="inline-flex items-center rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-slate-950 shadow-lg transition hover:bg-blue-50">☎ <span className="ml-2">{phoneNumber}</span></a>}
+      {contactEmail && <a href={`mailto:${contactEmail}`} aria-label={`Email ${contactEmail}`} className="inline-flex items-center rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-slate-950 shadow-lg transition hover:bg-blue-50">✉ <span className="ml-2">{contactEmail}</span></a>}
     </div>}
     {socialLinks.length > 0 && <div className="flex flex-wrap justify-center gap-x-4 gap-y-2">{socialLinks.map(({ label, url, color, icon }) => <a key={label} href={url} target="_blank" rel="noreferrer" className={`inline-flex items-center gap-1.5 text-xs font-semibold transition ${color}`}><SocialIcon icon={icon} /><span>{label}</span></a>)}</div>}
   </div>;

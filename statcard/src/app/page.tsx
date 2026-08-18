@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import ProfileAvatar from '@/components/ProfileAvatar';
 import { supabase } from '@/lib/supabase';
-type Athlete = { first_name: string | null; last_name: string | null; username: string; avatar_url: string | null; sport: string | null; position?: string | null; account_type: 'athlete' | 'coach' | null };
+type Athlete = { first_name: string | null; last_name: string | null; username: string; avatar_url: string | null; sport: string | null; position?: string | null; high_school?: string | null; college_university?: string | null; account_type: 'athlete' | 'coach' | null };
 
 export default function HomePage() {
   const [loading, setLoading] = useState(true);
@@ -21,8 +21,8 @@ export default function HomePage() {
       setIsSignedIn(Boolean(session));
       if (session) {
         const [{ data, error: profilesError }, { data: coachData, error: coachesError }] = await Promise.all([
-          supabase.from('profiles').select('first_name, last_name, username, avatar_url, sport, position').order('last_name', { ascending: true }).limit(1000),
-          supabase.from('coachprofiles').select('first_name, last_name, username, avatar_url, sport').order('last_name', { ascending: true }).limit(1000),
+          supabase.from('profiles').select('first_name, last_name, username, avatar_url, sport, position, high_school').order('last_name', { ascending: true }).limit(1000),
+          supabase.from('coachprofiles').select('first_name, last_name, username, avatar_url, sport, college_university').order('last_name', { ascending: true }).limit(1000),
         ]);
         if (profilesError || coachesError) setError('Unable to load athlete and coach profiles right now.');
         else setAthletes([

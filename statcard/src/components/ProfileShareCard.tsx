@@ -1,11 +1,11 @@
 'use client';
 /* eslint-disable @next/next/no-img-element -- QR code is generated as a local data URL. */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import QRCode from 'qrcode';
 
 export default function ProfileShareCard({ username }: { username: string }) {
-  const [url] = useState(() => typeof window === 'undefined' ? '' : `${window.location.origin}/${username}`);
+  const url = useMemo(() => typeof window === 'undefined' ? '' : `${window.location.origin}/${username}`, [username]);
   const [qrCode, setQrCode] = useState('');
   const [copied, setCopied] = useState(false);
   const [isQrExpanded, setIsQrExpanded] = useState(false);

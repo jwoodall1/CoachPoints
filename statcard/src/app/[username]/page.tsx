@@ -1,31 +1,30 @@
-import { createClient } from '@supabase/supabase-js';
 import { notFound } from 'next/navigation';
 import ProfileShareCard from '@/components/ProfileShareCard';
 import ProfileAvatar from '@/components/ProfileAvatar';
 import HudlHighlight from '@/components/HudlHighlight';
 import SocialLinks from '@/components/SocialLinks';
-
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
+import { supabase } from '@/lib/supabase';
 
 export default async function AthleteProfile({ params }: { params: Promise<{ username: string }> }) {
   const { username } = await params;
-  const { data: athleteProfile, error: athleteError } = await supabase
+  const athleteQuery = supabase
     .from('profiles')
     .select('first_name, last_name, account_type, height, weight, graduating_class, sport, bio, avatar_url, hudl_highlight_url, instagram_url, tiktok_url, youtube_url, x_url, stats, measurables')
     .eq('username', username)
     .maybeSingle();
-
-  let profile = athleteProfile ? { ...athleteProfile, college_university: null } : null;
-  let error = athleteError;
-  if (!profile) {
-    const { data: coachProfile, error: coachError } = await supabase
+  const coachQuery = supabase
       .from('coachprofiles')
       .select('first_name, last_name, college_university, sport, bio, avatar_url, instagram_url, tiktok_url, youtube_url, x_url')
       .eq('username', username)
       .maybeSingle();
-    profile = coachProfile ? { ...coachProfile, account_type: 'coach', height: null, weight: null, graduating_class: null, hudl_highlight_url: null, stats: null, measurables: null } : null;
-    error = coachError;
-  }
+  const [{ data: athleteProfile, error: athleteError }, { data: coachProfile, error: coachError }] = await Promise.all([athleteQuery, coachQuery]);
+
+  const profile = athleteProfile
+    ? { ...athleteProfile, college_university: null }
+    : coachProfile
+      ? { ...coachProfile, account_type: 'coach' as const, height: null, weight: null, graduating_class: null, hudl_highlight_url: null, stats: null, measurables: null }
+      : null;
+  const error = athleteProfile ? athleteError : coachError;
 
   if (error || !profile) notFound();
   const name = [profile.first_name, profile.last_name].filter(Boolean).join(' ') || username;

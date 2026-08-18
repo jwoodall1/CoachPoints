@@ -2,10 +2,8 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
 import ProfileAvatar from '@/components/ProfileAvatar';
-
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
+import { supabase } from '@/lib/supabase';
 type Athlete = { first_name: string | null; last_name: string | null; username: string; avatar_url: string | null; sport: string | null; account_type: 'athlete' | 'coach' | null };
 
 export default function HomePage() {
@@ -22,8 +20,8 @@ export default function HomePage() {
       setIsSignedIn(Boolean(session));
       if (session) {
         const [{ data, error: profilesError }, { data: coachData, error: coachesError }] = await Promise.all([
-          supabase.from('profiles').select('first_name, last_name, username, avatar_url, sport').order('last_name', { ascending: true }),
-          supabase.from('coachprofiles').select('first_name, last_name, username, avatar_url, sport').order('last_name', { ascending: true }),
+          supabase.from('profiles').select('first_name, last_name, username, avatar_url, sport').order('last_name', { ascending: true }).limit(1000),
+          supabase.from('coachprofiles').select('first_name, last_name, username, avatar_url, sport').order('last_name', { ascending: true }).limit(1000),
         ]);
         if (profilesError || coachesError) setError('Unable to load athlete and coach profiles right now.');
         else setAthletes([

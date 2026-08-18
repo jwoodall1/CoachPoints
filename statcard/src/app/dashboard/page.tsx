@@ -1,12 +1,12 @@
 'use client';
 
 import { FormEvent, useEffect, useState } from 'react';
-import { createClient, User } from '@supabase/supabase-js';
+import { User } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 import UploadModal from '@/components/UploadModal';
 import ProfileAvatar from '@/components/ProfileAvatar';
 
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
+import { supabase } from '@/lib/supabase';
 type Stat = { id: string; label: string; value: string };
 type AccountType = 'athlete' | 'coach';
 type Profile = { firstName: string; lastName: string; username: string; accountType: AccountType; height: string; weight: string; graduatingClass: string; sport: string; bio: string; hudl_highlight_url: string; instagram_url: string; tiktok_url: string; youtube_url: string; x_url: string; stats: Stat[]; measurables: Stat[] };

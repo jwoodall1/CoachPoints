@@ -1,10 +1,6 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
 import SiteNav from "@/components/SiteNav";
-
-// This optimizes and loads the Inter font
-const inter = Inter({ subsets: ["latin"] });
 
 // This metadata improves SEO and tab titles
 export const metadata: Metadata = {
@@ -19,7 +15,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body>
         <SiteNav />
         {children}
         {/* A subtle global footer */}

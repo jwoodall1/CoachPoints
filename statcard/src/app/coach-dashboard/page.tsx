@@ -1,10 +1,10 @@
 'use client';
 
 import { FormEvent, useEffect, useState } from 'react';
-import { createClient, User } from '@supabase/supabase-js';
+import { User } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
+import { supabase } from '@/lib/supabase';
 
 type CoachProfile = { firstName: string; lastName: string; username: string; collegeUniversity: string; sport: string; bio: string; instagramUrl: string; tiktokUrl: string; youtubeUrl: string; xUrl: string };
 const emptyProfile: CoachProfile = { firstName: '', lastName: '', username: '', collegeUniversity: '', sport: '', bio: '', instagramUrl: '', tiktokUrl: '', youtubeUrl: '', xUrl: '' };

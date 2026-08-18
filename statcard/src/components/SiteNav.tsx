@@ -25,7 +25,8 @@ export default function SiteNav() {
       const { data } = isCoach
         ? await supabase.from('coachprofiles').select('username').eq('id', session.user.id).maybeSingle()
         : await supabase.from('profiles').select('username').eq('id', session.user.id).maybeSingle();
-      setUsername(data?.username ?? session.user.user_metadata.username ?? null);
+      // Auth metadata can contain a username before the profile row is saved.
+      setUsername(data?.username ?? null);
       setAccountType(isCoach ? 'coach' : 'athlete');
       setReady(true);
     };

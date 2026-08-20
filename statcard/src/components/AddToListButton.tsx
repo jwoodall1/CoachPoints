@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import { useAuth } from '@/components/AuthProvider';
 import { supabase } from '@/lib/supabase';
@@ -18,7 +19,9 @@ export default function AddToListButton({ athleteId, prominent = false }: { athl
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [popoverPosition, setPopoverPosition] = useState({ top: 0, left: 0 });
   const pickerRef = useRef<HTMLDivElement>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
   const closePicker = useCallback(() => setOpen(false), []);
   const isCoach = user?.user_metadata.account_type === 'coach';
 
@@ -27,7 +30,8 @@ export default function AddToListButton({ athleteId, prominent = false }: { athl
 
     // Only the open picker needs a document-level listener.
     const handleOutsideClick = (event: PointerEvent) => {
-      if (pickerRef.current && !pickerRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      if (pickerRef.current && !pickerRef.current.contains(target) && !popoverRef.current?.contains(target)) {
         closePicker();
         if (closeActivePicker === closePicker) closeActivePicker = null;
       }
@@ -35,6 +39,35 @@ export default function AddToListButton({ athleteId, prominent = false }: { athl
     document.addEventListener('pointerdown', handleOutsideClick);
     return () => document.removeEventListener('pointerdown', handleOutsideClick);
   }, [closePicker, open]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const positionPopover = () => {
+      const anchor = pickerRef.current;
+      const popover = popoverRef.current;
+      if (!anchor || !popover) return;
+
+      const anchorRect = anchor.getBoundingClientRect();
+      const popoverWidth = Math.min(288, window.innerWidth - 32);
+      const gap = 8;
+      const edge = 16;
+      const left = Math.min(Math.max(edge, anchorRect.right - popoverWidth), window.innerWidth - popoverWidth - edge);
+      const below = anchorRect.bottom + gap;
+      const above = anchorRect.top - popover.offsetHeight - gap;
+      const top = below + popover.offsetHeight <= window.innerHeight - edge || above < edge ? below : above;
+
+      setPopoverPosition({ top: Math.max(edge, top), left });
+    };
+
+    positionPopover();
+    window.addEventListener('resize', positionPopover);
+    window.addEventListener('scroll', positionPopover, true);
+    return () => {
+      window.removeEventListener('resize', positionPopover);
+      window.removeEventListener('scroll', positionPopover, true);
+    };
+  }, [error, lists, loading, open]);
 
   const loadLists = async () => {
     setLoading(true);
@@ -106,12 +139,12 @@ export default function AddToListButton({ athleteId, prominent = false }: { athl
     <button type="button" onClick={openPicker} className={prominent ? 'rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-600/20 transition hover:bg-emerald-700' : 'rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700 transition hover:bg-emerald-100'}>
       {open ? 'Close list picker' : '+ Add to list'}
     </button>
-    {open && <div className="absolute right-0 z-20 mt-2 w-72 rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-xl shadow-slate-300/40">
+    {open && typeof document !== 'undefined' && createPortal(<div ref={popoverRef} style={popoverPosition} className="fixed z-50 max-h-[calc(100vh-2rem)] w-72 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-xl shadow-slate-300/40">
       <p className="text-sm font-bold text-slate-950">Save this athlete</p>
       <p className="mt-1 text-xs leading-5 text-slate-500">Choose an existing list or create a new one.</p>
       {loading ? <p className="mt-4 text-sm text-slate-500">Loading lists…</p> : lists.length ? <div className="mt-4 space-y-2">{lists.map((list) => { const selected = memberListIds.includes(list.id); return <button key={list.id} type="button" disabled={saving !== null} onClick={() => toggleMembership(list)} className="flex w-full items-center justify-between rounded-xl border border-slate-200 px-3 py-2.5 text-left text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"><span className="truncate">{list.name}</span><span className={selected ? 'text-emerald-600' : 'text-slate-300'}>{saving === list.id ? '…' : selected ? '✓' : '+'}</span></button>; })}</div> : <p className="mt-4 rounded-xl bg-slate-50 px-3 py-3 text-xs text-slate-500">You have not created any lists yet.</p>}
       <div className="mt-4 flex gap-2"><input value={newListName} onChange={(event) => setNewListName(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') createList(); }} placeholder="New list name" className="input min-w-0 flex-1 text-sm" maxLength={80} /><button type="button" disabled={!newListName.trim() || saving !== null} onClick={createList} className="rounded-xl bg-slate-950 px-3 py-2 text-xs font-bold text-white disabled:opacity-50">{saving === 'new' ? '…' : 'Create'}</button></div>
       {error && <p role="alert" className="mt-3 text-xs font-medium text-rose-600">{error}</p>}
-    </div>}
+    </div>, document.body)}
   </div>;
 }

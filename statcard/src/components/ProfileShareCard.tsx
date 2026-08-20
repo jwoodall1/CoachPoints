@@ -1,19 +1,35 @@
 'use client';
 /* eslint-disable @next/next/no-img-element -- QR code is generated as a local data URL. */
 
-import { useEffect, useMemo, useState } from 'react';
-import QRCode from 'qrcode';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 
+const subscribeToOrigin = () => () => undefined;
+
+/** Generates copyable profile links and QR codes after the page hydrates. */
 export default function ProfileShareCard({ username }: { username: string }) {
-  const url = useMemo(() => typeof window === 'undefined' ? '' : `${window.location.origin}/${username}`, [username]);
+  // The server snapshot avoids a server/client hydration mismatch around window.location.
+  const origin = useSyncExternalStore(subscribeToOrigin, () => window.location.origin, () => '');
+  const url = origin ? `${origin}/${username}` : '';
   const [qrCode, setQrCode] = useState('');
   const [copied, setCopied] = useState(false);
   const [isQrExpanded, setIsQrExpanded] = useState(false);
+  const copyTimer = useRef<number | null>(null);
 
   useEffect(() => {
-    const profileUrl = `${window.location.origin}/${username}`;
-    QRCode.toDataURL(profileUrl, { width: 280, margin: 1, color: { dark: '#0f172a', light: '#ffffff' } }).then(setQrCode);
-  }, [username]);
+    if (!url) return;
+    let active = true;
+
+    // QRCode is loaded on demand so its implementation stays out of initial page JS.
+    void import('qrcode')
+      .then(({ default: QRCode }) => QRCode.toDataURL(url, { width: 280, margin: 1, color: { dark: '#0f172a', light: '#ffffff' } }))
+      .then((dataUrl) => {
+        if (active) setQrCode(dataUrl);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [url]);
 
   useEffect(() => {
     if (!isQrExpanded) return;
@@ -27,8 +43,13 @@ export default function ProfileShareCard({ username }: { username: string }) {
   const copyLink = async () => {
     await navigator.clipboard.writeText(url);
     setCopied(true);
-    window.setTimeout(() => setCopied(false), 1800);
+    if (copyTimer.current) window.clearTimeout(copyTimer.current);
+    copyTimer.current = window.setTimeout(() => setCopied(false), 1800);
   };
+
+  useEffect(() => () => {
+    if (copyTimer.current) window.clearTimeout(copyTimer.current);
+  }, []);
 
   return <aside className="rounded-3xl border border-slate-200 bg-slate-50 p-6 sm:p-7">
     <p className="text-xs font-bold uppercase tracking-[0.16em] text-blue-700">Share this NextUp profile</p>

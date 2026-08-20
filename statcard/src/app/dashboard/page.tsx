@@ -1,28 +1,23 @@
 'use client';
 
-import { FormEvent, useEffect, useState } from 'react';
-import { User } from '@supabase/supabase-js';
+import dynamic from 'next/dynamic';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import UploadModal from '@/components/UploadModal';
-import ProfileAvatar from '@/components/ProfileAvatar';
 
+import { useAuth } from '@/components/AuthProvider';
+import ProfileAvatar from '@/components/ProfileAvatar';
 import { supabase } from '@/lib/supabase';
-import { getPositions } from '@/lib/sports';
+import { collegiateSports, getPositions } from '@/lib/sports';
+
+// The image cropper and its canvas logic are downloaded only after this route needs them.
+const UploadModal = dynamic(() => import('@/components/UploadModal'));
+
 type Stat = { id: string; label: string; value: string };
 type AccountType = 'athlete' | 'coach';
 type Profile = { firstName: string; lastName: string; username: string; accountType: AccountType; height: string; weight: string; graduatingClass: string; highSchool: string; gpa: string; sport: string; position: string; bio: string; hudl_highlight_url: string; phone_number: string; contact_email: string; instagram_url: string; tiktok_url: string; youtube_url: string; x_url: string; stats: Stat[]; measurables: Stat[] };
 const emptyProfile: Profile = { firstName: '', lastName: '', username: '', accountType: 'athlete', height: '', weight: '', graduatingClass: '', highSchool: '', gpa: '', sport: '', position: '', bio: '', hudl_highlight_url: '', phone_number: '', contact_email: '', instagram_url: '', tiktok_url: '', youtube_url: '', x_url: '', stats: [], measurables: [] };
 
-const collegiateSports = [
-  'Baseball', 'Beach volleyball', 'Fencing', 'Field hockey', 'Football', 'Gymnastics', 'Softball',
-  "Men's basketball", "Women's basketball", "Men's cross country", "Women's cross country",
-  "Men's golf", "Women's golf", "Men's ice hockey", "Women's ice hockey", "Men's lacrosse", "Women's lacrosse",
-  "Men's rowing", "Women's rowing", "Men's soccer", "Women's soccer", "Men's swimming and diving",
-  "Women's swimming and diving", "Men's tennis", "Women's tennis", "Men's track and field",
-  "Women's track and field", "Men's volleyball", "Women's volleyball", "Men's water polo", "Women's water polo",
-  "Men's wrestling", "Women's wrestling", 'Other',
-] as const;
-
+// Accept only Hudl player URLs that the public profile knows how to embed.
 const isValidHudlUrl = (value: string) => {
   if (!value.trim()) return true;
   try {
@@ -33,12 +28,14 @@ const isValidHudlUrl = (value: string) => {
   }
 };
 
+// Convert Supabase JSON objects into editable rows with stable React keys.
 const asStats = (stats: unknown): Stat[] => stats && typeof stats === 'object' && !Array.isArray(stats)
   ? Object.entries(stats as Record<string, unknown>).map(([label, value]) => ({ id: crypto.randomUUID(), label, value: String(value) })) : [];
 
+/** Loads, edits, and saves the signed-in athlete's complete public profile. */
 export default function DashboardPage() {
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
+  const { ready, user } = useAuth();
   const [profile, setProfile] = useState<Profile>(emptyProfile);
   const [savedProfile, setSavedProfile] = useState<Profile>(emptyProfile);
   const [isEditing, setIsEditing] = useState(false);
@@ -48,26 +45,35 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
-  const hudlUrlError = profile.hudl_highlight_url.trim() && !isValidHudlUrl(profile.hudl_highlight_url)
+  const hudlUrlError = useMemo(() => profile.hudl_highlight_url.trim() && !isValidHudlUrl(profile.hudl_highlight_url)
     ? 'Enter a valid Hudl video link, such as http://www.hudl.com/v/2JrhL4 or https://www.hudl.com/video/....'
-    : null;
+    : null, [profile.hudl_highlight_url]);
 
   useEffect(() => {
+    if (!ready) return;
+    if (!user) {
+      router.replace('/login');
+      return;
+    }
+    if (user.user_metadata.account_type === 'coach') {
+      router.replace('/coach-dashboard');
+      return;
+    }
+    let active = true;
+
+    // Profile data is loaded after the shared auth provider resolves the current user.
     const load = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return router.replace('/login');
-      if (session.user.user_metadata.account_type === 'coach') return router.replace('/coach-dashboard');
-      setUser(session.user);
-      const accountType: AccountType = session.user.user_metadata.account_type === 'coach' ? 'coach' : 'athlete';
+      const accountType: AccountType = user.user_metadata.account_type === 'coach' ? 'coach' : 'athlete';
       let data: { first_name?: string | null; last_name?: string | null; username?: string | null; height?: string | null; weight?: string | null; graduating_class?: string | null; high_school?: string | null; gpa?: string | null; sport?: string | null; position?: string | null; bio?: string | null; avatar_url?: string | null; hudl_highlight_url?: string | null; phone_number?: string | null; contact_email?: string | null; instagram_url?: string | null; tiktok_url?: string | null; youtube_url?: string | null; x_url?: string | null; stats?: unknown; measurables?: unknown } | null = null;
       if (accountType === 'coach') {
-        const result = await supabase.from('coachprofiles').select('first_name, last_name, username, sport, bio, avatar_url, instagram_url, tiktok_url, youtube_url, x_url').eq('id', session.user.id).maybeSingle();
+        const result = await supabase.from('coachprofiles').select('first_name, last_name, username, sport, bio, avatar_url, instagram_url, tiktok_url, youtube_url, x_url').eq('id', user.id).maybeSingle();
         data = result.data;
       } else {
-        const result = await supabase.from('profiles').select('first_name, last_name, username, height, weight, graduating_class, high_school, gpa, sport, position, bio, avatar_url, hudl_highlight_url, phone_number, contact_email, instagram_url, tiktok_url, youtube_url, x_url, stats, measurables').eq('id', session.user.id).maybeSingle();
+        const result = await supabase.from('profiles').select('first_name, last_name, username, height, weight, graduating_class, high_school, gpa, sport, position, bio, avatar_url, hudl_highlight_url, phone_number, contact_email, instagram_url, tiktok_url, youtube_url, x_url, stats, measurables').eq('id', user.id).maybeSingle();
         data = result.data;
       }
-      const loaded: Profile = { firstName: data?.first_name ?? session.user.user_metadata.first_name ?? '', lastName: data?.last_name ?? session.user.user_metadata.last_name ?? '', username: data?.username ?? session.user.user_metadata.username ?? '', accountType, height: data?.height ?? '', weight: data?.weight ?? '', graduatingClass: data?.graduating_class ?? '', highSchool: data?.high_school ?? '', gpa: data?.gpa ?? '', sport: data?.sport ?? '', position: data?.position ?? '', bio: data?.bio ?? '', hudl_highlight_url: data?.hudl_highlight_url ?? '', phone_number: data?.phone_number ?? '', contact_email: data?.contact_email ?? session.user.email ?? '', instagram_url: data?.instagram_url ?? '', tiktok_url: data?.tiktok_url ?? '', youtube_url: data?.youtube_url ?? '', x_url: data?.x_url ?? '', stats: asStats(data?.stats), measurables: asStats(data?.measurables) };
+      if (!active) return;
+      const loaded: Profile = { firstName: data?.first_name ?? user.user_metadata.first_name ?? '', lastName: data?.last_name ?? user.user_metadata.last_name ?? '', username: data?.username ?? user.user_metadata.username ?? '', accountType, height: data?.height ?? '', weight: data?.weight ?? '', graduatingClass: data?.graduating_class ?? '', highSchool: data?.high_school ?? '', gpa: data?.gpa ?? '', sport: data?.sport ?? '', position: data?.position ?? '', bio: data?.bio ?? '', hudl_highlight_url: data?.hudl_highlight_url ?? '', phone_number: data?.phone_number ?? '', contact_email: data?.contact_email ?? user.email ?? '', instagram_url: data?.instagram_url ?? '', tiktok_url: data?.tiktok_url ?? '', youtube_url: data?.youtube_url ?? '', x_url: data?.x_url ?? '', stats: asStats(data?.stats), measurables: asStats(data?.measurables) };
       setProfile(loaded);
       setSavedProfile(loaded);
       const avatarPath = loaded.username ? `${loaded.username}/profile.png` : '';
@@ -76,8 +82,11 @@ export default function DashboardPage() {
       setSavedAvatarUrl(data?.avatar_url ?? (avatarPath ? publicUrl : null));
       setLoading(false);
     };
-    load();
-  }, [router]);
+    void load();
+    return () => {
+      active = false;
+    };
+  }, [ready, router, user]);
 
   const update = <K extends keyof Profile>(key: K, value: Profile[K]) => setProfile((current) => key === 'sport' ? { ...current, sport: value as string, position: '' } : { ...current, [key]: value });
   const updateStat = (id: string, key: 'label' | 'value', value: string) => update('stats', profile.stats.map((stat) => stat.id === id ? { ...stat, [key]: value } : stat));
@@ -155,6 +164,7 @@ export default function DashboardPage() {
   </div></main>;
 }
 
+/** Renders a standard dashboard input or the curated sport selector. */
 function Input({ label, value, onChange, placeholder, hint, required = false, type = 'text', inputMode }: { label: string; value: string; onChange: (value: string) => void; placeholder: string; hint?: string; required?: boolean; type?: string; inputMode?: 'decimal' | 'email' | 'tel' | 'text' }) {
   return <label className="block text-sm font-semibold text-slate-700"><span className="mb-2 block">{label}</span>{label === 'Sport' ? <select value={value} onChange={(event) => onChange(event.target.value)} className="input [&:disabled]:appearance-none" aria-label="Sport"><option value="">Select a sport</option>{collegiateSports.map((sport) => <option key={sport} value={sport}>{sport}</option>)}</select> : <input type={type} inputMode={inputMode} value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} required={required} className="input" />}{hint && <span className="mt-2 block text-xs font-normal text-slate-500">{hint}</span>}</label>;
 }

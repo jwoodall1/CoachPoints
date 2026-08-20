@@ -8,10 +8,12 @@ import { useRouter, useSearchParams } from 'next/navigation';
 type Mode = 'sign-in' | 'sign-up';
 type AccountType = 'athlete' | 'coach';
 
+/** Keeps search-parameter access inside Suspense as required by the App Router. */
 export default function LoginPage() {
   return <Suspense fallback={<main className="grid min-h-screen place-items-center bg-slate-950 text-sm font-medium text-white">Loading…</main>}><LoginForm /></Suspense>;
 }
 
+/** Handles athlete and coach sign-in or registration against Supabase Auth. */
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -71,12 +73,12 @@ function LoginForm() {
         setMessage('Your account is ready. Check your email to confirm it, then sign in.');
       }
     } else {
-      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
 
       if (signInError) setError(signInError.message);
       else {
-        const { data: { user } } = await supabase.auth.getUser();
-        const signedInType = user?.user_metadata.account_type === 'coach' ? 'coach' : 'athlete';
+        // signInWithPassword already returns the verified user; avoid a second auth request.
+        const signedInType = data.user?.user_metadata.account_type === 'coach' ? 'coach' : 'athlete';
         router.push(signedInType === 'coach' ? '/coach-dashboard' : '/dashboard');
       }
     }
@@ -91,7 +93,7 @@ function LoginForm() {
       <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,_#1d4ed8_0%,_transparent_32%),radial-gradient(circle_at_bottom_right,_#0f766e_0%,_transparent_28%)] opacity-60" />
       <section className="w-full max-w-md rounded-3xl border border-white/15 bg-white p-6 shadow-2xl shadow-slate-950/40 sm:p-8">
         <div className="mb-8 text-center">
-          <Image src="/athlio-mark.png" alt="Athlio" width={96} height={64} className="mx-auto mb-5 size-12 rounded-2xl object-cover shadow-lg shadow-blue-600/30" priority />
+          <Image src="/athlio-mark.png" alt="Athlio" width={96} height={64} className="mx-auto mb-5 size-12 rounded-2xl object-cover shadow-lg shadow-blue-600/30" preload />
           <h1 className="text-3xl font-bold tracking-tight text-slate-950">Welcome to Athlio</h1>
           <p className="mt-2 text-sm leading-6 text-slate-500">Manage your {accountType} profile and share your progress with confidence.</p>
         </div>
@@ -126,6 +128,7 @@ function LoginForm() {
   );
 }
 
+/** Gives every authentication field a consistent label and layout. */
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return <label className="block text-sm font-medium text-slate-700"><span className="mb-2 block">{label}</span>{children}</label>;
 }

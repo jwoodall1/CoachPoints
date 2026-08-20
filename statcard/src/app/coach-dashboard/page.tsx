@@ -1,17 +1,18 @@
 'use client';
 
 import { FormEvent, useEffect, useState } from 'react';
-import { User } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 
+import { useAuth } from '@/components/AuthProvider';
 import { supabase } from '@/lib/supabase';
 
 type CoachProfile = { firstName: string; lastName: string; username: string; collegeUniversity: string; sport: string; bio: string; phoneNumber: string; contactEmail: string; instagramUrl: string; tiktokUrl: string; youtubeUrl: string; xUrl: string };
 const emptyProfile: CoachProfile = { firstName: '', lastName: '', username: '', collegeUniversity: '', sport: '', bio: '', phoneNumber: '', contactEmail: '', instagramUrl: '', tiktokUrl: '', youtubeUrl: '', xUrl: '' };
 
+/** Loads, edits, and saves the signed-in coach's public profile. */
 export default function CoachDashboardPage() {
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
+  const { ready, user } = useAuth();
   const [profile, setProfile] = useState<CoachProfile>(emptyProfile);
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -19,17 +20,29 @@ export default function CoachDashboardPage() {
   const [notice, setNotice] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!ready) return;
+    if (!user) {
+      router.replace('/login?role=coach');
+      return;
+    }
+    if (user.user_metadata.account_type !== 'coach') {
+      router.replace('/dashboard');
+      return;
+    }
+    let active = true;
+
+    // The dashboard requests only fields used by the coach form.
     const load = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return router.replace('/login?role=coach');
-      if (session.user.user_metadata.account_type !== 'coach') return router.replace('/dashboard');
-      setUser(session.user);
-      const { data } = await supabase.from('coachprofiles').select('first_name, last_name, username, college_university, sport, bio, phone_number, contact_email, instagram_url, tiktok_url, youtube_url, x_url').eq('id', session.user.id).maybeSingle();
-      setProfile({ firstName: data?.first_name ?? session.user.user_metadata.first_name ?? '', lastName: data?.last_name ?? session.user.user_metadata.last_name ?? '', username: data?.username ?? session.user.user_metadata.username ?? '', collegeUniversity: data?.college_university ?? '', sport: data?.sport ?? '', bio: data?.bio ?? '', phoneNumber: data?.phone_number ?? '', contactEmail: data?.contact_email ?? session.user.email ?? '', instagramUrl: data?.instagram_url ?? '', tiktokUrl: data?.tiktok_url ?? '', youtubeUrl: data?.youtube_url ?? '', xUrl: data?.x_url ?? '' });
+      const { data } = await supabase.from('coachprofiles').select('first_name, last_name, username, college_university, sport, bio, phone_number, contact_email, instagram_url, tiktok_url, youtube_url, x_url').eq('id', user.id).maybeSingle();
+      if (!active) return;
+      setProfile({ firstName: data?.first_name ?? user.user_metadata.first_name ?? '', lastName: data?.last_name ?? user.user_metadata.last_name ?? '', username: data?.username ?? user.user_metadata.username ?? '', collegeUniversity: data?.college_university ?? '', sport: data?.sport ?? '', bio: data?.bio ?? '', phoneNumber: data?.phone_number ?? '', contactEmail: data?.contact_email ?? user.email ?? '', instagramUrl: data?.instagram_url ?? '', tiktokUrl: data?.tiktok_url ?? '', youtubeUrl: data?.youtube_url ?? '', xUrl: data?.x_url ?? '' });
       setLoading(false);
     };
-    load();
-  }, [router]);
+    void load();
+    return () => {
+      active = false;
+    };
+  }, [ready, router, user]);
 
   const update = <K extends keyof CoachProfile>(key: K, value: CoachProfile[K]) => setProfile((current) => ({ ...current, [key]: value }));
   const save = async (event: FormEvent<HTMLFormElement>) => {
@@ -51,6 +64,7 @@ export default function CoachDashboardPage() {
   </div></main>;
 }
 
+/** Renders one consistently styled coach-profile input. */
 function Field({ label, value, onChange, placeholder, disabled, required = false }: { label: string; value: string; onChange: (value: string) => void; placeholder: string; disabled: boolean; required?: boolean }) {
   return <label className="block text-sm font-semibold text-slate-700"><span className="mb-2 block">{label}</span><input value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} required={required} disabled={disabled} className="input disabled:cursor-not-allowed disabled:bg-slate-100" /></label>;
 }

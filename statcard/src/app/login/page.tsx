@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 
 type Mode = 'sign-in' | 'sign-up';
 type AccountType = 'athlete' | 'coach';
+const reservedUsernames = new Set(['api', 'coach-dashboard', 'coach-lists', 'dashboard', 'friends', 'login']);
 
 /** Keeps search-parameter access inside Suspense as required by the App Router. */
 export default function LoginPage() {
@@ -45,6 +46,11 @@ function LoginForm() {
       const publicUsername = username.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
       if (publicUsername.length < 3) {
         setError('Choose a username with at least 3 letters or numbers.');
+        setLoading(false);
+        return;
+      }
+      if (reservedUsernames.has(publicUsername)) {
+        setError('That username is reserved by Athlio. Please choose another.');
         setLoading(false);
         return;
       }

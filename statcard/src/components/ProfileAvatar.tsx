@@ -7,7 +7,7 @@ import { useState } from 'react';
 type ProfileAvatarProps = {
   name: string;
   preload?: boolean;
-  size?: 'small' | 'large';
+  size?: 'compact' | 'small' | 'large';
   src: string;
 };
 
@@ -27,6 +27,7 @@ function canOptimizeAvatar(src: string) {
 export default function ProfileAvatar({ src, name, size = 'large', preload = false }: ProfileAvatarProps) {
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
   const unavailable = failedSrc === src;
-  const dimensions = size === 'large' ? 'size-20 text-3xl' : 'size-20 text-xl';
-  return <div className={`relative grid shrink-0 place-items-center overflow-hidden rounded-full bg-slate-100 font-bold text-slate-400 ${dimensions}`}>{!unavailable && (canOptimizeAvatar(src) ? <Image src={src} alt={`${name}'s profile`} fill sizes="80px" className="object-cover" onError={() => setFailedSrc(src)} preload={preload} /> : <img src={src} alt={`${name}'s profile`} className="size-full object-cover" onError={() => setFailedSrc(src)} />)}{unavailable && name.charAt(0).toUpperCase()}</div>;
+  const dimensions = size === 'compact' ? 'size-14 text-lg' : size === 'large' ? 'size-20 text-3xl' : 'size-20 text-xl';
+  const imageSize = size === 'compact' ? '56px' : '80px';
+  return <div className={`relative grid shrink-0 place-items-center overflow-hidden rounded-full bg-slate-100 font-bold text-slate-400 ${dimensions}`}>{!unavailable && (canOptimizeAvatar(src) ? <Image src={src} alt={`${name}'s profile`} fill sizes={imageSize} className="object-cover" onError={() => setFailedSrc(src)} preload={preload} /> : <img src={src} alt={`${name}'s profile`} className="size-full object-cover" onError={() => setFailedSrc(src)} />)}{unavailable && name.charAt(0).toUpperCase()}</div>;
 }

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/components/AuthProvider";
+import { PresenceProvider } from "@/components/PresenceProvider";
 import SiteNav from "@/components/SiteNav";
 
 // These defaults describe every page unless a route supplies more specific metadata.
@@ -19,11 +20,13 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <AuthProvider>
-          <SiteNav />
-          {children}
-          <footer className="py-6 text-center text-sm text-gray-400">
-            Powered by Athlio
-          </footer>
+          <PresenceProvider>
+            <SiteNav />
+            {children}
+            <footer className="py-6 text-center text-sm text-gray-400">
+              Powered by Athlio
+            </footer>
+          </PresenceProvider>
         </AuthProvider>
       </body>
     </html>

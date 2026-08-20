@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { useEffect, useState } from 'react';
 
 import { useAuth } from '@/components/AuthProvider';
+import MessageNavLink from '@/components/MessageNavLink';
 import { supabase } from '@/lib/supabase';
 
 type ProfileIdentity = { userId: string; username: string | null };
@@ -46,6 +47,7 @@ export default function SiteNav() {
         {ready && userId && username ? <>
           <Link href={accountType === 'coach' ? '/coach-dashboard' : '/dashboard'} className="rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950">Dashboard</Link>
           {accountType === 'coach' && <Link href="/coach-lists" className="rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950">Lists</Link>}
+          <MessageNavLink userId={userId} />
           <Link href="/friends" className="rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950">Friends</Link>
           <Link href={`/${username}`} className="whitespace-nowrap rounded-lg bg-slate-950 px-3 py-2 text-sm font-semibold text-white transition hover:bg-slate-800">My profile</Link>
         </> : null}

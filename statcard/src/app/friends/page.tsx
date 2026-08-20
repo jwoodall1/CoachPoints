@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { useAuth } from '@/components/AuthProvider';
+import { OnlineStatus } from '@/components/PresenceProvider';
 import ProfileAvatar from '@/components/ProfileAvatar';
 import { supabase } from '@/lib/supabase';
 
@@ -305,6 +306,7 @@ export default function FriendsPage() {
         </div>}
       </div> : <div id="friends-panel" role="tabpanel" aria-labelledby="friends-tab" tabIndex={0} className="outline-none">
         {friends.length === 0 ? <EmptyState title="No friends yet" description="Browse profiles and send a follow request. You’ll become friends when they follow you back." /> : <div className="divide-y divide-slate-100">{friends.map((connection) => <PersonRow key={connection.id} person={personFor(connection)}>
+          <Link href={`/messages/${personFor(connection).id}`} className="w-full rounded-xl bg-blue-600 px-4 py-2.5 text-center text-sm font-semibold text-white transition hover:bg-blue-700 sm:w-auto">Message</Link>
           <button type="button" disabled={actionId !== null} onClick={() => void deleteConnection(connection, true)} className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700 disabled:cursor-wait disabled:opacity-50 sm:w-auto">{actionId === connection.id ? 'Removing…' : 'Remove'}</button>
         </PersonRow>)}</div>}
       </div>}
@@ -321,7 +323,7 @@ function PersonRow({ person, children }: { person: Person; children: React.React
   const name = displayName(person);
   const identity = <div className="flex min-w-0 items-center gap-4">
     {person.avatarUrl ? <ProfileAvatar src={person.avatarUrl} name={name} size="compact" /> : <div aria-hidden="true" className="grid size-14 shrink-0 place-items-center rounded-full bg-slate-100 text-lg font-bold text-slate-400">{name.charAt(0).toUpperCase()}</div>}
-    <div className="min-w-0"><p className="truncate font-bold text-slate-950">{name}</p>{person.username && <p className="truncate text-sm text-slate-500">@{person.username}</p>}<div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">{person.accountType && <span className={`font-bold uppercase tracking-wide ${person.accountType === 'coach' ? 'text-emerald-700' : 'text-blue-700'}`}>{person.accountType}</span>}{person.sport && <span>{person.sport}</span>}{person.detail && <span className="truncate">{person.detail}</span>}</div></div>
+    <div className="min-w-0"><p className="truncate font-bold text-slate-950">{name}</p>{person.username && <p className="truncate text-sm text-slate-500">@{person.username}</p>}<div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500"><OnlineStatus userId={person.id} compact />{person.accountType && <span className={`font-bold uppercase tracking-wide ${person.accountType === 'coach' ? 'text-emerald-700' : 'text-blue-700'}`}>{person.accountType}</span>}{person.sport && <span>{person.sport}</span>}{person.detail && <span className="truncate">{person.detail}</span>}</div></div>
   </div>;
 
   return <div className="flex flex-col gap-4 px-5 py-5 sm:flex-row sm:items-center sm:px-6">{person.username ? <Link href={`/${encodeURIComponent(person.username)}`} className="min-w-0 rounded-xl outline-none transition hover:opacity-75 focus-visible:ring-4 focus-visible:ring-blue-100 sm:flex-1" aria-label={`View ${name}'s profile`}>{identity}</Link> : <div className="min-w-0 sm:flex-1">{identity}</div>}<div className="flex w-full gap-2 sm:ml-auto sm:w-auto sm:shrink-0">{children}</div></div>;

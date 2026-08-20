@@ -238,7 +238,10 @@ export default function FriendsPage() {
       if (deleteError) setError(deleteError.message);
       else {
         await reload(false);
-        if (deleted !== true && mountedRef.current && currentUserRef.current === userId) {
+        // A false result means the row changed or was already removed. A
+        // null result is also valid for older deployments whose RPC returns
+        // void; reload() above is the source of truth in that case.
+        if (deleted === false && mountedRef.current && currentUserRef.current === userId) {
           setError('This connection changed before your action completed. Its current status is shown now.');
         }
       }

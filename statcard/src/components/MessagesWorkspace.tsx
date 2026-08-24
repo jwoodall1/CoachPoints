@@ -45,6 +45,13 @@ type InboxSnapshot = { items: InboxItem[]; error: string | null };
 
 const messageColumns = 'id, sender_id, recipient_id, body, created_at, read_at';
 
+function resolveAvatarUrl(username: string | null, storedUrl: string | null) {
+  if (storedUrl) return storedUrl;
+  if (!username) return null;
+  const { data } = supabase.storage.from('avatars').getPublicUrl(`${username}/profile.png`);
+  return data.publicUrl;
+}
+
 function displayName(person: Person) {
   return [person.firstName, person.lastName].filter(Boolean).join(' ') || person.username || 'Athlio member';
 }
@@ -72,7 +79,7 @@ async function loadInbox(): Promise<InboxSnapshot> {
       username: profile.username,
       firstName: profile.first_name ?? '',
       lastName: profile.last_name ?? '',
-      avatarUrl: profile.avatar_url,
+      avatarUrl: resolveAvatarUrl(profile.username, profile.avatar_url),
       accountType: 'athlete' as const,
     })),
     ...(coachResult.data ?? []).map((profile) => ({
@@ -80,7 +87,7 @@ async function loadInbox(): Promise<InboxSnapshot> {
       username: profile.username,
       firstName: profile.first_name ?? '',
       lastName: profile.last_name ?? '',
-      avatarUrl: profile.avatar_url,
+      avatarUrl: resolveAvatarUrl(profile.username, profile.avatar_url),
       accountType: 'coach' as const,
     })),
   ];

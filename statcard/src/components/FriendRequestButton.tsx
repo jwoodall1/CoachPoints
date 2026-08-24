@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { Check, MessageCircle, UserPlus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import { useAuth } from '@/components/AuthProvider';
@@ -147,9 +148,9 @@ export default function FriendRequestButton({ targetUserId, targetName }: { targ
               : `Send a friend request to ${targetName}`;
 
   return <div className="text-center">
-    <div className="flex flex-wrap justify-center gap-2"><button type="button" onClick={updateConnection} disabled={loading || saving || unavailable} className={`rounded-xl px-5 py-2.5 text-sm font-semibold transition disabled:cursor-wait disabled:opacity-60 ${buttonClass}`} aria-label={actionLabel} title={isOutgoing || isFriend ? actionLabel : undefined}>
-      {isFriend && <span aria-hidden="true" className="mr-1.5">&#10003;</span>}{label}
-    </button>{isFriend && <Link href={`/messages/${targetUserId}`} className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-950/30 transition hover:bg-blue-500">Message</Link>}</div>
+    <div className="flex flex-wrap justify-center gap-2"><button type="button" onClick={updateConnection} disabled={loading || saving || unavailable} className={`inline-flex min-h-11 items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-extrabold transition disabled:cursor-wait disabled:opacity-60 ${buttonClass}`} aria-label={actionLabel} title={isOutgoing || isFriend ? actionLabel : undefined}>
+      {isFriend ? <Check className="size-4" /> : <UserPlus className="size-4" />}{label}
+    </button>{isFriend && <Link href={`/messages/${targetUserId}`} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-extrabold text-white shadow-lg shadow-brand-950/30 transition hover:-translate-y-0.5 hover:bg-brand-500"><MessageCircle className="size-4" />Message</Link>}</div>
     {isFriend && <div className="mt-2"><OnlineStatus userId={targetUserId} compact /></div>}
     {error && <p role="alert" className="mt-2 max-w-56 text-xs font-medium text-rose-200">{error}</p>}
   </div>;

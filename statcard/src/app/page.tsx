@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
+import { ArrowRight, BarChart3, Check, Dumbbell, GraduationCap, MapPin, MessageCircle, Search, ShieldCheck, Sparkles, Trophy, UserRound, UsersRound } from 'lucide-react';
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useAuth } from '@/components/AuthProvider';
@@ -10,15 +11,13 @@ import ProfileAvatar from '@/components/ProfileAvatar';
 import { supabase } from '@/lib/supabase';
 import { getPositions } from '@/lib/sports';
 
-// Only coaches download the interactive list picker used by directory cards.
 const AddToListButton = dynamic(() => import('@/components/AddToListButton'));
 
 type Athlete = { id: string; first_name: string | null; last_name: string | null; username: string; avatar_url: string | null; sport: string | null; position?: string | null; graduating_class?: string | null; high_school?: string | null; college_university?: string | null; account_type: 'athlete' | 'coach' | null };
 type DirectoryState = { userId: string; profiles: Athlete[]; error: string | null };
-
 const EMPTY_PROFILES: Athlete[] = [];
 
-/** Shows the landing page to guests and the searchable profile directory to members. */
+/** Marketing home for guests and professional discovery workspace for members. */
 export default function HomePage() {
   const { ready, user } = useAuth();
   const [directory, setDirectory] = useState<DirectoryState | null>(null);
@@ -32,90 +31,103 @@ export default function HomePage() {
   const isSignedIn = Boolean(userId);
   const canManageLists = user?.user_metadata.account_type === 'coach';
   const isCurrentDirectory = directory?.userId === userId;
-  const athletes = isCurrentDirectory ? directory.profiles : EMPTY_PROFILES;
+  const profiles = isCurrentDirectory ? directory.profiles : EMPTY_PROFILES;
   const error = isCurrentDirectory ? directory.error : null;
   const loading = !ready || (isSignedIn && !isCurrentDirectory);
 
   useEffect(() => {
     if (!ready || !userId) return;
     let active = true;
-
-    // Both public profile tables are independent, so fetch them in parallel.
     const load = async () => {
       const [{ data, error: profilesError }, { data: coachData, error: coachesError }] = await Promise.all([
         supabase.from('profiles').select('id, first_name, last_name, username, avatar_url, sport, position, graduating_class, high_school').order('last_name', { ascending: true }).limit(1000),
         supabase.from('coachprofiles').select('id, first_name, last_name, username, avatar_url, sport, college_university').order('last_name', { ascending: true }).limit(1000),
       ]);
       if (!active) return;
-
-      if (profilesError || coachesError) {
-        setDirectory({ userId, profiles: [], error: 'Unable to load athlete and coach profiles right now.' });
-        return;
-      }
-
-      const profiles = [
+      if (profilesError || coachesError) return setDirectory({ userId, profiles: [], error: 'Unable to load athlete and coach profiles right now.' });
+      const loadedProfiles = [
         ...(data ?? []).map((athlete) => ({ ...athlete, account_type: 'athlete' as const })),
         ...(coachData ?? []).map((coach) => ({ ...coach, account_type: 'coach' as const })),
       ].filter((profile) => profile.username).sort((a, b) => (a.last_name ?? '').localeCompare(b.last_name ?? ''));
-      setDirectory({ userId, profiles, error: null });
+      setDirectory({ userId, profiles: loadedProfiles, error: null });
     };
     void load();
-
-    return () => {
-      active = false;
-    };
+    return () => { active = false; };
   }, [ready, userId]);
 
-  const sports = useMemo(() => Array.from(new Set(athletes.map((athlete) => athlete.sport?.trim()).filter((sport): sport is string => Boolean(sport)))).sort((a, b) => a.localeCompare(b)), [athletes]);
-  const positions = useMemo(() => Array.from(new Set(athletes.map((athlete) => athlete.position?.trim()).filter((position): position is string => Boolean(position)))).sort((a, b) => a.localeCompare(b)), [athletes]);
+  const sports = useMemo(() => uniqueSorted(profiles.map((profile) => profile.sport)), [profiles]);
+  const positions = useMemo(() => uniqueSorted(profiles.map((profile) => profile.position)), [profiles]);
+  const classYears = useMemo(() => uniqueSorted(profiles.map((profile) => profile.graduating_class)), [profiles]);
+  const highSchools = useMemo(() => uniqueSorted(profiles.map((profile) => profile.high_school)), [profiles]);
+  const colleges = useMemo(() => uniqueSorted(profiles.map((profile) => profile.college_university)), [profiles]);
   const availablePositions = sportFilter === 'all' ? positions : getPositions(sportFilter);
-  const classYears = useMemo(() => Array.from(new Set(athletes.map((athlete) => athlete.graduating_class?.trim()).filter((year): year is string => Boolean(year)))).sort(), [athletes]);
-  const highSchools = useMemo(() => Array.from(new Set(athletes.map((athlete) => athlete.high_school?.trim()).filter((school): school is string => Boolean(school)))).sort((a, b) => a.localeCompare(b)), [athletes]);
-  const colleges = useMemo(() => Array.from(new Set(athletes.map((athlete) => athlete.college_university?.trim()).filter((college): college is string => Boolean(college)))).sort((a, b) => a.localeCompare(b)), [athletes]);
-  // Compute filter results once per filter change and separate the two profile types.
   const { filteredAthletes, filteredCoaches } = useMemo(() => {
     const query = search.trim().toLowerCase();
-    const profiles = athletes.filter((athlete) => {
-      const name = getName(athlete).toLowerCase();
-      return (!query || name.includes(query) || athlete.username.toLowerCase().includes(query)) && (sportFilter === 'all' || athlete.sport === sportFilter) && (positionFilter === 'all' || athlete.position === positionFilter) && (classFilter === 'all' || athlete.graduating_class === classFilter) && (highSchoolFilter === 'all' || athlete.high_school === highSchoolFilter) && (collegeFilter === 'all' || athlete.college_university === collegeFilter);
+    const filtered = profiles.filter((profile) => {
+      const name = getName(profile).toLowerCase();
+      return (!query || name.includes(query) || profile.username.toLowerCase().includes(query)) && (sportFilter === 'all' || profile.sport === sportFilter) && (positionFilter === 'all' || profile.position === positionFilter) && (classFilter === 'all' || profile.graduating_class === classFilter) && (highSchoolFilter === 'all' || profile.high_school === highSchoolFilter) && (collegeFilter === 'all' || profile.college_university === collegeFilter);
     });
-    return {
-      filteredAthletes: profiles.filter((profile) => profile.account_type === 'athlete'),
-      filteredCoaches: profiles.filter((profile) => profile.account_type === 'coach'),
-    };
-  }, [athletes, search, sportFilter, positionFilter, classFilter, highSchoolFilter, collegeFilter]);
-  const clearBasicFilters = useCallback(() => {
-    setSearch('');
-    setSportFilter('all');
-    setPositionFilter('all');
-  }, []);
+    return { filteredAthletes: filtered.filter((profile) => profile.account_type === 'athlete'), filteredCoaches: filtered.filter((profile) => profile.account_type === 'coach') };
+  }, [profiles, search, sportFilter, positionFilter, classFilter, highSchoolFilter, collegeFilter]);
+  const clearFilters = useCallback(() => { setSearch(''); setSportFilter('all'); setPositionFilter('all'); setClassFilter('all'); setHighSchoolFilter('all'); setCollegeFilter('all'); }, []);
 
-  if (loading) return <main className="grid min-h-[calc(100vh-125px)] place-items-center bg-slate-50 text-sm font-medium text-slate-500">Loading Athlio…</main>;
-  if (!isSignedIn) return <main className="flex min-h-[calc(100vh-125px)] items-center justify-center bg-slate-50 p-4"><div className="max-w-xl text-center"><p className="text-sm font-bold uppercase tracking-[0.2em] text-blue-600">Athlio profiles, elevated</p><h1 className="mt-4 text-5xl font-extrabold tracking-tight text-slate-950 sm:text-6xl">Every stat tells a story.</h1><p className="mx-auto mt-6 max-w-md text-lg leading-8 text-slate-600">Athlio gives athletes and coaches one place to build, manage, and share a performance profile.</p><div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row"><Link href="/login?role=athlete" className="inline-flex rounded-xl bg-blue-600 px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-blue-200 transition hover:bg-blue-700">Athlete login / register</Link><Link href="/login?role=coach" className="inline-flex rounded-xl bg-slate-950 px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-slate-300 transition hover:bg-slate-800">Coach login / register</Link></div></div></main>;
+  if (loading) return <LoadingState label="Preparing Athlio…" />;
+  if (!isSignedIn) return <MarketingHome />;
 
-  return <main className="min-h-[calc(100vh-125px)] bg-slate-50 px-4 py-10 sm:px-6 lg:py-14"><div className="mx-auto max-w-5xl">
-    <header className="mb-8"><p className="text-sm font-bold uppercase tracking-[0.18em] text-blue-600">Athlete directory</p><h1 className="mt-2 text-4xl font-bold tracking-tight text-slate-950 sm:text-5xl">Explore Athlio</h1><p className="mt-3 max-w-2xl text-base leading-7 text-slate-600">Browse public athlete profiles and see the accomplishments behind every performance.</p></header>
-    {error ? <div className="rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm text-rose-700">{error}</div> : athletes.length === 0 ? <EmptyState /> : <>
-      <div className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-5"><label><span className="mb-2 block text-sm font-semibold text-slate-700">Position</span><select value={positionFilter} onChange={(event) => setPositionFilter(event.target.value)} className="input"><option value="all">All positions</option>{availablePositions.map((position) => <option key={position} value={position}>{position}</option>)}</select></label><label><span className="mb-2 block text-sm font-semibold text-slate-700">Class year</span><select value={classFilter} onChange={(event) => setClassFilter(event.target.value)} className="input"><option value="all">All class years</option>{classYears.map((year) => <option key={year} value={year}>{year}</option>)}</select></label><label><span className="mb-2 block text-sm font-semibold text-slate-700">High school</span><select value={highSchoolFilter} onChange={(event) => setHighSchoolFilter(event.target.value)} className="input"><option value="all">All high schools</option>{highSchools.map((school) => <option key={school} value={school}>{school}</option>)}</select></label><label><span className="mb-2 block text-sm font-semibold text-slate-700">College / university</span><select value={collegeFilter} onChange={(event) => setCollegeFilter(event.target.value)} className="input"><option value="all">All colleges</option>{colleges.map((college) => <option key={college} value={college}>{college}</option>)}</select></label><label><span className="mb-2 block text-sm font-semibold text-slate-700">Sport</span><select value={sportFilter} onChange={(event) => { const nextSport = event.target.value; setSportFilter(nextSport); if (nextSport !== 'all' && positionFilter !== 'all' && !getPositions(nextSport).includes(positionFilter)) setPositionFilter('all'); }} className="input"><option value="all">All sports</option>{sports.map((sport) => <option key={sport} value={sport}>{sport}</option>)}</select></label></div>
-      <section id="all-profiles" aria-labelledby="all-profiles-heading" className="mt-14 scroll-mt-6"><div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">The directory</p><h2 id="all-profiles-heading" className="mt-1 text-2xl font-bold tracking-tight text-slate-950">Athletes and coaches</h2><p className="mt-1 text-sm text-slate-500">{filteredAthletes.length} athletes · {filteredCoaches.length} coaches found</p></div><div className="flex w-full sm:w-auto sm:flex-1"><label className="relative block w-full sm:ml-8"><span className="sr-only">Search profiles</span><span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">⌕</span><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search by name or handle" className="input w-full pl-9" /></label></div></div><ProfileGroup title="Athlete profiles" profiles={filteredAthletes} emptyMessage="No athletes match these filters." onClear={clearBasicFilters} showListActions={canManageLists} /><ProfileGroup title="Coach profiles" profiles={filteredCoaches} emptyMessage="No coaches match these filters." onClear={clearBasicFilters} showListActions={false} /></section>
-    </>}
-  </div></main>;
+  return <main className="min-h-[calc(100vh-72px)] pb-20">
+    <section className="relative overflow-hidden bg-slate-950 py-14 text-white sm:py-18"><div className="athletic-grid absolute inset-0 opacity-70" /><div className="absolute -right-32 -top-36 size-96 rounded-full bg-brand-600/25 blur-3xl" /><div className="page-shell relative"><div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between"><div className="max-w-2xl"><p className="eyebrow text-brand-300">Athlio network</p><h1 className="mt-4 text-4xl font-black tracking-[-0.035em] sm:text-5xl">Discover the people<br className="hidden sm:block" /> moving sports forward.</h1><p className="mt-5 max-w-xl text-base leading-7 text-slate-300">Find athletes by performance and program fit. Connect with coaches, build your network, and start the right conversations.</p></div><div className="grid grid-cols-2 gap-3"><Metric value={filteredAthletes.length} label="Athletes" /><Metric value={filteredCoaches.length} label="Coaches" /></div></div></div></section>
+
+    <div className="page-shell -mt-7 relative z-10">
+      {error ? <div className="surface-card border-rose-200 bg-rose-50 p-5 text-sm font-medium text-rose-700">{error}</div> : profiles.length === 0 ? <EmptyState /> : <>
+        <section className="surface-card p-5 sm:p-6" aria-label="Directory filters"><div className="flex flex-col gap-4 lg:flex-row lg:items-end"><label className="relative block flex-1"><span className="mb-2 block text-xs font-extrabold uppercase tracking-wider text-slate-500">Search the network</span><Search className="pointer-events-none absolute bottom-3.5 left-3.5 size-4 text-slate-400" /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Name or @username" className="input pl-10" /></label><Filter label="Sport" value={sportFilter} onChange={(nextSport) => { setSportFilter(nextSport); if (nextSport !== 'all' && positionFilter !== 'all' && !getPositions(nextSport).includes(positionFilter)) setPositionFilter('all'); }} options={sports} allLabel="All sports" /><Filter label="Position" value={positionFilter} onChange={setPositionFilter} options={availablePositions} allLabel="All positions" /><button type="button" onClick={clearFilters} className="btn-secondary px-4">Reset</button></div><details className="group mt-4 border-t border-slate-100 pt-4"><summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-bold text-slate-600 hover:text-slate-950"><span className="grid size-7 place-items-center rounded-lg bg-slate-100"><GraduationCap className="size-4" /></span>More recruiting filters <span className="ml-auto text-xs font-semibold text-slate-400 group-open:hidden">Class, school & college</span></summary><div className="mt-4 grid gap-4 sm:grid-cols-3"><Filter label="Class year" value={classFilter} onChange={setClassFilter} options={classYears} allLabel="All classes" wide /><Filter label="High school" value={highSchoolFilter} onChange={setHighSchoolFilter} options={highSchools} allLabel="All high schools" wide /><Filter label="College / university" value={collegeFilter} onChange={setCollegeFilter} options={colleges} allLabel="All colleges" wide /></div></details></section>
+
+        <section id="all-profiles" className="scroll-mt-28 pt-12"><div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"><div><p className="eyebrow">Talent directory</p><h2 className="mt-2 text-3xl font-black tracking-tight text-slate-950">Athletes and coaches</h2><p className="mt-2 text-sm text-slate-500">{filteredAthletes.length + filteredCoaches.length} profiles match your search</p></div><div className="inline-flex self-start rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-500 shadow-sm"><Sparkles className="mr-1.5 size-3.5 text-brand-500" />Profiles update in real time</div></div><ProfileGroup title="Athletes" description="Performance, academics, film, and contact details." profiles={filteredAthletes} emptyMessage="No athletes match these filters." onClear={clearFilters} showListActions={canManageLists} /><ProfileGroup title="Coaches" description="Programs, recruiting contacts, and coaching profiles." profiles={filteredCoaches} emptyMessage="No coaches match these filters." onClear={clearFilters} showListActions={false} /></section>
+      </>}
+    </div>
+  </main>;
 }
 
-/** Uses a profile's full name when available and falls back to its username. */
-function getName(athlete: Athlete) { return [athlete.first_name, athlete.last_name].filter(Boolean).join(' ') || athlete.username; }
+function MarketingHome() {
+  const features = [
+    { icon: BarChart3, title: 'Tell the full story', text: 'Put stats, measurables, academics, film, and contact details in one polished profile.' },
+    { icon: UsersRound, title: 'Build real connections', text: 'Mutual follows keep your network intentional and conversations relevant.' },
+    { icon: MessageCircle, title: 'Move faster together', text: 'Real-time private messaging brings athletes and coaches into one focused space.' },
+  ];
+  return <main className="overflow-hidden bg-white">
+    <section className="relative isolate overflow-hidden bg-slate-950 text-white"><div className="athletic-grid absolute inset-0 -z-10" /><div className="absolute left-[6%] top-20 -z-10 size-80 rounded-full bg-brand-600/25 blur-3xl" /><div className="absolute bottom-0 right-[5%] -z-10 size-96 rounded-full bg-emerald-500/15 blur-3xl" /><div className="page-shell grid min-h-[680px] items-center gap-14 py-20 lg:grid-cols-[1.05fr_.95fr] lg:py-24"><div><div className="inline-flex items-center gap-2 rounded-full border border-brand-400/25 bg-brand-400/10 px-3 py-1.5 text-xs font-bold text-brand-200"><Sparkles className="size-3.5" />Built for the next opportunity</div><h1 className="mt-6 max-w-3xl text-5xl font-black leading-[0.98] tracking-[-0.045em] sm:text-6xl lg:text-7xl">Your game.<br /><span className="bg-gradient-to-r from-brand-300 via-blue-400 to-cyan-300 bg-clip-text text-transparent">Your story.</span><br />Your next move.</h1><p className="mt-7 max-w-xl text-lg leading-8 text-slate-300">Athlio gives athletes a professional presence and coaches a clearer path to the right talent—without the noise.</p><div className="mt-9 flex flex-col gap-3 sm:flex-row"><Link href="/login?role=athlete" className="btn-primary min-h-13 px-6 text-base">Create athlete profile <ArrowRight className="size-4" /></Link><Link href="/login?role=coach" className="inline-flex min-h-13 items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/8 px-6 py-3 text-base font-bold text-white transition hover:-translate-y-0.5 hover:bg-white/14">Explore as a coach</Link></div><div className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-xs font-semibold text-slate-400"><span className="flex items-center gap-1.5"><Check className="size-3.5 text-emerald-400" />Free to get started</span><span className="flex items-center gap-1.5"><ShieldCheck className="size-3.5 text-emerald-400" />Mutual connections</span><span className="flex items-center gap-1.5"><MessageCircle className="size-3.5 text-emerald-400" />Real-time messaging</span></div></div><HeroPreview /></div></section>
 
-/** Renders one profile category and defers off-screen card layout work. */
-const ProfileGroup = memo(function ProfileGroup({ title, profiles, emptyMessage, onClear, showListActions }: { title: string; profiles: Athlete[]; emptyMessage: string; onClear: () => void; showListActions: boolean }) {
-  return <section className="mt-8"><div className="mb-4 flex items-end justify-between gap-4"><h3 className="text-xl font-bold tracking-tight text-slate-950">{title}</h3><span className="text-sm text-slate-500">{profiles.length}</span></div>{profiles.length ? <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{profiles.map((profile) => <AthleteCard key={profile.username} athlete={profile} showListAction={showListActions} />)}</div> : <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-8 text-center"><p className="text-sm text-slate-500">{emptyMessage}</p><button type="button" onClick={onClear} className="mt-3 text-sm font-semibold text-blue-600 hover:text-blue-700">Clear filters</button></div>}</section>;
+    <section className="page-shell py-20 sm:py-24"><div className="mx-auto max-w-2xl text-center"><p className="eyebrow">One platform. Every advantage.</p><h2 className="mt-3 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">Designed for how sports connections actually happen.</h2><p className="mt-4 text-base leading-7 text-slate-600">Professional tools that keep the athlete at the center and give coaches the signal they need.</p></div><div className="mt-12 grid gap-5 md:grid-cols-3">{features.map(({ icon: Icon, title, text }) => <article key={title} className="surface-card group p-7 transition duration-300 hover:-translate-y-1 hover:shadow-card-hover"><div className="grid size-12 place-items-center rounded-2xl bg-brand-50 text-brand-700 transition group-hover:bg-brand-600 group-hover:text-white"><Icon className="size-5" /></div><h3 className="mt-6 text-lg font-extrabold text-slate-950">{title}</h3><p className="mt-2 text-sm leading-6 text-slate-600">{text}</p></article>)}</div></section>
+
+    <section className="border-y border-slate-200 bg-slate-50"><div className="page-shell grid gap-6 py-18 lg:grid-cols-2"><RoleCard role="Athletes" title="Own your profile beyond game day." text="Build a credible, shareable home for your performance, academics, highlights, and story." href="/login?role=athlete" icon={Trophy} accent="blue" bullets={['Professional public profile', 'Stats, measurables, and Hudl film', 'Direct coach connections']} /><RoleCard role="Coaches" title="Turn discovery into a real recruiting workflow." text="Find athletes, organize prospect lists, and communicate directly with mutual connections." href="/login?role=coach" icon={Dumbbell} accent="emerald" bullets={['Searchable athlete directory', 'Private recruiting lists', 'Individual and list messaging']} /></div></section>
+
+    <section className="page-shell py-20"><div className="relative overflow-hidden rounded-[2rem] bg-brand-600 px-6 py-12 text-center text-white shadow-2xl shadow-brand-600/20 sm:px-12"><div className="athletic-grid absolute inset-0" /><div className="relative"><p className="text-xs font-extrabold uppercase tracking-[0.2em] text-brand-100">Ready when you are</p><h2 className="mx-auto mt-3 max-w-2xl text-3xl font-black tracking-tight sm:text-4xl">Put your next opportunity in motion.</h2><p className="mx-auto mt-4 max-w-xl text-brand-100">Create your Athlio profile and start building the network around your goals.</p><Link href="/login?role=athlete" className="mt-7 inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-extrabold text-brand-700 shadow-xl transition hover:-translate-y-0.5 hover:bg-brand-50">Build your profile <ArrowRight className="size-4" /></Link></div></div></section>
+  </main>;
+}
+
+function HeroPreview() {
+  return <div className="relative mx-auto w-full max-w-lg lg:mr-0"><div className="absolute -inset-4 rounded-[2.25rem] bg-gradient-to-br from-brand-500/20 to-emerald-400/10 blur-2xl" /><div className="relative rotate-[1.5deg] overflow-hidden rounded-[2rem] border border-white/15 bg-white text-slate-950 shadow-2xl shadow-slate-950/50"><div className="h-28 bg-gradient-to-br from-brand-700 via-brand-600 to-cyan-500 p-5"><span className="rounded-full border border-white/25 bg-white/15 px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider text-white">Athlete profile</span></div><div className="px-6 pb-6"><div className="-mt-10 flex items-end justify-between"><div className="grid size-20 place-items-center rounded-2xl border-4 border-white bg-slate-950 text-2xl font-black text-white shadow-lg">JM</div><span className="mb-1 inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600"><span className="size-2 rounded-full bg-emerald-500 ring-4 ring-emerald-100" />Active now</span></div><h3 className="mt-4 text-2xl font-black tracking-tight">Jordan Mitchell</h3><p className="mt-1 text-sm font-semibold text-slate-500">@jordan-mitchell · Basketball</p><div className="mt-5 grid grid-cols-3 gap-2">{[['PPG', '18.6'], ['Height', '6′ 3″'], ['GPA', '3.8']].map(([label, value]) => <div key={label} className="rounded-xl bg-slate-50 p-3"><p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">{label}</p><p className="mt-1 text-lg font-black text-slate-950">{value}</p></div>)}</div><div className="mt-5 flex gap-2"><span className="flex-1 rounded-xl bg-brand-600 px-4 py-3 text-center text-xs font-extrabold text-white">View full profile</span><span className="grid size-10 place-items-center rounded-xl border border-slate-200 text-slate-600"><MessageCircle className="size-4" /></span></div></div></div><div className="absolute -bottom-7 -left-7 hidden rotate-[-5deg] rounded-2xl border border-white/70 bg-white p-4 shadow-xl sm:block"><p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Profile strength</p><div className="mt-2 flex items-center gap-3"><div className="grid size-10 place-items-center rounded-full bg-emerald-50 text-sm font-black text-emerald-700">92%</div><p className="text-xs font-bold text-slate-700">Recruiter ready</p></div></div></div>;
+}
+
+function RoleCard({ role, title, text, href, icon: Icon, accent, bullets }: { role: string; title: string; text: string; href: string; icon: typeof Trophy; accent: 'blue' | 'emerald'; bullets: string[] }) {
+  const green = accent === 'emerald';
+  return <article className="rounded-[2rem] border border-slate-200 bg-white p-7 shadow-card sm:p-9"><div className={`grid size-12 place-items-center rounded-2xl ${green ? 'bg-emerald-50 text-emerald-700' : 'bg-brand-50 text-brand-700'}`}><Icon className="size-5" /></div><p className={`mt-6 text-xs font-extrabold uppercase tracking-[0.18em] ${green ? 'text-emerald-600' : 'text-brand-600'}`}>For {role}</p><h3 className="mt-2 text-2xl font-black tracking-tight text-slate-950">{title}</h3><p className="mt-3 text-sm leading-6 text-slate-600">{text}</p><ul className="mt-6 space-y-3">{bullets.map((bullet) => <li key={bullet} className="flex items-center gap-3 text-sm font-semibold text-slate-700"><span className={`grid size-5 place-items-center rounded-full ${green ? 'bg-emerald-100 text-emerald-700' : 'bg-brand-100 text-brand-700'}`}><Check className="size-3" /></span>{bullet}</li>)}</ul><Link href={href} className={`mt-7 inline-flex items-center gap-2 text-sm font-extrabold ${green ? 'text-emerald-700' : 'text-brand-700'}`}>Get started <ArrowRight className="size-4" /></Link></article>;
+}
+
+function Metric({ value, label }: { value: number; label: string }) { return <div className="min-w-28 rounded-2xl border border-white/10 bg-white/8 px-5 py-4 backdrop-blur"><strong className="block text-2xl font-black">{value}</strong><span className="text-xs font-semibold text-slate-400">{label}</span></div>; }
+function Filter({ label, value, onChange, options, allLabel, wide = false }: { label: string; value: string; onChange: (value: string) => void; options: readonly string[]; allLabel: string; wide?: boolean }) { return <label className={wide ? 'block' : 'block lg:w-44'}><span className="mb-2 block text-xs font-extrabold uppercase tracking-wider text-slate-500">{label}</span><select value={value} onChange={(event) => onChange(event.target.value)} className="input"><option value="all">{allLabel}</option>{options.map((option) => <option key={option} value={option}>{option}</option>)}</select></label>; }
+function getName(profile: Athlete) { return [profile.first_name, profile.last_name].filter(Boolean).join(' ') || profile.username; }
+function uniqueSorted(values: Array<string | null | undefined>) { return Array.from(new Set(values.map((value) => value?.trim()).filter((value): value is string => Boolean(value)))).sort((a, b) => a.localeCompare(b)); }
+
+const ProfileGroup = memo(function ProfileGroup({ title, description, profiles, emptyMessage, onClear, showListActions }: { title: string; description: string; profiles: Athlete[]; emptyMessage: string; onClear: () => void; showListActions: boolean }) {
+  return <section className="mt-10"><div className="mb-5 flex items-end justify-between gap-4"><div><h3 className="text-xl font-black tracking-tight text-slate-950">{title}</h3><p className="mt-1 text-sm text-slate-500">{description}</p></div><span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-extrabold text-slate-600">{profiles.length}</span></div>{profiles.length ? <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{profiles.map((profile) => <ProfileCard key={profile.id} profile={profile} showListAction={showListActions} />)}</div> : <div className="surface-card border-dashed px-6 py-12 text-center"><p className="text-sm font-semibold text-slate-500">{emptyMessage}</p><button type="button" onClick={onClear} className="mt-4 text-sm font-extrabold text-brand-700 hover:text-brand-800">Clear all filters</button></div>}</section>;
 });
 
-/** Displays a profile summary; memoization prevents unrelated cards from rerendering. */
-const AthleteCard = memo(function AthleteCard({ athlete, showListAction }: { athlete: Athlete; showListAction: boolean }) {
-  const name = getName(athlete);
-  const { data: { publicUrl: fallbackAvatarUrl } } = supabase.storage.from('avatars').getPublicUrl(`${athlete.username}/profile.png`);
-  return <div className="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition [content-visibility:auto] [contain-intrinsic-size:auto_320px] hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-lg hover:shadow-blue-100/50"><Link href={`/${athlete.username}`}><div className="flex items-start justify-between gap-3"><ProfileAvatar src={athlete.avatar_url || fallbackAvatarUrl} name={name} size="small" /><span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${athlete.account_type === 'coach' ? 'bg-emerald-50 text-emerald-700' : 'bg-blue-50 text-blue-700'}`}>{athlete.account_type === 'coach' ? 'Coach' : 'Athlete'}</span></div><h3 className="mt-4 text-lg font-bold text-slate-950 group-hover:text-blue-700">{name}</h3><p className="mt-1 text-sm text-slate-500">@{athlete.username}</p><div className="mt-2"><OnlineStatus userId={athlete.id} compact /></div>{athlete.sport && <p className="mt-1 text-xs font-medium text-slate-400">{athlete.sport}</p>}{athlete.account_type === 'athlete' && (athlete.position || athlete.graduating_class || athlete.high_school) && <div className="mt-3 flex flex-wrap gap-2">{athlete.position && <span className="rounded-full bg-violet-50 px-2.5 py-1 text-xs font-semibold text-violet-700">{athlete.position}</span>}{athlete.graduating_class && <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">Class of {athlete.graduating_class}</span>}{athlete.high_school && <span className="rounded-full bg-cyan-50 px-2.5 py-1 text-xs font-semibold text-cyan-700">{athlete.high_school}</span>}</div>}{athlete.account_type === 'coach' && athlete.college_university && <div className="mt-3"><span className="inline-flex rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">{athlete.college_university}</span></div>}<span className="mt-5 inline-flex text-sm font-semibold text-blue-600">View profile <span aria-hidden="true" className="ml-1 transition group-hover:translate-x-0.5">→</span></span></Link>{showListAction && <div className="mt-4 border-t border-slate-100 pt-4"><AddToListButton athleteId={athlete.id} /></div>}</div>;
+const ProfileCard = memo(function ProfileCard({ profile, showListAction }: { profile: Athlete; showListAction: boolean }) {
+  const name = getName(profile);
+  const { data: { publicUrl: fallbackAvatarUrl } } = supabase.storage.from('avatars').getPublicUrl(`${profile.username}/profile.png`);
+  const coach = profile.account_type === 'coach';
+  return <article className="group relative overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-card transition duration-300 hover:-translate-y-1 hover:border-brand-200 hover:shadow-card-hover"><div className={`h-2 ${coach ? 'bg-gradient-to-r from-emerald-500 to-teal-400' : 'bg-gradient-to-r from-brand-600 to-cyan-400'}`} /><div className="p-5"><Link href={`/${profile.username}`} className="block rounded-xl"><div className="flex items-start justify-between gap-3"><div className="relative"><ProfileAvatar src={profile.avatar_url || fallbackAvatarUrl} name={name} size="compact" /></div><span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider ${coach ? 'bg-emerald-50 text-emerald-700' : 'bg-brand-50 text-brand-700'}`}>{coach ? <UserRound className="size-3" /> : <Trophy className="size-3" />}{coach ? 'Coach' : 'Athlete'}</span></div><h4 className="mt-5 text-lg font-black tracking-tight text-slate-950 transition group-hover:text-brand-700">{name}</h4><p className="mt-1 text-sm font-medium text-slate-500">@{profile.username}</p><div className="mt-2"><OnlineStatus userId={profile.id} compact /></div><div className="mt-4 space-y-2 text-xs font-semibold text-slate-600">{profile.sport && <p className="flex items-center gap-2"><Dumbbell className="size-3.5 text-slate-400" />{profile.sport}{profile.position ? ` · ${profile.position}` : ''}</p>}{!coach && profile.high_school && <p className="flex items-center gap-2"><MapPin className="size-3.5 text-slate-400" />{profile.high_school}</p>}{coach && profile.college_university && <p className="flex items-center gap-2"><GraduationCap className="size-3.5 text-slate-400" />{profile.college_university}</p>}</div><span className="mt-6 inline-flex items-center gap-1.5 text-sm font-extrabold text-brand-700">View profile <ArrowRight className="size-4 transition group-hover:translate-x-0.5" /></span></Link>{showListAction && <div className="mt-5 border-t border-slate-100 pt-4"><AddToListButton athleteId={profile.id} /></div>}</div></article>;
 });
 
-/** Guides a signed-in user when no public profiles exist yet. */
-function EmptyState() { return <div className="rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center"><h2 className="text-lg font-bold text-slate-900">No public Cards yet</h2><p className="mt-2 text-sm text-slate-500">Create and save your profile to become the first athlete in the directory.</p><Link href="/dashboard" className="mt-5 inline-flex text-sm font-semibold text-blue-600 hover:text-blue-700">Go to your dashboard →</Link></div>; }
+function LoadingState({ label }: { label: string }) { return <main className="loading-shell"><div className="text-center"><div className="mx-auto size-8 animate-spin rounded-full border-2 border-slate-200 border-t-brand-600" /><p className="mt-4">{label}</p></div></main>; }
+function EmptyState() { return <div className="surface-card px-6 py-16 text-center"><UsersRound className="mx-auto size-10 text-brand-600" /><h2 className="mt-4 text-xl font-black text-slate-950">The directory is ready for its first profile</h2><p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">Complete your public profile to start building the Athlio network.</p><Link href="/dashboard" className="btn-primary mt-6">Complete profile <ArrowRight className="size-4" /></Link></div>; }

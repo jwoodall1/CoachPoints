@@ -2,16 +2,18 @@
 
 import { FormEvent, Suspense, useState } from 'react';
 import Image from 'next/image';
-import { supabase } from '@/lib/supabase';
+import Link from 'next/link';
+import { ArrowRight, AtSign, Check, Dumbbell, Eye, EyeOff, LockKeyhole, Mail, ShieldCheck, Trophy, UserRound } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
+
+import { supabase } from '@/lib/supabase';
 
 type Mode = 'sign-in' | 'sign-up';
 type AccountType = 'athlete' | 'coach';
-const reservedUsernames = new Set(['api', 'coach-dashboard', 'coach-lists', 'dashboard', 'friends', 'login']);
+const reservedUsernames = new Set(['api', 'coach-dashboard', 'coach-lists', 'dashboard', 'friends', 'login', 'messages']);
 
-/** Keeps search-parameter access inside Suspense as required by the App Router. */
 export default function LoginPage() {
-  return <Suspense fallback={<main className="grid min-h-screen place-items-center bg-slate-950 text-sm font-medium text-white">Loading…</main>}><LoginForm /></Suspense>;
+  return <Suspense fallback={<main className="loading-shell"><p>Preparing secure access…</p></main>}><LoginForm /></Suspense>;
 }
 
 /** Handles athlete and coach sign-in or registration against Supabase Auth. */
@@ -24,117 +26,49 @@ function LoginForm() {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const accountType: AccountType = searchParams.get('role') === 'coach' ? 'coach' : 'athlete';
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const isSignUp = mode === 'sign-up';
+  const isCoach = accountType === 'coach';
 
-
-  const selectMode = (nextMode: Mode) => {
-    setMode(nextMode);
-    setError(null);
-    setMessage(null);
-  };
-
+  const selectMode = (nextMode: Mode) => { setMode(nextMode); setError(null); setMessage(null); };
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setLoading(true);
-    setError(null);
-    setMessage(null);
-
-    if (mode === 'sign-up') {
+    setLoading(true); setError(null); setMessage(null);
+    if (isSignUp) {
       const publicUsername = username.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
-      if (publicUsername.length < 3) {
-        setError('Choose a username with at least 3 letters or numbers.');
-        setLoading(false);
-        return;
-      }
-      if (reservedUsernames.has(publicUsername)) {
-        setError('That username is reserved by Athlio. Please choose another.');
-        setLoading(false);
-        return;
-      }
-      const { data, error: signUpError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            first_name: firstName.trim(),
-            last_name: lastName.trim(),
-            username: publicUsername,
-            account_type: accountType,
-          },
-            emailRedirectTo: `${window.location.origin}/${accountType === 'coach' ? 'coach-dashboard' : 'dashboard'}`,
-        },
-      });
-
-      if (signUpError) {
-        setError(signUpError.message);
-      } else if (data.session) {
-        if (accountType === 'coach') {
-          await supabase.from('coachprofiles').upsert({ id: data.session.user.id, first_name: firstName.trim(), last_name: lastName.trim(), username: publicUsername }, { onConflict: 'id' });
-        }
-        router.push(accountType === 'coach' ? '/coach-dashboard' : '/dashboard');
-      } else {
-        setMessage('Your account is ready. Check your email to confirm it, then sign in.');
-      }
+      if (publicUsername.length < 3) { setError('Choose a username with at least 3 letters or numbers.'); setLoading(false); return; }
+      if (reservedUsernames.has(publicUsername)) { setError('That username is reserved by Athlio. Please choose another.'); setLoading(false); return; }
+      const { data, error: signUpError } = await supabase.auth.signUp({ email, password, options: { data: { first_name: firstName.trim(), last_name: lastName.trim(), username: publicUsername, account_type: accountType }, emailRedirectTo: `${window.location.origin}/${isCoach ? 'coach-dashboard' : 'dashboard'}` } });
+      if (signUpError) setError(signUpError.message);
+      else if (data.session) {
+        if (isCoach) await supabase.from('coachprofiles').upsert({ id: data.session.user.id, first_name: firstName.trim(), last_name: lastName.trim(), username: publicUsername }, { onConflict: 'id' });
+        router.push(isCoach ? '/coach-dashboard' : '/dashboard');
+      } else setMessage('Your account is ready. Check your email to confirm it, then sign in.');
     } else {
       const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
-
       if (signInError) setError(signInError.message);
-      else {
-        // signInWithPassword already returns the verified user; avoid a second auth request.
-        const signedInType = data.user?.user_metadata.account_type === 'coach' ? 'coach' : 'athlete';
-        router.push(signedInType === 'coach' ? '/coach-dashboard' : '/dashboard');
-      }
+      else router.push(data.user?.user_metadata.account_type === 'coach' ? '/coach-dashboard' : '/dashboard');
     }
-
     setLoading(false);
   };
 
-  const isSignUp = mode === 'sign-up';
+  return <main className="min-h-[calc(100vh-72px)] bg-slate-950 lg:grid lg:grid-cols-[.9fr_1.1fr]">
+    <aside className="athletic-grid relative hidden overflow-hidden border-r border-white/10 px-12 py-14 text-white lg:flex lg:flex-col lg:justify-between xl:px-18"><div className="absolute -left-24 top-12 size-80 rounded-full bg-brand-600/25 blur-3xl" /><div className="absolute -bottom-32 right-0 size-96 rounded-full bg-emerald-500/15 blur-3xl" /><div className="relative"><div className="flex items-center gap-3"><Image src="/athlio-mark.png" alt="" width={44} height={44} className="size-11 rounded-2xl object-cover shadow-lg shadow-brand-600/25" /><span className="text-sm font-extrabold uppercase tracking-[0.18em] text-brand-200">Athlio access</span></div><p className="mt-16 text-sm font-bold text-brand-300">{isCoach ? 'Recruit with clarity' : 'Own your athletic story'}</p><h1 className="mt-3 max-w-xl text-5xl font-black leading-[1.02] tracking-[-0.04em]">{isCoach ? 'The right athletes deserve your attention.' : 'Your next opportunity starts with being seen.'}</h1><p className="mt-6 max-w-lg text-base leading-7 text-slate-300">{isCoach ? 'Build a focused network, organize prospects, and communicate directly with athletes who fit your program.' : 'Bring your stats, academics, film, and goals together in one professional profile built for what comes next.'}</p></div><div className="relative grid gap-3">{(isCoach ? ['Search complete athlete profiles', 'Build private recruiting lists', 'Message mutual connections'] : ['Create a polished public profile', 'Share performance and Hudl film', 'Connect directly with coaches']).map((item) => <div key={item} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/6 px-4 py-3 text-sm font-semibold text-slate-200 backdrop-blur"><span className="grid size-6 place-items-center rounded-full bg-emerald-400/15 text-emerald-300"><Check className="size-3.5" /></span>{item}</div>)}</div></aside>
 
-  return (
-    <main className="relative isolate flex min-h-screen items-center justify-center overflow-hidden bg-slate-950 px-4 py-12">
-      <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,_#1d4ed8_0%,_transparent_32%),radial-gradient(circle_at_bottom_right,_#0f766e_0%,_transparent_28%)] opacity-60" />
-      <section className="w-full max-w-md rounded-3xl border border-white/15 bg-white p-6 shadow-2xl shadow-slate-950/40 sm:p-8">
-        <div className="mb-8 text-center">
-          <Image src="/athlio-mark.png" alt="Athlio" width={96} height={64} className="mx-auto mb-5 size-12 rounded-2xl object-cover shadow-lg shadow-blue-600/30" preload />
-          <h1 className="text-3xl font-bold tracking-tight text-slate-950">Welcome to Athlio</h1>
-          <p className="mt-2 text-sm leading-6 text-slate-500">Manage your {accountType} profile and share your progress with confidence.</p>
-        </div>
+    <section className="flex items-center justify-center bg-slate-50 px-4 py-12 sm:px-8 lg:py-16"><div className="w-full max-w-lg"><div className="lg:hidden"><p className="eyebrow">Secure Athlio access</p></div><div className="flex items-start justify-between gap-4"><div><h2 className="mt-2 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">{isSignUp ? 'Create your account' : 'Welcome back'}</h2><p className="mt-2 text-sm leading-6 text-slate-500">{isSignUp ? `Build your ${accountType} presence on Athlio.` : `Sign in to your ${accountType} workspace.`}</p></div><div className={`grid size-12 shrink-0 place-items-center rounded-2xl ${isCoach ? 'bg-emerald-100 text-emerald-700' : 'bg-brand-100 text-brand-700'}`}>{isCoach ? <Dumbbell className="size-5" /> : <Trophy className="size-5" />}</div></div>
 
-        <div className="mb-5 flex items-center justify-between rounded-xl border border-blue-100 bg-blue-50 px-4 py-3"><span className="text-sm font-semibold text-slate-700">Account type</span><span className="rounded-full bg-white px-3 py-1 text-xs font-bold uppercase tracking-wide text-blue-700">{accountType}</span></div>
+      <div className="mt-7 grid grid-cols-2 gap-2 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-sm"><Link href="/login?role=athlete" className={`flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-bold transition ${!isCoach ? 'bg-brand-600 text-white shadow-md shadow-brand-600/20' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'}`}><Trophy className="size-4" />Athlete</Link><Link href="/login?role=coach" className={`flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-bold transition ${isCoach ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'}`}><Dumbbell className="size-4" />Coach</Link></div>
+      <div className="mt-5 grid grid-cols-2 rounded-2xl bg-slate-200/60 p-1" role="tablist" aria-label="Account access"><button type="button" role="tab" aria-selected={!isSignUp} onClick={() => selectMode('sign-in')} className={`rounded-xl px-3 py-2.5 text-sm font-bold transition ${!isSignUp ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>Sign in</button><button type="button" role="tab" aria-selected={isSignUp} onClick={() => selectMode('sign-up')} className={`rounded-xl px-3 py-2.5 text-sm font-bold transition ${isSignUp ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>Create account</button></div>
 
-        <div className="mb-7 grid grid-cols-2 rounded-xl bg-slate-100 p-1" role="tablist" aria-label="Account access">
-          <button type="button" role="tab" aria-selected={!isSignUp} onClick={() => selectMode('sign-in')} className={`rounded-lg px-3 py-2.5 text-sm font-semibold transition ${!isSignUp ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>Sign in</button>
-          <button type="button" role="tab" aria-selected={isSignUp} onClick={() => selectMode('sign-up')} className={`rounded-lg px-3 py-2.5 text-sm font-semibold transition ${isSignUp ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>Create account</button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-5">
-          {isSignUp && (
-            <div className="grid grid-cols-2 gap-4">
-              <Field label="First name"><input value={firstName} onChange={(event) => setFirstName(event.target.value)} className="input" placeholder="John" required /></Field>
-              <Field label="Last name"><input value={lastName} onChange={(event) => setLastName(event.target.value)} className="input" placeholder="Doe" required /></Field>
-            </div>
-          )}
-          {isSignUp && <Field label="Username"><input value={username} onChange={(event) => setUsername(event.target.value)} className="input" placeholder="john-doe" autoComplete="username" required /><span className="mt-2 block text-xs text-slate-500">This becomes your permanent public profile handle.</span></Field>}
-          <Field label="Email address"><input type="email" value={email} onChange={(event) => setEmail(event.target.value)} className="input" placeholder="athlete@example.com" autoComplete="email" required /></Field>
-          <Field label="Password"><input type="password" value={password} onChange={(event) => setPassword(event.target.value)} className="input" placeholder="At least 8 characters" autoComplete={isSignUp ? 'new-password' : 'current-password'} minLength={8} required /></Field>
-
-          {error && <p role="alert" className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
-          {message && <p role="status" className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{message}</p>}
-
-          <button disabled={loading} className="flex w-full items-center justify-center rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-600/25 transition hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-200 disabled:cursor-not-allowed disabled:opacity-60">
-            {loading ? 'Please wait…' : isSignUp ? 'Create your account' : 'Sign in to your dashboard'}
-          </button>
-        </form>
-      </section>
-    </main>
-  );
+      <form onSubmit={handleSubmit} className="mt-7 space-y-5">{isSignUp && <div className="grid grid-cols-2 gap-4"><Field label="First name" icon={UserRound}><input value={firstName} onChange={(event) => setFirstName(event.target.value)} className="input pl-10" placeholder="Jordan" autoComplete="given-name" required /></Field><Field label="Last name"><input value={lastName} onChange={(event) => setLastName(event.target.value)} className="input" placeholder="Lee" autoComplete="family-name" required /></Field></div>}{isSignUp && <Field label="Public username" icon={AtSign}><input value={username} onChange={(event) => setUsername(event.target.value)} className="input pl-10" placeholder="jordan-lee" autoComplete="username" required /><span className="mt-2 block text-xs text-slate-500">This becomes your permanent profile address.</span></Field>}<Field label="Email address" icon={Mail}><input type="email" value={email} onChange={(event) => setEmail(event.target.value)} className="input pl-10" placeholder="you@example.com" autoComplete="email" required /></Field><Field label="Password" icon={LockKeyhole}><div className="relative"><input type={showPassword ? 'text' : 'password'} value={password} onChange={(event) => setPassword(event.target.value)} className="input px-10" placeholder="At least 8 characters" autoComplete={isSignUp ? 'new-password' : 'current-password'} minLength={8} required /><button type="button" onClick={() => setShowPassword((show) => !show)} className="absolute right-2 top-1/2 grid size-8 -translate-y-1/2 place-items-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700" aria-label={showPassword ? 'Hide password' : 'Show password'}>{showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}</button></div></Field>{error && <p role="alert" className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3.5 text-sm font-medium text-rose-700">{error}</p>}{message && <p role="status" className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3.5 text-sm font-medium text-emerald-700">{message}</p>}<button disabled={loading} className={`flex min-h-12 w-full items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-extrabold text-white shadow-lg transition hover:-translate-y-0.5 disabled:pointer-events-none disabled:opacity-60 ${isCoach ? 'bg-emerald-600 shadow-emerald-600/20 hover:bg-emerald-700' : 'bg-brand-600 shadow-brand-600/20 hover:bg-brand-700'}`}>{loading ? 'Please wait…' : isSignUp ? 'Create account' : 'Sign in'}{!loading && <ArrowRight className="size-4" />}</button><p className="flex items-center justify-center gap-2 text-center text-xs font-medium text-slate-400"><ShieldCheck className="size-3.5" />Your account is protected by secure authentication.</p></form>
+    </div></section>
+  </main>;
 }
 
-/** Gives every authentication field a consistent label and layout. */
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return <label className="block text-sm font-medium text-slate-700"><span className="mb-2 block">{label}</span>{children}</label>;
+function Field({ label, icon: Icon, children }: { label: string; icon?: typeof UserRound; children: React.ReactNode }) {
+  return <label className="block text-sm font-bold text-slate-700"><span className="mb-2 block">{label}</span><span className="relative block">{Icon && <Icon className="pointer-events-none absolute left-3.5 top-3.5 z-10 size-4 text-slate-400" />}{children}</span></label>;
 }

@@ -1,6 +1,8 @@
 'use client';
 
 import { FormEvent, useEffect, useState } from 'react';
+import Link from 'next/link';
+import { ArrowUpRight, Dumbbell, ListChecks, LogOut, Pencil, Save, UsersRound } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 import { useAuth } from '@/components/AuthProvider';
@@ -21,17 +23,9 @@ export default function CoachDashboardPage() {
 
   useEffect(() => {
     if (!ready) return;
-    if (!user) {
-      router.replace('/login?role=coach');
-      return;
-    }
-    if (user.user_metadata.account_type !== 'coach') {
-      router.replace('/dashboard');
-      return;
-    }
+    if (!user) { router.replace('/login?role=coach'); return; }
+    if (user.user_metadata.account_type !== 'coach') { router.replace('/dashboard'); return; }
     let active = true;
-
-    // The dashboard requests only fields used by the coach form.
     const load = async () => {
       const { data } = await supabase.from('coachprofiles').select('first_name, last_name, username, college_university, sport, bio, phone_number, contact_email, instagram_url, tiktok_url, youtube_url, x_url').eq('id', user.id).maybeSingle();
       if (!active) return;
@@ -39,9 +33,7 @@ export default function CoachDashboardPage() {
       setLoading(false);
     };
     void load();
-    return () => {
-      active = false;
-    };
+    return () => { active = false; };
   }, [ready, router, user]);
 
   const update = <K extends keyof CoachProfile>(key: K, value: CoachProfile[K]) => setProfile((current) => ({ ...current, [key]: value }));
@@ -54,17 +46,19 @@ export default function CoachDashboardPage() {
     setSaving(false);
   };
 
-  if (loading) return <main className="grid min-h-screen place-items-center bg-slate-50 text-sm font-medium text-slate-500">Loading your coach dashboard…</main>;
-  return <main className="min-h-screen bg-slate-50 px-4 py-8 sm:px-6 lg:py-12"><div className="mx-auto max-w-5xl">
-    <header className="mb-8 flex flex-col gap-5 rounded-3xl bg-slate-950 px-6 py-7 text-white shadow-xl shadow-slate-200 sm:flex-row sm:items-center sm:justify-between sm:px-8"><div><p className="text-sm font-medium text-emerald-300">Coach dashboard</p><h1 className="mt-1 text-3xl font-bold tracking-tight">Build your coach profile</h1><p className="mt-2 text-sm text-slate-300">{user?.email}</p></div><button type="button" onClick={async () => { await supabase.auth.signOut(); router.replace('/login?role=coach'); }} className="rounded-xl border border-white/15 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10">Sign out</button></header>
-    <form onSubmit={save} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"><div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"><div><h2 className="text-xl font-bold text-slate-950">Coach information</h2><p className="mt-1 text-sm text-slate-500">Share the information athletes need to know about you.</p></div>{editing && <button type="button" onClick={() => setEditing(false)} className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50">Cancel</button>}</div>
-      <div className="grid gap-5 sm:grid-cols-2"><Field label="First name" value={profile.firstName} onChange={(value) => update('firstName', value)} placeholder="Jordan" disabled={!editing} required /><Field label="Last name" value={profile.lastName} onChange={(value) => update('lastName', value)} placeholder="Lee" disabled={!editing} required /><Field label="College / university" value={profile.collegeUniversity} onChange={(value) => update('collegeUniversity', value)} placeholder="State University" disabled={!editing} /><Field label="Sport or program" value={profile.sport} onChange={(value) => update('sport', value)} placeholder="Basketball" disabled={!editing} /><label className="sm:col-span-2 block text-sm font-semibold text-slate-700"><span className="mb-2 block">Bio</span><textarea value={profile.bio} onChange={(event) => update('bio', event.target.value)} rows={5} className="input resize-y disabled:cursor-not-allowed disabled:bg-slate-100" placeholder="Your coaching experience, philosophy, and specialties." disabled={!editing} /></label><Field label="Phone number" value={profile.phoneNumber} onChange={(value) => update('phoneNumber', value)} placeholder="(555) 123-4567" disabled={!editing} /><Field label="Contact email" value={profile.contactEmail} onChange={(value) => update('contactEmail', value)} placeholder="you@example.com" disabled={!editing} /><Field label="Instagram URL" value={profile.instagramUrl} onChange={(value) => update('instagramUrl', value)} placeholder="https://instagram.com/yourname" disabled={!editing} /><Field label="TikTok URL" value={profile.tiktokUrl} onChange={(value) => update('tiktokUrl', value)} placeholder="https://tiktok.com/@yourname" disabled={!editing} /><Field label="YouTube URL" value={profile.youtubeUrl} onChange={(value) => update('youtubeUrl', value)} placeholder="https://youtube.com/@yourname" disabled={!editing} /><Field label="X URL" value={profile.xUrl} onChange={(value) => update('xUrl', value)} placeholder="https://x.com/yourname" disabled={!editing} /></div>
-      <div className="mt-7 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">{notice ? <p role="status" className={`text-sm font-medium ${notice.includes('successfully') ? 'text-emerald-600' : 'text-rose-600'}`}>{notice}</p> : <span />}{editing ? <button type="submit" disabled={saving} className="rounded-xl bg-emerald-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-600/20 hover:bg-emerald-700 disabled:opacity-60">{saving ? 'Saving…' : 'Save coach profile'}</button> : <button type="button" onClick={(event) => { event.preventDefault(); setNotice(null); setEditing(true); }} className="rounded-xl bg-slate-950 px-6 py-3 text-sm font-semibold text-white hover:bg-slate-800">Edit profile</button>}</div>
+  if (loading) return <main className="loading-shell">Loading your coach workspace…</main>;
+  return <main className="min-h-screen pb-20 pt-8 sm:pt-10"><div className="page-shell max-w-5xl">
+    <header className="athletic-grid relative overflow-hidden rounded-[2rem] bg-slate-950 px-6 py-8 text-white shadow-2xl shadow-slate-300/50 sm:px-8 sm:py-10"><div className="absolute -right-16 -top-24 size-72 rounded-full bg-emerald-500/20 blur-3xl" /><div className="relative flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between"><div className="flex items-start gap-4"><div className="hidden size-12 shrink-0 place-items-center rounded-2xl bg-emerald-400/15 text-emerald-200 sm:grid"><Dumbbell className="size-5" /></div><div><p className="text-xs font-extrabold uppercase tracking-[0.18em] text-emerald-300">Coach workspace</p><h1 className="mt-2 text-3xl font-black tracking-tight sm:text-4xl">Lead your recruiting presence</h1><p className="mt-2 text-sm font-medium text-slate-400">{user?.email}</p></div></div><div className="flex flex-wrap gap-2">{profile.username && <Link href={`/${profile.username}`} className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-sm font-bold text-white transition hover:bg-white/10">View profile <ArrowUpRight className="size-4" /></Link>}<button type="button" onClick={async () => { await supabase.auth.signOut(); router.replace('/login?role=coach'); }} className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-white/15 px-4 py-2 text-sm font-bold text-slate-200 hover:bg-white/10"><LogOut className="size-4" />Sign out</button></div></div></header>
+
+    <div className="mt-6 grid gap-4 sm:grid-cols-2"><Link href="/coach-lists" className="surface-card group flex items-center gap-4 p-5 transition hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-card-hover"><span className="grid size-11 place-items-center rounded-xl bg-emerald-50 text-emerald-700"><ListChecks className="size-5" /></span><span><strong className="block text-sm font-extrabold text-slate-950">Recruiting lists</strong><span className="mt-0.5 block text-xs text-slate-500">Organize and message athlete groups</span></span><ArrowUpRight className="ml-auto size-4 text-slate-400 group-hover:text-emerald-600" /></Link><Link href="/friends" className="surface-card group flex items-center gap-4 p-5 transition hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-card-hover"><span className="grid size-11 place-items-center rounded-xl bg-brand-50 text-brand-700"><UsersRound className="size-5" /></span><span><strong className="block text-sm font-extrabold text-slate-950">Your network</strong><span className="mt-0.5 block text-xs text-slate-500">Manage mutual connections</span></span><ArrowUpRight className="ml-auto size-4 text-slate-400 group-hover:text-brand-600" /></Link></div>
+
+    <form onSubmit={save} className="surface-card mt-6 p-6 sm:p-8"><div className="mb-7 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"><div><p className="eyebrow text-emerald-600">Public identity</p><h2 className="section-title mt-2">Coach information</h2><p className="mt-1 text-sm text-slate-500">Share the information athletes need to know about you and your program.</p></div>{editing ? <button type="button" onClick={() => setEditing(false)} className="btn-secondary">Cancel editing</button> : <button type="button" onClick={() => { setNotice(null); setEditing(true); }} className="btn-dark"><Pencil className="size-4" />Edit profile</button>}</div>
+      <fieldset disabled={!editing} className="grid gap-5 sm:grid-cols-2 disabled:opacity-75"><Field label="First name" value={profile.firstName} onChange={(value) => update('firstName', value)} placeholder="Jordan" required /><Field label="Last name" value={profile.lastName} onChange={(value) => update('lastName', value)} placeholder="Lee" required /><Field label="College / university" value={profile.collegeUniversity} onChange={(value) => update('collegeUniversity', value)} placeholder="State University" /><Field label="Sport or program" value={profile.sport} onChange={(value) => update('sport', value)} placeholder="Basketball" /><label className="block text-sm font-bold text-slate-700 sm:col-span-2"><span className="mb-2 block">Bio</span><textarea value={profile.bio} onChange={(event) => update('bio', event.target.value)} rows={5} className="input resize-y" placeholder="Your coaching experience, philosophy, and specialties." /></label><Field label="Phone number" value={profile.phoneNumber} onChange={(value) => update('phoneNumber', value)} placeholder="(555) 123-4567" /><Field label="Contact email" value={profile.contactEmail} onChange={(value) => update('contactEmail', value)} placeholder="you@example.com" /><Field label="Instagram URL" value={profile.instagramUrl} onChange={(value) => update('instagramUrl', value)} placeholder="https://instagram.com/yourname" /><Field label="TikTok URL" value={profile.tiktokUrl} onChange={(value) => update('tiktokUrl', value)} placeholder="https://tiktok.com/@yourname" /><Field label="YouTube URL" value={profile.youtubeUrl} onChange={(value) => update('youtubeUrl', value)} placeholder="https://youtube.com/@yourname" /><Field label="X URL" value={profile.xUrl} onChange={(value) => update('xUrl', value)} placeholder="https://x.com/yourname" /></fieldset>
+      <div className="mt-7 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">{notice ? <p role="status" className={`text-sm font-bold ${notice.includes('successfully') ? 'text-emerald-600' : 'text-rose-600'}`}>{notice}</p> : <span />}{editing && <button type="submit" disabled={saving} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 text-sm font-extrabold text-white shadow-lg shadow-emerald-600/20 transition hover:-translate-y-0.5 hover:bg-emerald-700 disabled:opacity-60"><Save className="size-4" />{saving ? 'Saving…' : 'Save coach profile'}</button>}</div>
     </form>
   </div></main>;
 }
 
-/** Renders one consistently styled coach-profile input. */
-function Field({ label, value, onChange, placeholder, disabled, required = false }: { label: string; value: string; onChange: (value: string) => void; placeholder: string; disabled: boolean; required?: boolean }) {
-  return <label className="block text-sm font-semibold text-slate-700"><span className="mb-2 block">{label}</span><input value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} required={required} disabled={disabled} className="input disabled:cursor-not-allowed disabled:bg-slate-100" /></label>;
+function Field({ label, value, onChange, placeholder, required = false }: { label: string; value: string; onChange: (value: string) => void; placeholder: string; required?: boolean }) {
+  return <label className="block text-sm font-bold text-slate-700"><span className="mb-2 block">{label}</span><input value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} required={required} className="input" /></label>;
 }

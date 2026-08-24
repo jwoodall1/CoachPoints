@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { ArrowLeft, MessageCircle, UserPlus, UsersRound } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
@@ -267,15 +268,11 @@ export default function FriendsPage() {
     document.getElementById(`${nextTab}-tab`)?.focus();
   };
 
-  if (!ready || !userId || loading || loadedUserId !== userId) return <main className="grid min-h-screen place-items-center bg-slate-50 px-4"><p role="status" aria-live="polite" className="text-sm font-medium text-slate-500">Loading your friends…</p></main>;
+  if (!ready || !userId || loading || loadedUserId !== userId) return <main className="loading-shell"><p role="status" aria-live="polite">Loading your network…</p></main>;
 
-  return <main className="min-h-screen bg-slate-50 px-4 py-8 sm:px-6 lg:py-12"><div className="mx-auto max-w-4xl">
-    <header className="mb-8 overflow-hidden rounded-3xl bg-slate-950 px-6 py-8 text-white shadow-xl shadow-slate-200 sm:px-8 sm:py-10">
-      <Link href={dashboardHref} className="text-sm font-semibold text-blue-300 transition hover:text-blue-200">← Dashboard</Link>
-      <div className="mt-5 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-        <div><p className="text-sm font-medium text-blue-300">Your network</p><h1 className="mt-1 text-3xl font-bold tracking-tight sm:text-4xl">Friends</h1><p className="mt-3 max-w-xl text-sm leading-6 text-slate-300">Connections are mutual. A request only becomes a friendship after the other person follows back.</p></div>
-        <div className="flex gap-3" aria-label="Connection totals"><div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-center"><strong className="block text-xl text-white">{friends.length}</strong><span className="text-xs font-medium text-slate-300">Friends</span></div><div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-center"><strong className="block text-xl text-white">{requestCount}</strong><span className="text-xs font-medium text-slate-300">Requests</span></div></div>
-      </div>
+  return <main className="min-h-screen pb-20 pt-8 sm:pt-10"><div className="page-shell max-w-5xl">
+    <header className="athletic-grid relative mb-8 overflow-hidden rounded-[2rem] bg-slate-950 px-6 py-8 text-white shadow-2xl shadow-slate-300/50 sm:px-8 sm:py-10"><div className="absolute -right-16 -top-24 size-72 rounded-full bg-brand-600/25 blur-3xl" />
+      <div className="relative"><Link href={dashboardHref} className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-brand-300 transition hover:text-brand-200"><ArrowLeft className="size-3.5" />Dashboard</Link><div className="mt-5 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between"><div className="flex items-start gap-4"><span className="hidden size-12 place-items-center rounded-2xl bg-brand-400/15 text-brand-200 sm:grid"><UsersRound className="size-5" /></span><div><p className="text-xs font-extrabold uppercase tracking-[0.18em] text-brand-300">Your network</p><h1 className="mt-2 text-3xl font-black tracking-tight sm:text-4xl">Connections</h1><p className="mt-3 max-w-xl text-sm leading-6 text-slate-300">Every connection is mutual, keeping your network relevant and your conversations intentional.</p></div></div><div className="flex gap-3" aria-label="Connection totals"><div className="min-w-24 rounded-2xl border border-white/10 bg-white/6 px-4 py-3 text-center backdrop-blur"><strong className="block text-2xl font-black text-white">{friends.length}</strong><span className="text-xs font-semibold text-slate-400">Connected</span></div><div className="min-w-24 rounded-2xl border border-white/10 bg-white/6 px-4 py-3 text-center backdrop-blur"><strong className="block text-2xl font-black text-white">{requestCount}</strong><span className="text-xs font-semibold text-slate-400">Requests</span></div></div></div></div>
     </header>
 
     {error && <div role="alert" className="mb-5 flex flex-col gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm text-rose-700 sm:flex-row sm:items-center sm:justify-between"><span>{error}</span><button type="button" onClick={() => void reload()} className="shrink-0 self-start font-bold text-rose-700 underline decoration-rose-300 underline-offset-4 hover:text-rose-900 sm:self-auto">Try again</button></div>}
@@ -306,7 +303,7 @@ export default function FriendsPage() {
         </div>}
       </div> : <div id="friends-panel" role="tabpanel" aria-labelledby="friends-tab" tabIndex={0} className="outline-none">
         {friends.length === 0 ? <EmptyState title="No friends yet" description="Browse profiles and send a follow request. You’ll become friends when they follow you back." /> : <div className="divide-y divide-slate-100">{friends.map((connection) => <PersonRow key={connection.id} person={personFor(connection)}>
-          <Link href={`/messages/${personFor(connection).id}`} className="w-full rounded-xl bg-blue-600 px-4 py-2.5 text-center text-sm font-semibold text-white transition hover:bg-blue-700 sm:w-auto">Message</Link>
+          <Link href={`/messages/${personFor(connection).id}`} className="btn-primary w-full sm:w-auto"><MessageCircle className="size-4" />Message</Link>
           <button type="button" disabled={actionId !== null} onClick={() => void deleteConnection(connection, true)} className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700 disabled:cursor-wait disabled:opacity-50 sm:w-auto">{actionId === connection.id ? 'Removing…' : 'Remove'}</button>
         </PersonRow>)}</div>}
       </div>}
@@ -342,5 +339,5 @@ function CountBadge({ count, active }: { count: number; active: boolean }) {
 }
 
 function EmptyState({ title, description }: { title: string; description: string }) {
-  return <div className="px-6 py-16 text-center sm:py-20"><div aria-hidden="true" className="mx-auto grid size-14 place-items-center rounded-full bg-blue-50 text-2xl text-blue-600">♡</div><h2 className="mt-4 text-xl font-bold text-slate-950">{title}</h2><p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">{description}</p><Link href="/#all-profiles" className="mt-6 inline-flex rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800">Browse profiles</Link></div>;
+  return <div className="px-6 py-16 text-center sm:py-20"><div aria-hidden="true" className="mx-auto grid size-14 place-items-center rounded-2xl bg-brand-50 text-brand-700">{title.includes('request') ? <UserPlus className="size-6" /> : <UsersRound className="size-6" />}</div><h2 className="mt-4 text-xl font-black text-slate-950">{title}</h2><p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">{description}</p><Link href="/#all-profiles" className="btn-dark mt-6">Browse profiles</Link></div>;
 }

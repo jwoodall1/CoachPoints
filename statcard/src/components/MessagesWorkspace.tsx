@@ -277,16 +277,16 @@ export default function MessagesWorkspace({ initialRecipientId = null }: { initi
   };
 
   if (!ready || !userId || loadingInbox || loadedUserId !== userId) {
-    return <main className="grid min-h-[calc(100vh-130px)] place-items-center bg-slate-50 px-4"><p role="status" className="text-sm font-medium text-slate-500">Loading messages…</p></main>;
+    return <main className="loading-shell"><p role="status">Loading messages…</p></main>;
   }
 
   const invalidRecipient = Boolean(selectedRecipientId && !selectedItem);
 
-  return <main className="bg-slate-100 px-0 py-0 sm:px-4 sm:py-6 lg:px-6">
-    <div className="mx-auto flex h-[calc(100dvh-116px)] min-h-[580px] max-w-6xl overflow-hidden border-slate-200 bg-white shadow-xl shadow-slate-200/70 sm:h-[calc(100dvh-150px)] sm:rounded-3xl sm:border">
+  return <main className="px-0 py-0 sm:px-4 sm:py-6 lg:px-6">
+    <div className="mx-auto flex h-[calc(100dvh-72px)] min-h-[580px] max-w-6xl overflow-hidden border-slate-200/80 bg-white shadow-card sm:h-[calc(100dvh-120px)] sm:rounded-[2rem] sm:border">
       <aside className={`${selectedItem || invalidRecipient ? 'hidden md:flex' : 'flex'} w-full shrink-0 flex-col border-r border-slate-200 md:w-[340px] lg:w-[390px]`} aria-label="Conversations">
         <div className="border-b border-slate-200 px-5 pb-4 pt-5 sm:px-6 sm:pt-6">
-          <div className="flex items-start justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-blue-600">Your network</p><h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-950">Messages</h1></div><span title={connected ? 'Realtime connected' : 'Realtime connecting'} className={`mt-1 size-2.5 rounded-full ${connected ? 'bg-emerald-500' : 'animate-pulse bg-amber-400'}`}><span className="sr-only">{connected ? 'Realtime connected' : 'Realtime connecting'}</span></span></div>
+          <div className="flex items-start justify-between gap-3"><div><p className="eyebrow">Your network</p><h1 className="mt-1 text-2xl font-black tracking-tight text-slate-950">Messages</h1></div><span title={connected ? 'Realtime connected' : 'Realtime connecting'} className={`mt-1 size-2.5 rounded-full ring-4 ${connected ? 'bg-emerald-500 ring-emerald-100' : 'animate-pulse bg-amber-400 ring-amber-100'}`}><span className="sr-only">{connected ? 'Realtime connected' : 'Realtime connecting'}</span></span></div>
           <label className="relative mt-4 block"><span className="sr-only">Search conversations</span><SearchIcon /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search connections" className="input pl-10" /></label>
         </div>
 
@@ -301,7 +301,7 @@ export default function MessagesWorkspace({ initialRecipientId = null }: { initi
           </div>
           <div className="border-t border-slate-200 bg-white p-3 sm:p-4">
             {conversationError && messages.length > 0 && <p role="alert" className="mx-auto mb-2 max-w-3xl text-sm font-medium text-rose-600">{conversationError}</p>}
-            <div className="mx-auto flex max-w-3xl items-end gap-2"><label className="min-w-0 flex-1"><span className="sr-only">Message {displayName(selectedItem.person)}</span><textarea value={draft} onChange={(event) => setDraft(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); void sendMessage(); } }} rows={1} maxLength={2000} placeholder={`Message ${displayName(selectedItem.person)}`} className="input max-h-32 min-h-11 resize-none py-3" /></label><button type="button" onClick={() => void sendMessage()} disabled={!draft.trim() || sending} aria-label="Send message" className="grid size-11 shrink-0 place-items-center rounded-xl bg-blue-600 text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300"><SendIcon /></button></div>
+            <div className="mx-auto flex max-w-3xl items-end gap-2"><label className="min-w-0 flex-1"><span className="sr-only">Message {displayName(selectedItem.person)}</span><textarea value={draft} onChange={(event) => setDraft(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); void sendMessage(); } }} rows={1} maxLength={2000} placeholder={`Message ${displayName(selectedItem.person)}`} className="input max-h-32 min-h-11 resize-none py-3" /></label><button type="button" onClick={() => void sendMessage()} disabled={!draft.trim() || sending} aria-label="Send message" className="grid size-11 shrink-0 place-items-center rounded-xl bg-brand-600 text-white shadow-lg shadow-brand-600/20 transition hover:-translate-y-0.5 hover:bg-brand-700 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none"><SendIcon /></button></div>
             <p className="mx-auto mt-1.5 max-w-3xl text-xs text-slate-400">Enter to send · Shift+Enter for a new line</p>
           </div>
         </> : <div className="grid flex-1 place-items-center px-8 text-center"><div><div aria-hidden="true" className="mx-auto grid size-16 place-items-center rounded-2xl bg-white text-blue-600 shadow-sm"><MessageIcon /></div><h2 className="mt-5 text-xl font-bold text-slate-950">Select a conversation</h2><p className="mt-2 max-w-sm text-sm leading-6 text-slate-500">Choose one of your mutual connections to view your messages or start a conversation.</p></div></div>}

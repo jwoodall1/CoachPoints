@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowLeft, ListChecks, MessageCircle, Plus } from 'lucide-react';
+import { ArrowDown, ArrowLeft, ArrowUp, Download, GripVertical, ListChecks, MessageCircle, Plus, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
@@ -21,6 +21,29 @@ type Athlete = {
 
 const athleteColumns = 'id, username, first_name, last_name, sport, position, graduating_class, high_school, height, weight, gpa, bio, phone_number, contact_email, hudl_highlight_url, instagram_url, tiktok_url, youtube_url, x_url, stats, measurables';
 const tableHeadings = ['Athlete', 'Username', 'Sport', 'Position', 'Class', 'High school', 'Height', 'Weight', 'GPA', 'Bio', 'Stats', 'Measurables', 'Phone', 'Email', 'Hudl', 'Instagram', 'TikTok', 'YouTube', 'X', ''] as const;
+
+type ExportColumn = { key: string; label: string; getValue: (athlete: Athlete) => string };
+const exportColumns: ExportColumn[] = [
+  { key: 'athlete', label: 'Athlete', getValue: (athlete) => [athlete.first_name, athlete.last_name].filter(Boolean).join(' ') || athlete.username },
+  { key: 'username', label: 'Username', getValue: (athlete) => `@${athlete.username}` },
+  { key: 'sport', label: 'Sport', getValue: (athlete) => athlete.sport ?? '' },
+  { key: 'position', label: 'Position', getValue: (athlete) => athlete.position ?? '' },
+  { key: 'graduating_class', label: 'Class', getValue: (athlete) => athlete.graduating_class ?? '' },
+  { key: 'high_school', label: 'High school', getValue: (athlete) => athlete.high_school ?? '' },
+  { key: 'height', label: 'Height', getValue: (athlete) => athlete.height ?? '' },
+  { key: 'weight', label: 'Weight', getValue: (athlete) => athlete.weight ?? '' },
+  { key: 'gpa', label: 'GPA', getValue: (athlete) => athlete.gpa ?? '' },
+  { key: 'bio', label: 'Bio', getValue: (athlete) => athlete.bio ?? '' },
+  { key: 'stats', label: 'Stats', getValue: (athlete) => formatJson(athlete.stats, '') },
+  { key: 'measurables', label: 'Measurables', getValue: (athlete) => formatJson(athlete.measurables, '') },
+  { key: 'phone_number', label: 'Phone', getValue: (athlete) => athlete.phone_number ?? '' },
+  { key: 'contact_email', label: 'Email', getValue: (athlete) => athlete.contact_email ?? '' },
+  { key: 'hudl_highlight_url', label: 'Hudl', getValue: (athlete) => athlete.hudl_highlight_url ?? '' },
+  { key: 'instagram_url', label: 'Instagram', getValue: (athlete) => athlete.instagram_url ?? '' },
+  { key: 'tiktok_url', label: 'TikTok', getValue: (athlete) => athlete.tiktok_url ?? '' },
+  { key: 'youtube_url', label: 'YouTube', getValue: (athlete) => athlete.youtube_url ?? '' },
+  { key: 'x_url', label: 'X', getValue: (athlete) => athlete.x_url ?? '' },
+];
 
 type ListSnapshot = { lists: List[]; members: Member[]; athletes: Athlete[]; error: string | null };
 type MessageEligibility = {
@@ -82,6 +105,8 @@ export default function CoachListsPage() {
   const [sendingListMessage, setSendingListMessage] = useState(false);
   const [listMessageError, setListMessageError] = useState<string | null>(null);
   const [listMessageSuccess, setListMessageSuccess] = useState<string | null>(null);
+  const [exportOpen, setExportOpen] = useState(false);
+  const [exportOrder, setExportOrder] = useState<string[]>(() => exportColumns.map((column) => column.key));
   const userId = user?.id ?? null;
   const accountType = user?.user_metadata.account_type === 'coach' ? 'coach' : 'athlete';
 
@@ -232,6 +257,54 @@ export default function CoachListsPage() {
     setSendingListMessage(false);
   };
 
+  const openExport = () => {
+    setExportOrder(exportColumns.map((column) => column.key));
+    setExportOpen(true);
+  };
+
+  const moveExportColumn = (key: string, direction: -1 | 1) => {
+    setExportOrder((current) => {
+      const index = current.indexOf(key);
+      const nextIndex = index + direction;
+      if (index < 0 || nextIndex < 0 || nextIndex >= current.length) return current;
+      const next = [...current];
+      [next[index], next[nextIndex]] = [next[nextIndex], next[index]];
+      return next;
+    });
+  };
+
+  const reorderExportColumns = (fromKey: string, toKey: string) => {
+    setExportOrder((current) => {
+      const fromIndex = current.indexOf(fromKey);
+      const toIndex = current.indexOf(toKey);
+      if (fromIndex < 0 || toIndex < 0 || fromIndex === toIndex) return current;
+      const next = [...current];
+      next.splice(fromIndex, 1);
+      next.splice(toIndex, 0, fromKey);
+      return next;
+    });
+  };
+
+  const downloadCsv = () => {
+    if (!selectedList || !selectedAthletes.length) return;
+    const columns = exportOrder.map((key) => exportColumns.find((column) => column.key === key)).filter((column): column is ExportColumn => Boolean(column));
+    const escapeCsv = (value: string) => `"${value.replace(/"/g, '""')}"`;
+    const csv = [
+      columns.map((column) => escapeCsv(column.label)).join(','),
+      ...selectedAthletes.map((athlete) => columns.map((column) => escapeCsv(column.getValue(athlete))).join(',')),
+    ].join('\r\n');
+    const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `${selectedList.name.trim().replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase() || 'athlete-list'}.csv`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(url);
+    setExportOpen(false);
+  };
+
   if (loading) return <main className="loading-shell">Loading your recruiting lists…</main>;
 
   return <main className="min-h-screen pb-20 pt-8 sm:pt-10"><div className="page-shell max-w-[1600px]">
@@ -241,17 +314,24 @@ export default function CoachListsPage() {
     {lists.length === 0 ? <div className="rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center"><h2 className="text-xl font-bold text-slate-950">No lists yet</h2><p className="mt-2 text-sm text-slate-500">Create a list, then add athletes from the directory.</p></div> : <>
       <div className="mb-5 flex flex-col gap-4 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm lg:flex-row lg:items-end lg:justify-between"><label className="block lg:max-w-sm lg:flex-1"><span className="mb-2 block text-sm font-semibold text-slate-700">Select a list</span><select value={selectedListId} onChange={(event) => chooseList(event.target.value)} className="input">{lists.map((list) => <option key={list.id} value={list.id}>{list.name}</option>)}</select></label><div className="flex flex-col gap-2 sm:flex-row"><input value={editedListName} onChange={(event) => setEditedListName(event.target.value)} className="input sm:w-64" maxLength={80} aria-label="Selected list name" /><button type="button" disabled={!editedListName.trim() || saving} onClick={renameList} className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50">Rename list</button><button type="button" disabled={saving} onClick={deleteList} className="rounded-xl border border-rose-200 px-4 py-2.5 text-sm font-semibold text-rose-600 hover:bg-rose-50 disabled:opacity-50">Delete list</button></div></div>
       {listMessageAthleteCount > 0 && currentMessageEligibility && <div className={`mb-5 flex flex-col gap-4 rounded-2xl border px-5 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between ${canMessageSelectedList ? 'border-emerald-200 bg-emerald-50' : 'border-amber-200 bg-amber-50'}`}><div><p className={`text-sm font-extrabold ${canMessageSelectedList ? 'text-emerald-900' : 'text-amber-900'}`}>{canMessageSelectedList ? 'This list is ready for messaging' : 'Connect with every athlete to unlock list messaging'}</p><p className={`mt-1 text-sm ${canMessageSelectedList ? 'text-emerald-700' : 'text-amber-700'}`}>{currentMessageEligibility.error ? 'Unable to check mutual connections right now.' : `${currentMessageEligibility.connectedAthletes} of ${currentMessageEligibility.totalAthletes} athletes are mutual connections.`}</p></div>{canMessageSelectedList && <button type="button" onClick={openListMessage} className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-extrabold text-white shadow-lg shadow-emerald-600/15 transition hover:-translate-y-0.5 hover:bg-emerald-700"><MessageCircle className="size-4" />Message list</button>}</div>}
+      {selectedAthletes.length > 0 && <div className="mb-3 flex justify-end"><button type="button" onClick={openExport} className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-slate-950/10 transition hover:-translate-y-0.5 hover:bg-slate-800"><Download className="size-4" />Export CSV</button></div>}
       <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm"><div className="flex items-center justify-between gap-4 border-b border-slate-200 px-5 py-5 sm:px-6"><div><h2 className="text-xl font-bold text-slate-950">{selectedList?.name}</h2><p className="mt-1 text-sm text-slate-500">{selectedAthletes.length} {selectedAthletes.length === 1 ? 'athlete' : 'athletes'}</p></div><Link href="/#all-profiles" className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700">Browse athletes</Link></div>{selectedAthletes.length === 0 ? <div className="px-6 py-16 text-center text-sm text-slate-500">No athletes in this list yet.</div> : <div className="overflow-x-auto"><table className="min-w-[2200px] text-left text-sm"><thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500"><tr>{tableHeadings.map((heading) => <th key={heading} className="whitespace-nowrap px-4 py-3 font-bold">{heading}</th>)}</tr></thead><tbody className="divide-y divide-slate-100">{selectedAthletes.map((athlete) => <tr key={athlete.id} className="align-top hover:bg-slate-50"><td className="whitespace-nowrap px-4 py-4 font-semibold text-slate-950"><Link href={`/${athlete.username}`} className="hover:text-blue-700">{[athlete.first_name, athlete.last_name].filter(Boolean).join(' ') || athlete.username}</Link></td><td className="whitespace-nowrap px-4 py-4 text-slate-500">@{athlete.username}</td><td className="whitespace-nowrap px-4 py-4 text-slate-700">{athlete.sport || '—'}</td><td className="whitespace-nowrap px-4 py-4 text-slate-700">{athlete.position || '—'}</td><td className="whitespace-nowrap px-4 py-4 text-slate-700">{athlete.graduating_class || '—'}</td><td className="max-w-48 px-4 py-4 text-slate-700">{athlete.high_school || '—'}</td><td className="whitespace-nowrap px-4 py-4 text-slate-700">{athlete.height || '—'}</td><td className="whitespace-nowrap px-4 py-4 text-slate-700">{athlete.weight || '—'}</td><td className="whitespace-nowrap px-4 py-4 text-slate-700">{athlete.gpa || '—'}</td><td className="max-w-64 whitespace-pre-wrap px-4 py-4 text-slate-600">{athlete.bio || '—'}</td><td className="max-w-56 whitespace-pre-wrap px-4 py-4 text-slate-600">{formatJson(athlete.stats)}</td><td className="max-w-56 whitespace-pre-wrap px-4 py-4 text-slate-600">{formatJson(athlete.measurables)}</td><td className="whitespace-nowrap px-4 py-4 text-slate-700">{athlete.phone_number || '—'}</td><td className="whitespace-nowrap px-4 py-4 text-slate-700">{athlete.contact_email || '—'}</td>{[athlete.hudl_highlight_url, athlete.instagram_url, athlete.tiktok_url, athlete.youtube_url, athlete.x_url].map((url, index) => <td key={index} className="max-w-48 px-4 py-4">{url ? <a href={url} target="_blank" rel="noreferrer" className="break-all text-blue-600 hover:text-blue-700">{url}</a> : <span className="text-slate-400">—</span>}</td>)}<td className="whitespace-nowrap px-4 py-4"><button type="button" onClick={() => removeAthlete(athlete)} className="font-semibold text-rose-600 hover:text-rose-700">Remove</button></td></tr>)}</tbody></table></div>}</section>
     </>}
-  </div>{messageListOpen && selectedList && <ListMessageComposer listName={selectedList.name} athleteCount={listMessageAthleteCount} value={listMessage} sending={sendingListMessage} canSend={canMessageSelectedList} error={listMessageError} onChange={setListMessage} onClose={() => { if (!sendingListMessage) setMessageListOpen(false); }} onSend={() => void sendListMessage()} />}</main>;
+  </div>{messageListOpen && selectedList && <ListMessageComposer listName={selectedList.name} athleteCount={listMessageAthleteCount} value={listMessage} sending={sendingListMessage} canSend={canMessageSelectedList} error={listMessageError} onChange={setListMessage} onClose={() => { if (!sendingListMessage) setMessageListOpen(false); }} onSend={() => void sendListMessage()} />}{exportOpen && selectedList && <ExportColumnDialog listName={selectedList.name} columns={exportOrder.map((key) => exportColumns.find((column) => column.key === key)).filter((column): column is ExportColumn => Boolean(column))} onMove={moveExportColumn} onReorder={reorderExportColumns} onClose={() => setExportOpen(false)} onExport={downloadCsv} />}</main>;
 }
 
 function ListMessageComposer({ listName, athleteCount, value, sending, canSend, error, onChange, onClose, onSend }: { listName: string; athleteCount: number; value: string; sending: boolean; canSend: boolean; error: string | null; onChange: (value: string) => void; onClose: () => void; onSend: () => void }) {
   return <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/60 p-4 backdrop-blur-sm" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}><section role="dialog" aria-modal="true" aria-labelledby="list-message-title" className="w-full max-w-xl rounded-3xl bg-white p-6 shadow-2xl sm:p-8"><div className="flex items-start justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-emerald-600">Individual delivery</p><h2 id="list-message-title" className="mt-1 text-2xl font-bold tracking-tight text-slate-950">Message {listName}</h2><p className="mt-2 text-sm leading-6 text-slate-500">This sends the same private, one-to-one message separately to each of the {athleteCount} {athleteCount === 1 ? 'athlete' : 'athletes'} in this list. Athletes will not see the other recipients.</p></div><button type="button" onClick={onClose} disabled={sending} aria-label="Close list message composer" className="grid size-9 shrink-0 place-items-center rounded-lg text-xl text-slate-400 hover:bg-slate-100 hover:text-slate-700 disabled:opacity-50">×</button></div><label className="mt-6 block"><span className="mb-2 block text-sm font-bold text-slate-700">Message</span><textarea autoFocus value={value} onChange={(event) => onChange(event.target.value)} rows={7} maxLength={2000} placeholder="Write your message to the athletes in this list…" className="input resize-y" /></label><div className="mt-2 flex items-center justify-between gap-3"><span className="text-xs text-slate-400">{value.length}/2000</span>{!canSend && <span className="text-xs font-semibold text-amber-700">Connection eligibility changed. Close and try again.</span>}</div>{error && <p role="alert" className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</p>}<div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end"><button type="button" onClick={onClose} disabled={sending} className="rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50">Cancel</button><button type="button" onClick={onSend} disabled={sending || !canSend || !value.trim()} className="rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-slate-300">{sending ? 'Sending individually…' : `Send to ${athleteCount} ${athleteCount === 1 ? 'athlete' : 'athletes'}`}</button></div></section></div>;
 }
 
+function ExportColumnDialog({ listName, columns, onMove, onReorder, onClose, onExport }: { listName: string; columns: ExportColumn[]; onMove: (key: string, direction: -1 | 1) => void; onReorder: (fromKey: string, toKey: string) => void; onClose: () => void; onExport: () => void }) {
+  const [draggedKey, setDraggedKey] = useState<string | null>(null);
+
+  return <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/60 p-4 backdrop-blur-sm" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}><section role="dialog" aria-modal="true" aria-labelledby="export-columns-title" className="flex max-h-[min(760px,calc(100vh-2rem))] w-full max-w-2xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl"><header className="flex items-start justify-between gap-4 border-b border-slate-200 px-6 py-5 sm:px-8"><div><p className="text-xs font-extrabold uppercase tracking-[0.18em] text-brand-600">CSV export</p><h2 id="export-columns-title" className="mt-1 text-2xl font-black tracking-tight text-slate-950">Arrange your columns</h2><p className="mt-2 max-w-xl text-sm leading-6 text-slate-500">Choose the order for the {listName} export. Drag a field into place or use the arrow controls.</p></div><button type="button" onClick={onClose} aria-label="Close CSV export" className="grid size-9 shrink-0 place-items-center rounded-xl text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"><X className="size-5" /></button></header><div className="overflow-y-auto bg-slate-50/70 px-6 py-5 sm:px-8"><div className="grid gap-2">{columns.map((column, index) => <div key={column.key} draggable onDragStart={() => setDraggedKey(column.key)} onDragEnd={() => setDraggedKey(null)} onDragOver={(event) => event.preventDefault()} onDrop={() => { if (draggedKey) onReorder(draggedKey, column.key); setDraggedKey(null); }} className={`flex items-center gap-3 rounded-2xl border bg-white px-3 py-3 shadow-sm transition ${draggedKey === column.key ? 'border-brand-400 opacity-60' : 'border-slate-200 hover:border-brand-200 hover:shadow-md'}`}><GripVertical className="size-5 shrink-0 cursor-grab text-slate-400" aria-hidden="true" /><span className="grid size-7 shrink-0 place-items-center rounded-lg bg-slate-100 text-xs font-extrabold text-slate-500">{index + 1}</span><span className="min-w-0 flex-1 truncate text-sm font-bold text-slate-800">{column.label}</span><div className="flex shrink-0 gap-1"><button type="button" onClick={() => onMove(column.key, -1)} disabled={index === 0} aria-label={`Move ${column.label} up`} className="grid size-8 place-items-center rounded-lg text-slate-500 transition hover:bg-brand-50 hover:text-brand-700 disabled:cursor-not-allowed disabled:opacity-25"><ArrowUp className="size-4" /></button><button type="button" onClick={() => onMove(column.key, 1)} disabled={index === columns.length - 1} aria-label={`Move ${column.label} down`} className="grid size-8 place-items-center rounded-lg text-slate-500 transition hover:bg-brand-50 hover:text-brand-700 disabled:cursor-not-allowed disabled:opacity-25"><ArrowDown className="size-4" /></button></div></div>)}</div></div><footer className="flex flex-col-reverse gap-2 border-t border-slate-200 bg-white px-6 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-8"><p className="text-xs font-medium text-slate-400">{columns.length} columns · CSV format</p><div className="flex gap-2"><button type="button" onClick={onClose} className="btn-secondary">Cancel</button><button type="button" onClick={onExport} className="btn-primary"><Download className="size-4" />Download CSV</button></div></footer></section></div>;
+}
+
 /** Converts stored JSON metrics into compact multi-line table text. */
-function formatJson(value: unknown) {
-  if (!value || typeof value !== 'object') return '—';
-  return Object.entries(value as Record<string, unknown>).map(([key, entry]) => `${key}: ${String(entry)}`).join('\n') || '—';
+function formatJson(value: unknown, emptyValue = '—') {
+  if (!value || typeof value !== 'object') return emptyValue;
+  return Object.entries(value as Record<string, unknown>).map(([key, entry]) => `${key}: ${String(entry)}`).join('\n') || emptyValue;
 }

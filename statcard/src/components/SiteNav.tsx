@@ -4,7 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { ChevronLeft, Compass, LayoutDashboard, ListChecks, Menu, UserRound, UsersRound, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { useAuth } from '@/components/AuthProvider';
 import MessageNavLink from '@/components/MessageNavLink';
@@ -21,6 +21,7 @@ export default function SiteNav() {
   const [profileIdentity, setProfileIdentity] = useState<ProfileIdentity | null>(null);
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const initialRouteChecked = useRef(false);
   const userId = user?.id ?? null;
   const accountType = user?.user_metadata.account_type === 'coach' ? 'coach' : 'athlete';
   const username = profileIdentity?.userId === userId ? profileIdentity.username : null;
@@ -43,7 +44,9 @@ export default function SiteNav() {
   }, [accountType, ready, userId]);
 
   useEffect(() => {
-    if (signedIn && pathname === '/' && !new URLSearchParams(window.location.search).has('discover')) router.replace(`/${username}`);
+    if (initialRouteChecked.current || !signedIn) return;
+    initialRouteChecked.current = true;
+    if (pathname === '/') router.replace(`/${username}`);
   }, [pathname, router, signedIn, username]);
 
   return <>

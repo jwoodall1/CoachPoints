@@ -1,4 +1,7 @@
+'use client';
+
 import { Mail, Phone } from 'lucide-react';
+import { trackEvent } from '@/lib/analytics';
 
 export type SocialLinks = { phoneNumber?: string | null; contactEmail?: string | null; instagramUrl?: string | null; tiktokUrl?: string | null; youtubeUrl?: string | null; xUrl?: string | null };
 type SocialLink = { label: string; url: string; icon: 'instagram' | 'tiktok' | 'youtube' | 'x' };
@@ -23,5 +26,5 @@ export default function SocialLinks({ links }: { links: SocialLinks }) {
   ] satisfies SocialLink[]).filter(({ url }) => url.trim());
   if (!socialLinks.length && !phoneNumber && !contactEmail) return null;
 
-  return <div className="mt-6 flex flex-wrap justify-center gap-2 md:justify-start">{phoneNumber && <a href={phoneHref} aria-label={`Call ${phoneNumber}`} className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/8 px-3.5 py-2 text-xs font-bold text-slate-100 transition hover:bg-white/15"><Phone className="size-3.5 text-brand-300" />{phoneNumber}</a>}{contactEmail && <a href={`mailto:${contactEmail}`} aria-label={`Email ${contactEmail}`} className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/8 px-3.5 py-2 text-xs font-bold text-slate-100 transition hover:bg-white/15"><Mail className="size-3.5 text-brand-300" />{contactEmail}</a>}{socialLinks.map(({ label, url, icon }) => <a key={label} href={url} target="_blank" rel="noreferrer" aria-label={label} title={label} className="grid size-9 place-items-center rounded-xl border border-white/10 bg-white/8 text-slate-300 transition hover:-translate-y-0.5 hover:bg-white/15 hover:text-white"><SocialIcon icon={icon} /></a>)}</div>;
+  return <div className="mt-6 flex flex-wrap justify-center gap-2 md:justify-start">{phoneNumber && <a href={phoneHref} onClick={() => trackEvent('profile_contact_action', { channel: 'phone' })} aria-label={`Call ${phoneNumber}`} className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/8 px-3.5 py-2 text-xs font-bold text-slate-100 transition hover:bg-white/15"><Phone className="size-3.5 text-brand-300" />{phoneNumber}</a>}{contactEmail && <a href={`mailto:${contactEmail}`} onClick={() => trackEvent('profile_contact_action', { channel: 'email' })} aria-label={`Email ${contactEmail}`} className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/8 px-3.5 py-2 text-xs font-bold text-slate-100 transition hover:bg-white/15"><Mail className="size-3.5 text-brand-300" />{contactEmail}</a>}{socialLinks.map(({ label, url, icon }) => <a key={label} href={url} target="_blank" rel="noreferrer" onClick={() => trackEvent('profile_contact_action', { channel: label.toLowerCase() })} aria-label={label} title={label} className="grid size-9 place-items-center rounded-xl border border-white/10 bg-white/8 text-slate-300 transition hover:-translate-y-0.5 hover:bg-white/15 hover:text-white"><SocialIcon icon={icon} /></a>)}</div>;
 }

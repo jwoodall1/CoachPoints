@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/components/AuthProvider';
 import { OnlineStatus } from '@/components/PresenceProvider';
 import { supabase } from '@/lib/supabase';
+import { trackEvent } from '@/lib/analytics';
 
 type FriendConnection = {
   id: string;
@@ -111,6 +112,7 @@ export default function FriendRequestButton({ targetUserId, targetName }: { targ
         key: connectionKey,
       });
       if (connectionChanged) setActionError('This connection changed before your action completed. Its current status is shown now.');
+      else trackEvent('connection_action', { action: !connection ? 'request_sent' : isIncoming ? 'request_accepted' : isFriend ? 'connection_removed' : 'request_cancelled' });
     }
     setSaving(false);
   };

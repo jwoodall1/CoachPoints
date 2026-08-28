@@ -4,6 +4,7 @@ import { AuthProvider } from "@/components/AuthProvider";
 import { PresenceProvider } from "@/components/PresenceProvider";
 import SiteFooter from "@/components/SiteFooter";
 import SiteNav from "@/components/SiteNav";
+import { Analytics } from "@vercel/analytics/next"
 
 // These defaults describe every page unless a route supplies more specific metadata.
 export const metadata: Metadata = {
@@ -25,6 +26,7 @@ export default function RootLayout({
             <SiteNav />
             {children}
             <SiteFooter />
+            <Analytics />
           </PresenceProvider>
         </AuthProvider>
       </body>

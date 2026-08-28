@@ -6,6 +6,7 @@ import { Check, ListPlus, Plus, X } from 'lucide-react';
 
 import { useAuth } from '@/components/AuthProvider';
 import { supabase } from '@/lib/supabase';
+import { trackEvent } from '@/lib/analytics';
 
 type CoachList = { id: string; name: string };
 let closeActivePicker: (() => void) | null = null;
@@ -110,7 +111,10 @@ export default function AddToListButton({ athleteId, prominent = false }: { athl
       ? await supabase.from('coach_list_members').delete().eq('list_id', list.id).eq('athlete_id', athleteId)
       : await supabase.from('coach_list_members').insert({ list_id: list.id, athlete_id: athleteId });
     if (result.error) setError(result.error.message);
-    else setMemberListIds((current) => isMember ? current.filter((id) => id !== list.id) : [...current, list.id]);
+    else {
+      setMemberListIds((current) => isMember ? current.filter((id) => id !== list.id) : [...current, list.id]);
+      trackEvent('recruiting_list_action', { action: isMember ? 'athlete_removed' : 'athlete_added' });
+    }
     setSaving(null);
   };
 
@@ -129,6 +133,7 @@ export default function AddToListButton({ athleteId, prominent = false }: { athl
         setLists((current) => [...current, list]);
         setMemberListIds((current) => [...current, list.id]);
         setNewListName('');
+        trackEvent('recruiting_list_action', { action: 'list_created' });
       }
     }
     setSaving(null);

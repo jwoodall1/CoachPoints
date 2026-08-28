@@ -3,6 +3,7 @@
 
 import { Check, Copy, QrCode, Share2, X } from 'lucide-react';
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { trackEvent } from '@/lib/analytics';
 
 const subscribeToOrigin = () => () => undefined;
 
@@ -31,6 +32,7 @@ export default function ProfileShareCard({ username }: { username: string }) {
 
   const copyLink = async () => {
     await navigator.clipboard.writeText(url);
+    trackEvent('profile_share_action', { action: 'copy_link' });
     setCopied(true);
     if (copyTimer.current) window.clearTimeout(copyTimer.current);
     copyTimer.current = window.setTimeout(() => setCopied(false), 1800);

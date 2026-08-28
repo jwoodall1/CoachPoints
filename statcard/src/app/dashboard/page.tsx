@@ -10,6 +10,7 @@ import { useAuth } from '@/components/AuthProvider';
 import ProfileAvatar from '@/components/ProfileAvatar';
 import { supabase } from '@/lib/supabase';
 import { collegiateSports, getPositions } from '@/lib/sports';
+import { trackEvent } from '@/lib/analytics';
 
 // The image cropper and its canvas logic are downloaded only after this route needs them.
 const UploadModal = dynamic(() => import('@/components/UploadModal'));
@@ -109,6 +110,7 @@ export default function DashboardPage() {
     if (profileError) throw new Error(profileError.message);
     setAvatarUrl(finalUrl);
     setSavedAvatarUrl(finalUrl);
+    trackEvent('profile_photo_saved', { account_type: profile.accountType });
     setNotice('Profile photo updated successfully.');
   };
 
@@ -126,6 +128,7 @@ export default function DashboardPage() {
     else {
       const saved = { ...profile, username };
       setProfile(saved); setSavedProfile(saved); setSavedAvatarUrl(avatarUrl); setIsEditing(false);
+      trackEvent('profile_saved', { account_type: profile.accountType, stats_count: Object.keys(stats).length, measurables_count: profile.measurables.filter(({ label }) => label.trim()).length });
       setNotice('Profile saved successfully.');
     }
     setSaving(false);

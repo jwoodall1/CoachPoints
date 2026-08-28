@@ -8,6 +8,7 @@ import { useAuth } from '@/components/AuthProvider';
 import { OnlineStatus, usePresence } from '@/components/PresenceProvider';
 import ProfileAvatar from '@/components/ProfileAvatar';
 import { supabase } from '@/lib/supabase';
+import { trackEvent } from '@/lib/analytics';
 
 type AccountType = 'athlete' | 'coach';
 type Person = {
@@ -278,6 +279,7 @@ export default function MessagesWorkspace({ initialRecipientId = null }: { initi
     } else {
       setDraft('');
       setMessages((current) => addOrReplaceMessage(current, data as DirectMessage));
+      trackEvent('message_sent');
       void refreshInbox();
     }
     setSending(false);

@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { useAuth } from '@/components/AuthProvider';
 import { supabase } from '@/lib/supabase';
+import { trackEvent } from '@/lib/analytics';
 
 type List = { id: string; name: string; created_at: string };
 type Member = { list_id: string; athlete_id: string };
@@ -71,14 +72,14 @@ export default function CoachListsPanel() {
     if (!trimmed || !user) return;
     setSaving(true); setError(null);
     const { error: createError } = await supabase.from('coach_lists').insert({ coach_id: user.id, name: trimmed });
-    if (createError) setError(createError.message); else { setName(''); applySnapshot(await fetchListSnapshot()); }
+    if (createError) setError(createError.message); else { setName(''); applySnapshot(await fetchListSnapshot()); trackEvent('recruiting_list_action', { action: 'list_created' }); }
     setSaving(false);
   };
 
   const deleteList = async (list: List) => {
     if (!window.confirm(`Delete the list “${list.name}”?`)) return;
     const { error: deleteError } = await supabase.from('coach_lists').delete().eq('id', list.id);
-    if (deleteError) setError(deleteError.message); else applySnapshot(await fetchListSnapshot());
+    if (deleteError) setError(deleteError.message); else { applySnapshot(await fetchListSnapshot()); trackEvent('recruiting_list_action', { action: 'list_deleted' }); }
   };
 
   // Index relations once instead of repeatedly scanning every athlete for every list.

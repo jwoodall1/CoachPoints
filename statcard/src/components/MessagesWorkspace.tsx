@@ -53,7 +53,7 @@ function resolveAvatarUrl(username: string | null, storedUrl: string | null) {
 }
 
 function displayName(person: Person) {
-  return [person.firstName, person.lastName].filter(Boolean).join(' ') || person.username || 'Rosterra member';
+  return [person.firstName, person.lastName].filter(Boolean).join(' ') || person.username || 'CoachPoints member';
 }
 
 async function loadInbox(): Promise<InboxSnapshot> {

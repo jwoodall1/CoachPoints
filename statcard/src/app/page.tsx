@@ -27,6 +27,7 @@ export default function HomePage() {
   const [classFilter, setClassFilter] = useState('all');
   const [highSchoolFilter, setHighSchoolFilter] = useState('all');
   const [collegeFilter, setCollegeFilter] = useState('all');
+  const [directoryType, setDirectoryType] = useState<'athletes' | 'coaches'>('athletes');
   const userId = user?.id ?? null;
   const isSignedIn = Boolean(userId);
   const canManageLists = user?.user_metadata.account_type === 'coach';
@@ -34,6 +35,16 @@ export default function HomePage() {
   const profiles = isCurrentDirectory ? directory.profiles : EMPTY_PROFILES;
   const error = isCurrentDirectory ? directory.error : null;
   const loading = !ready || (isSignedIn && !isCurrentDirectory);
+
+  useEffect(() => {
+    window.setTimeout(() => setDirectoryType(user?.user_metadata.account_type === 'athlete' ? 'coaches' : 'athletes'), 0);
+  }, [user?.user_metadata.account_type]);
+
+  useEffect(() => {
+    const changeDirectoryType = (event: Event) => { setDirectoryType((event as CustomEvent<'athletes' | 'coaches'>).detail); setSportFilter('all'); setPositionFilter('all'); setClassFilter('all'); setHighSchoolFilter('all'); setCollegeFilter('all'); setSearch(''); };
+    window.addEventListener('directory-type-change', changeDirectoryType);
+    return () => window.removeEventListener('directory-type-change', changeDirectoryType);
+  }, []);
 
   useEffect(() => {
     if (!ready || !userId) return;
@@ -55,20 +66,21 @@ export default function HomePage() {
     return () => { active = false; };
   }, [ready, userId]);
 
-  const sports = useMemo(() => uniqueSorted(profiles.map((profile) => profile.sport)), [profiles]);
-  const positions = useMemo(() => uniqueSorted(profiles.map((profile) => profile.position)), [profiles]);
-  const classYears = useMemo(() => uniqueSorted(profiles.map((profile) => profile.graduating_class)), [profiles]);
-  const highSchools = useMemo(() => uniqueSorted(profiles.map((profile) => profile.high_school)), [profiles]);
-  const colleges = useMemo(() => uniqueSorted(profiles.map((profile) => profile.college_university)), [profiles]);
+  const visibleProfiles = useMemo(() => profiles.filter((profile) => profile.account_type === directoryType.slice(0, -1)), [directoryType, profiles]);
+  const sports = useMemo(() => uniqueSorted(visibleProfiles.map((profile) => profile.sport)), [visibleProfiles]);
+  const positions = useMemo(() => uniqueSorted(visibleProfiles.map((profile) => profile.position)), [visibleProfiles]);
+  const classYears = useMemo(() => uniqueSorted(visibleProfiles.map((profile) => profile.graduating_class)), [visibleProfiles]);
+  const highSchools = useMemo(() => uniqueSorted(visibleProfiles.map((profile) => profile.high_school)), [visibleProfiles]);
+  const colleges = useMemo(() => uniqueSorted(visibleProfiles.map((profile) => profile.college_university)), [visibleProfiles]);
   const availablePositions = sportFilter === 'all' ? positions : uniqueSorted([...getPositions(sportFilter), ...coachPositions]);
   const { filteredAthletes, filteredCoaches } = useMemo(() => {
     const query = search.trim().toLowerCase();
-    const filtered = profiles.filter((profile) => {
+    const filtered = visibleProfiles.filter((profile) => {
       const name = getName(profile).toLowerCase();
       return (!query || name.includes(query) || profile.username.toLowerCase().includes(query)) && (sportFilter === 'all' || profile.sport === sportFilter) && (positionFilter === 'all' || profile.position === positionFilter) && (classFilter === 'all' || profile.graduating_class === classFilter) && (highSchoolFilter === 'all' || profile.high_school === highSchoolFilter) && (collegeFilter === 'all' || profile.college_university === collegeFilter);
     });
     return { filteredAthletes: filtered.filter((profile) => profile.account_type === 'athlete'), filteredCoaches: filtered.filter((profile) => profile.account_type === 'coach') };
-  }, [profiles, search, sportFilter, positionFilter, classFilter, highSchoolFilter, collegeFilter]);
+  }, [visibleProfiles, search, sportFilter, positionFilter, classFilter, highSchoolFilter, collegeFilter]);
   const clearFilters = useCallback(() => { setSearch(''); setSportFilter('all'); setPositionFilter('all'); setClassFilter('all'); setHighSchoolFilter('all'); setCollegeFilter('all'); }, []);
 
   if (loading) return <LoadingState label="Preparing CoachPoints…" />;
@@ -119,7 +131,19 @@ function getName(profile: Athlete) { return [profile.first_name, profile.last_na
 function uniqueSorted(values: Array<string | null | undefined>) { return Array.from(new Set(values.map((value) => value?.trim()).filter((value): value is string => Boolean(value)))).sort((a, b) => a.localeCompare(b)); }
 
 const ProfileGroup = memo(function ProfileGroup({ title, description, profiles, emptyMessage, onClear, showListActions }: { title: string; description: string; profiles: Athlete[]; emptyMessage: string; onClear: () => void; showListActions: boolean }) {
-  return <section className="mt-10"><div className="mb-5 flex items-end justify-between gap-4"><div><h3 className="text-xl font-black tracking-tight text-slate-950">{title}</h3><p className="mt-1 text-sm text-slate-500">{description}</p></div><span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-extrabold text-slate-600">{profiles.length}</span></div>{profiles.length ? <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{profiles.map((profile) => <ProfileCard key={profile.id} profile={profile} showListAction={showListActions} />)}</div> : <div className="surface-card border-dashed px-6 py-12 text-center"><p className="text-sm font-semibold text-slate-500">{emptyMessage}</p><button type="button" onClick={onClear} className="mt-4 text-sm font-extrabold text-brand-700 hover:text-brand-800">Clear all filters</button></div>}</section>;
+  const { user } = useAuth();
+  const initialType = user?.user_metadata.account_type === 'athlete' ? 'coaches' : 'athletes';
+  const [directoryType, setDirectoryType] = useState<'athletes' | 'coaches'>(initialType);
+  useEffect(() => {
+    window.setTimeout(() => setDirectoryType(initialType), 0);
+  }, [initialType]);
+  useEffect(() => {
+    const syncDirectoryType = (event: Event) => setDirectoryType((event as CustomEvent<'athletes' | 'coaches'>).detail);
+    window.addEventListener('directory-type-change', syncDirectoryType);
+    return () => window.removeEventListener('directory-type-change', syncDirectoryType);
+  }, []);
+  if ((directoryType === 'athletes' ? 'Athletes' : 'Coaches') !== title) return null;
+  return <section className="mt-10"><div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"><div><h3 className="text-xl font-black tracking-tight text-slate-950">{title}</h3><p className="mt-1 text-sm text-slate-500">{description}</p></div><div className="inline-flex rounded-xl border border-slate-200 bg-white p-1 shadow-sm" role="group" aria-label="Choose directory type"><button type="button" onClick={() => { setDirectoryType('athletes'); window.dispatchEvent(new CustomEvent('directory-type-change', { detail: 'athletes' })); }} className={`rounded-lg px-3 py-2 text-xs font-extrabold transition ${directoryType === 'athletes' ? 'bg-brand-600 text-white' : 'text-slate-500 hover:bg-slate-50'}`}>Athletes</button><button type="button" onClick={() => { setDirectoryType('coaches'); window.dispatchEvent(new CustomEvent('directory-type-change', { detail: 'coaches' })); }} className={`rounded-lg px-3 py-2 text-xs font-extrabold transition ${directoryType === 'coaches' ? 'bg-emerald-600 text-white' : 'text-slate-500 hover:bg-slate-50'}`}>Coaches</button></div><span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-extrabold text-slate-600">{profiles.length}</span></div>{profiles.length ? <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{profiles.map((profile) => <ProfileCard key={profile.id} profile={profile} showListAction={showListActions} />)}</div> : <div className="surface-card border-dashed px-6 py-12 text-center"><p className="text-sm font-semibold text-slate-500">{emptyMessage}</p><button type="button" onClick={onClear} className="mt-4 text-sm font-extrabold text-brand-700 hover:text-brand-800">Clear all filters</button></div>}</section>;
 });
 
 const ProfileCard = memo(function ProfileCard({ profile, showListAction }: { profile: Athlete; showListAction: boolean }) {

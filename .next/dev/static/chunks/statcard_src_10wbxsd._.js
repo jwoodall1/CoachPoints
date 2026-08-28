@@ -353,6 +353,7 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$
 var __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/statcard/node_modules/next/dist/client/app-dir/link.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/statcard/node_modules/next/navigation.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$left$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronLeft$3e$__ = __turbopack_context__.i("[project]/statcard/node_modules/lucide-react/dist/esm/icons/chevron-left.mjs [app-client] (ecmascript) <export default as ChevronLeft>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$compass$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Compass$3e$__ = __turbopack_context__.i("[project]/statcard/node_modules/lucide-react/dist/esm/icons/compass.mjs [app-client] (ecmascript) <export default as Compass>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$layout$2d$dashboard$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__LayoutDashboard$3e$__ = __turbopack_context__.i("[project]/statcard/node_modules/lucide-react/dist/esm/icons/layout-dashboard.mjs [app-client] (ecmascript) <export default as LayoutDashboard>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$list$2d$checks$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ListChecks$3e$__ = __turbopack_context__.i("[project]/statcard/node_modules/lucide-react/dist/esm/icons/list-checks.mjs [app-client] (ecmascript) <export default as ListChecks>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$menu$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Menu$3e$__ = __turbopack_context__.i("[project]/statcard/node_modules/lucide-react/dist/esm/icons/menu.mjs [app-client] (ecmascript) <export default as Menu>");
@@ -377,6 +378,7 @@ var _s = __turbopack_context__.k.signature();
 function SiteNav() {
     _s();
     const pathname = (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["usePathname"])();
+    const router = (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRouter"])();
     const { ready, user } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$src$2f$components$2f$AuthProvider$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useAuth"])();
     const [profileIdentity, setProfileIdentity] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(null);
     const [collapsed, setCollapsed] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(false);
@@ -429,6 +431,16 @@ function SiteNav() {
         ready,
         userId
     ]);
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
+        "SiteNav.useEffect": ()=>{
+            if (signedIn && pathname === '/' && !new URLSearchParams(window.location.search).has('discover')) router.replace(`/${username}`);
+        }
+    }["SiteNav.useEffect"], [
+        pathname,
+        router,
+        signedIn,
+        username
+    ]);
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
         children: [
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("aside", {
@@ -450,7 +462,7 @@ function SiteNav() {
                                     priority: true
                                 }, void 0, false, {
                                     fileName: "[project]/statcard/src/components/SiteNav.tsx",
-                                    lineNumber: 47,
+                                    lineNumber: 52,
                                     columnNumber: 121
                                 }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$image$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
                                     src: "/coachpoints-logo.png",
@@ -461,12 +473,12 @@ function SiteNav() {
                                     priority: true
                                 }, void 0, false, {
                                     fileName: "[project]/statcard/src/components/SiteNav.tsx",
-                                    lineNumber: 47,
+                                    lineNumber: 52,
                                     columnNumber: 290
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/statcard/src/components/SiteNav.tsx",
-                                lineNumber: 47,
+                                lineNumber: 52,
                                 columnNumber: 9
                             }, this),
                             !collapsed && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -478,18 +490,18 @@ function SiteNav() {
                                     className: "size-5"
                                 }, void 0, false, {
                                     fileName: "[project]/statcard/src/components/SiteNav.tsx",
-                                    lineNumber: 48,
+                                    lineNumber: 53,
                                     columnNumber: 228
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/statcard/src/components/SiteNav.tsx",
-                                lineNumber: 48,
+                                lineNumber: 53,
                                 columnNumber: 24
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/statcard/src/components/SiteNav.tsx",
-                        lineNumber: 46,
+                        lineNumber: 51,
                         columnNumber: 7
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -502,7 +514,7 @@ function SiteNav() {
                                     className: `size-2 rounded-full ${accountType === 'coach' ? 'bg-emerald-500' : 'bg-brand-500'}`
                                 }, void 0, false, {
                                     fileName: "[project]/statcard/src/components/SiteNav.tsx",
-                                    lineNumber: 50,
+                                    lineNumber: 55,
                                     columnNumber: 384
                                 }, this),
                                 !collapsed && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -510,25 +522,25 @@ function SiteNav() {
                                     children: accountType
                                 }, void 0, false, {
                                     fileName: "[project]/statcard/src/components/SiteNav.tsx",
-                                    lineNumber: 50,
+                                    lineNumber: 55,
                                     columnNumber: 504
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/statcard/src/components/SiteNav.tsx",
-                            lineNumber: 50,
+                            lineNumber: 55,
                             columnNumber: 100
                         }, this) : !collapsed && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                             className: "px-3 text-xs font-semibold text-slate-400",
                             children: "Performance meets opportunity"
                         }, void 0, false, {
                             fileName: "[project]/statcard/src/components/SiteNav.tsx",
-                            lineNumber: 50,
+                            lineNumber: 55,
                             columnNumber: 621
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/statcard/src/components/SiteNav.tsx",
-                        lineNumber: 50,
+                        lineNumber: 55,
                         columnNumber: 7
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("nav", {
@@ -536,13 +548,14 @@ function SiteNav() {
                         "aria-label": "Main navigation",
                         children: [
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(SideLink, {
-                                href: "/",
+                                href: signedIn ? '/?discover=1' : '/',
                                 label: "Discover",
+                                icon: __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$compass$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Compass$3e$__["Compass"],
                                 active: pathname === '/',
                                 collapsed: collapsed
                             }, void 0, false, {
                                 fileName: "[project]/statcard/src/components/SiteNav.tsx",
-                                lineNumber: 51,
+                                lineNumber: 56,
                                 columnNumber: 124
                             }, this),
                             signedIn && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
@@ -553,8 +566,8 @@ function SiteNav() {
                                             collapsed: collapsed
                                         }, item.href, false, {
                                             fileName: "[project]/statcard/src/components/SiteNav.tsx",
-                                            lineNumber: 51,
-                                            columnNumber: 246
+                                            lineNumber: 56,
+                                            columnNumber: 291
                                         }, this)),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$src$2f$components$2f$MessageNavLink$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
                                         userId: userId,
@@ -562,8 +575,8 @@ function SiteNav() {
                                         collapsed: collapsed
                                     }, void 0, false, {
                                         fileName: "[project]/statcard/src/components/SiteNav.tsx",
-                                        lineNumber: 51,
-                                        columnNumber: 340
+                                        lineNumber: 56,
+                                        columnNumber: 385
                                     }, this),
                                     username && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(SideLink, {
                                         href: `/${username}`,
@@ -573,14 +586,14 @@ function SiteNav() {
                                         collapsed: collapsed
                                     }, void 0, false, {
                                         fileName: "[project]/statcard/src/components/SiteNav.tsx",
-                                        lineNumber: 51,
-                                        columnNumber: 415
+                                        lineNumber: 56,
+                                        columnNumber: 460
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/statcard/src/components/SiteNav.tsx",
-                                lineNumber: 51,
-                                columnNumber: 223
+                                lineNumber: 56,
+                                columnNumber: 268
                             }, this),
                             ready && !userId && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
                                 href: "/login?role=athlete",
@@ -590,18 +603,18 @@ function SiteNav() {
                                     className: "size-4"
                                 }, void 0, false, {
                                     fileName: "[project]/statcard/src/components/SiteNav.tsx",
-                                    lineNumber: 51,
-                                    columnNumber: 870
+                                    lineNumber: 56,
+                                    columnNumber: 915
                                 }, this) : 'Get started'
                             }, void 0, false, {
                                 fileName: "[project]/statcard/src/components/SiteNav.tsx",
-                                lineNumber: 51,
-                                columnNumber: 570
+                                lineNumber: 56,
+                                columnNumber: 615
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/statcard/src/components/SiteNav.tsx",
-                        lineNumber: 51,
+                        lineNumber: 56,
                         columnNumber: 7
                     }, this),
                     collapsed && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -613,18 +626,18 @@ function SiteNav() {
                             className: "size-5 rotate-180"
                         }, void 0, false, {
                             fileName: "[project]/statcard/src/components/SiteNav.tsx",
-                            lineNumber: 52,
+                            lineNumber: 57,
                             columnNumber: 237
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/statcard/src/components/SiteNav.tsx",
-                        lineNumber: 52,
+                        lineNumber: 57,
                         columnNumber: 21
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/statcard/src/components/SiteNav.tsx",
-                lineNumber: 45,
+                lineNumber: 50,
                 columnNumber: 5
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -642,12 +655,12 @@ function SiteNav() {
                             priority: true
                         }, void 0, false, {
                             fileName: "[project]/statcard/src/components/SiteNav.tsx",
-                            lineNumber: 54,
+                            lineNumber: 59,
                             columnNumber: 191
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/statcard/src/components/SiteNav.tsx",
-                        lineNumber: 54,
+                        lineNumber: 59,
                         columnNumber: 146
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -661,24 +674,24 @@ function SiteNav() {
                             className: "size-5"
                         }, void 0, false, {
                             fileName: "[project]/statcard/src/components/SiteNav.tsx",
-                            lineNumber: 54,
+                            lineNumber: 59,
                             columnNumber: 628
                         }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$menu$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Menu$3e$__["Menu"], {
                             className: "size-5"
                         }, void 0, false, {
                             fileName: "[project]/statcard/src/components/SiteNav.tsx",
-                            lineNumber: 54,
+                            lineNumber: 59,
                             columnNumber: 655
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/statcard/src/components/SiteNav.tsx",
-                        lineNumber: 54,
+                        lineNumber: 59,
                         columnNumber: 325
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/statcard/src/components/SiteNav.tsx",
-                lineNumber: 54,
+                lineNumber: 59,
                 columnNumber: 5
             }, this),
             mobileOpen && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -692,12 +705,13 @@ function SiteNav() {
                     },
                     children: [
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(MobileLink, {
-                            href: "/",
+                            href: signedIn ? '/?discover=1' : '/',
                             label: "Discover",
+                            icon: __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$compass$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Compass$3e$__["Compass"],
                             active: pathname === '/'
                         }, void 0, false, {
                             fileName: "[project]/statcard/src/components/SiteNav.tsx",
-                            lineNumber: 55,
+                            lineNumber: 60,
                             columnNumber: 301
                         }, this),
                         signedIn && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
@@ -707,16 +721,16 @@ function SiteNav() {
                                         active: pathname === item.href
                                     }, item.href, false, {
                                         fileName: "[project]/statcard/src/components/SiteNav.tsx",
-                                        lineNumber: 55,
-                                        columnNumber: 403
+                                        lineNumber: 60,
+                                        columnNumber: 448
                                     }, this)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$src$2f$components$2f$MessageNavLink$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
                                     userId: userId,
                                     mobile: true
                                 }, void 0, false, {
                                     fileName: "[project]/statcard/src/components/SiteNav.tsx",
-                                    lineNumber: 55,
-                                    columnNumber: 477
+                                    lineNumber: 60,
+                                    columnNumber: 522
                                 }, this),
                                 username && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(MobileLink, {
                                     href: `/${username}`,
@@ -725,14 +739,14 @@ function SiteNav() {
                                     active: pathname === `/${username}`
                                 }, void 0, false, {
                                     fileName: "[project]/statcard/src/components/SiteNav.tsx",
-                                    lineNumber: 55,
-                                    columnNumber: 532
+                                    lineNumber: 60,
+                                    columnNumber: 577
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/statcard/src/components/SiteNav.tsx",
-                            lineNumber: 55,
-                            columnNumber: 380
+                            lineNumber: 60,
+                            columnNumber: 425
                         }, this),
                         ready && !userId && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
                             href: "/login?role=athlete",
@@ -740,30 +754,31 @@ function SiteNav() {
                             children: "Get started"
                         }, void 0, false, {
                             fileName: "[project]/statcard/src/components/SiteNav.tsx",
-                            lineNumber: 55,
-                            columnNumber: 667
+                            lineNumber: 60,
+                            columnNumber: 712
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/statcard/src/components/SiteNav.tsx",
-                    lineNumber: 55,
+                    lineNumber: 60,
                     columnNumber: 147
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/statcard/src/components/SiteNav.tsx",
-                lineNumber: 55,
+                lineNumber: 60,
                 columnNumber: 20
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/statcard/src/components/SiteNav.tsx",
-        lineNumber: 44,
+        lineNumber: 49,
         columnNumber: 10
     }, this);
 }
-_s(SiteNav, "WdjMxHIJJLFFb00VN1R9H/PKGYU=", false, function() {
+_s(SiteNav, "m1r6HZOdL1ZjYBkn0h34gTdg+Eo=", false, function() {
     return [
         __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["usePathname"],
+        __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRouter"],
         __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$src$2f$components$2f$AuthProvider$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useAuth"]
     ];
 });
@@ -779,14 +794,14 @@ function SideLink({ href, label, icon: Icon = __TURBOPACK__imported__module__$5b
                 className: "size-4.5 shrink-0"
             }, void 0, false, {
                 fileName: "[project]/statcard/src/components/SiteNav.tsx",
-                lineNumber: 60,
+                lineNumber: 65,
                 columnNumber: 344
             }, this),
             !collapsed && label
         ]
     }, void 0, true, {
         fileName: "[project]/statcard/src/components/SiteNav.tsx",
-        lineNumber: 60,
+        lineNumber: 65,
         columnNumber: 10
     }, this);
 }
@@ -801,14 +816,14 @@ function MobileLink({ href, label, icon: Icon = __TURBOPACK__imported__module__$
                 className: "size-4.5"
             }, void 0, false, {
                 fileName: "[project]/statcard/src/components/SiteNav.tsx",
-                lineNumber: 64,
+                lineNumber: 69,
                 columnNumber: 226
             }, this),
             label
         ]
     }, void 0, true, {
         fileName: "[project]/statcard/src/components/SiteNav.tsx",
-        lineNumber: 64,
+        lineNumber: 69,
         columnNumber: 10
     }, this);
 }

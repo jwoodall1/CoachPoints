@@ -48,14 +48,15 @@ function LoginForm() {
       else if (data.session) {
         trackEvent('auth_completed', { action: 'sign_up', account_type: accountType });
         if (isCoach) await supabase.from('coachprofiles').upsert({ id: data.session.user.id, first_name: firstName.trim(), last_name: lastName.trim(), username: publicUsername }, { onConflict: 'id' });
-        router.push(isCoach ? '/coach-dashboard' : '/dashboard');
+        router.push(`/${publicUsername}`);
       } else setMessage('Your account is ready. Check your email to confirm it, then sign in.');
     } else {
       const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
       if (signInError) setError(signInError.message);
       else {
         trackEvent('auth_completed', { action: 'sign_in', account_type: data.user?.user_metadata.account_type === 'coach' ? 'coach' : 'athlete' });
-        router.push(data.user?.user_metadata.account_type === 'coach' ? '/coach-dashboard' : '/dashboard');
+        const username = typeof data.user?.user_metadata.username === 'string' ? data.user.user_metadata.username : null;
+        router.push(username ? `/${username}` : data.user?.user_metadata.account_type === 'coach' ? '/coach-dashboard' : '/dashboard');
       }
     }
     setLoading(false);

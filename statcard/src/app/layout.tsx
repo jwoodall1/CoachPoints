@@ -7,7 +7,7 @@ import SiteNav from "@/components/SiteNav";
 
 // These defaults describe every page unless a route supplies more specific metadata.
 export const metadata: Metadata = {
-  title: "Athlio | Performance Meets Opportunity",
+  title: "Rosterra | Performance Meets Opportunity",
   description: "Professional athlete profiles, recruiting tools, and direct connections for athletes and coaches.",
 };
 

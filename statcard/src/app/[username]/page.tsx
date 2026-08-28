@@ -24,10 +24,10 @@ const getPublicProfile = cache(async (username: string) => {
 export async function generateMetadata({ params }: ProfilePageProps): Promise<Metadata> {
   const { username } = await params;
   const { profile } = await getPublicProfile(username);
-  if (!profile) return { title: 'Profile not found | Athlio' };
+  if (!profile) return { title: 'Profile not found | Rosterra' };
   const name = [profile.first_name, profile.last_name].filter(Boolean).join(' ') || username;
   const role = profile.account_type === 'coach' ? 'Coach' : 'Athlete';
-  return { title: `${name} | Athlio`, description: `${role} profile for ${name} on Athlio.` };
+  return { title: `${name} | Rosterra`, description: `${role} profile for ${name} on Rosterra.` };
 }
 
 /** Public-facing athlete or coach portfolio with recruiting-ready details. */

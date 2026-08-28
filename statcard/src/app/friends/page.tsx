@@ -312,7 +312,7 @@ export default function FriendsPage() {
 }
 
 function displayName(person: Person) {
-  return [person.firstName, person.lastName].filter(Boolean).join(' ') || person.username || 'Athlio member';
+  return [person.firstName, person.lastName].filter(Boolean).join(' ') || person.username || 'Rosterra member';
 }
 
 /** Keeps identity and actions readable from narrow phones through desktop layouts. */

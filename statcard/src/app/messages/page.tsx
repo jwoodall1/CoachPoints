@@ -3,8 +3,8 @@ import type { Metadata } from 'next';
 import MessagesWorkspace from '@/components/MessagesWorkspace';
 
 export const metadata: Metadata = {
-  title: 'Messages | Athlio',
-  description: 'Private messages with your Athlio connections.',
+  title: 'Messages | Rosterra',
+  description: 'Private messages with your Rosterra connections.',
 };
 
 export default function MessagesPage() {

@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import MessagesWorkspace from '@/components/MessagesWorkspace';
 
 export const metadata: Metadata = {
-  title: 'Conversation | Athlio',
+  title: 'Conversation | Rosterra',
 };
 
 export default async function ConversationPage({ params }: { params: Promise<{ recipientId: string }> }) {

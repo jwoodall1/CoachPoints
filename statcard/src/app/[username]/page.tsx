@@ -14,10 +14,10 @@ import { supabase } from '@/lib/supabase';
 type ProfilePageProps = { params: Promise<{ username: string }> };
 
 const getPublicProfile = cache(async (username: string) => {
-  const athleteQuery = supabase.from('profiles').select('id, first_name, last_name, account_type, height, weight, graduating_class, high_school, gpa, sport, position, bio, avatar_url, hudl_highlight_url, phone_number, contact_email, instagram_url, tiktok_url, youtube_url, x_url, stats, measurables').eq('username', username).maybeSingle();
+  const athleteQuery = supabase.from('profiles').select('id, first_name, last_name, account_type, height, weight, graduating_class, high_school, gpa, sport, position, bio, avatar_url, hudl_highlight_url, hudl_secondary_urls, phone_number, contact_email, instagram_url, tiktok_url, youtube_url, x_url, stats, measurables').eq('username', username).maybeSingle();
   const coachQuery = supabase.from('coachprofiles').select('id, first_name, last_name, college_university, sport, bio, avatar_url, phone_number, contact_email, instagram_url, tiktok_url, youtube_url, x_url').eq('username', username).maybeSingle();
   const [{ data: athleteProfile, error: athleteError }, { data: coachProfile, error: coachError }] = await Promise.all([athleteQuery, coachQuery]);
-  const profile = athleteProfile ? { ...athleteProfile, college_university: null } : coachProfile ? { ...coachProfile, account_type: 'coach' as const, height: null, weight: null, graduating_class: null, high_school: null, gpa: null, sport: coachProfile.sport, position: null, hudl_highlight_url: null, stats: null, measurables: null } : null;
+  const profile = athleteProfile ? { ...athleteProfile, college_university: null } : coachProfile ? { ...coachProfile, account_type: 'coach' as const, height: null, weight: null, graduating_class: null, high_school: null, gpa: null, sport: coachProfile.sport, position: null, hudl_highlight_url: null, hudl_secondary_urls: [], stats: null, measurables: null } : null;
   return { error: athleteProfile ? athleteError : coachError, profile };
 });
 
@@ -57,7 +57,7 @@ export default async function PublicProfile({ params }: ProfilePageProps) {
     <div className="page-shell pt-10"><div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_340px]"><div className="space-y-8"><section className="surface-card p-6 sm:p-8"><SectionHeading icon={UserRound} eyebrow="Profile" title="About" /><p className="mt-5 whitespace-pre-wrap text-base leading-8 text-slate-600">{profile.bio || (isCoach ? 'This coach has not added a biography yet.' : 'This athlete has not added a biography yet.')}</p></section>
       {!isCoach && <section className="surface-card p-6 sm:p-8"><SectionHeading icon={Gauge} eyebrow="Performance" title="Stats that define the game" />{stats.length ? <dl className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">{stats.map(([label, value]) => <DataTile key={label} label={label} value={String(value)} />)}</dl> : <EmptyData text="Performance statistics will be added soon." />}</section>}
       {!isCoach && <section className="surface-card p-6 sm:p-8"><SectionHeading icon={Ruler} eyebrow="Athletic profile" title="Measurables" />{measurables.length ? <dl className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">{measurables.map(([label, value]) => <DataTile key={label} label={label} value={String(value)} compact />)}</dl> : <EmptyData text="Measurables will be added soon." />}</section>}
-      {profile.hudl_highlight_url && <section className="surface-card p-6 sm:p-8"><SectionHeading icon={Video} eyebrow="Film" title="Hudl highlight reel" /><div className="mt-6"><HudlHighlight url={profile.hudl_highlight_url} /></div></section>}</div><aside className="lg:sticky lg:top-28 lg:self-start"><ProfileShareCard username={username} /></aside></div></div>
+      {(profile.hudl_highlight_url || profile.hudl_secondary_urls?.length) && <section className="surface-card p-6 sm:p-8"><SectionHeading icon={Video} eyebrow="Film" title="Hudl highlight reel" /><div className="mt-6"><HudlHighlight primaryUrl={profile.hudl_highlight_url} secondaryUrls={profile.hudl_secondary_urls} /></div></section>}</div><aside className="lg:sticky lg:top-28 lg:self-start"><ProfileShareCard username={username} /></aside></div></div>
   </main>;
 }
 

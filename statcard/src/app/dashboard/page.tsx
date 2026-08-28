@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
-import { ArrowUpRight, Camera, CheckCircle2, Circle, LogOut, Pencil, Save, Sparkles, Trophy } from 'lucide-react';
+import { ArrowUpRight, Camera, LogOut, Pencil, Save, Trophy } from 'lucide-react';
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
@@ -11,6 +11,7 @@ import ProfileAvatar from '@/components/ProfileAvatar';
 import { supabase } from '@/lib/supabase';
 import { collegiateSports, getPositions } from '@/lib/sports';
 import { trackEvent } from '@/lib/analytics';
+import ProfileReadinessPopup from '@/components/ProfileReadinessPopup';
 
 // The image cropper and its canvas logic are downloaded only after this route needs them.
 const UploadModal = dynamic(() => import('@/components/UploadModal'));
@@ -154,13 +155,7 @@ export default function DashboardPage() {
   return <main className="min-h-screen pb-20 pt-8 sm:pt-10"><div className="page-shell max-w-5xl">
     <header className="athletic-grid relative mb-8 overflow-hidden rounded-[2rem] bg-slate-950 px-6 py-8 text-white shadow-2xl shadow-slate-300/50 sm:px-8 sm:py-10"><div className="absolute -right-16 -top-24 size-72 rounded-full bg-brand-600/25 blur-3xl" /><div className="relative flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between"><div className="flex items-start gap-4"><div className="hidden size-12 shrink-0 place-items-center rounded-2xl bg-brand-500/15 text-brand-200 sm:grid"><Trophy className="size-5" /></div><div><p className="text-xs font-extrabold uppercase tracking-[0.18em] text-brand-300">Athlete workspace</p><h1 className="mt-2 text-3xl font-black tracking-tight sm:text-4xl">Build your CoachPoints profile</h1><p className="mt-2 text-sm font-medium text-slate-400">{user?.email}</p></div></div><div className="flex flex-wrap gap-2">{profile.username && <Link href={`/${profile.username}`} className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-sm font-bold text-white transition hover:bg-white/10">View profile <ArrowUpRight className="size-4" /></Link>}<button type="button" onClick={async () => { await supabase.auth.signOut(); router.replace('/login'); }} className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-white/15 px-4 py-2 text-sm font-bold text-slate-200 transition hover:bg-white/10 hover:text-white"><LogOut className="size-4" />Sign out</button></div></div>
     </header>
-    <section className="mb-6 overflow-hidden rounded-3xl border border-brand-100 bg-gradient-to-br from-brand-50 via-white to-emerald-50/60 p-6 shadow-sm sm:p-8" aria-labelledby="profile-readiness-title">
-      <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-        <div className="min-w-0 flex-1"><div className="flex items-center gap-2 text-brand-700"><Sparkles className="size-4" /><p className="eyebrow text-brand-700">Recruiter readiness</p></div><div className="mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1"><h2 id="profile-readiness-title" className="text-2xl font-black tracking-tight text-slate-950">{readiness.recruiterReady ? 'Recruiter-ready profile' : 'Make your profile stand out'}</h2><span className="text-sm font-extrabold text-slate-500">{readiness.points}% complete</span></div><p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">{readiness.recruiterReady ? 'You have the essentials recruiters look for: a clear identity, position, and film. Keep your details current as your season develops.' : 'Complete the essentials so recruiters can understand who you are, what you play, and how to evaluate your game.'}</p><div className="mt-4 h-2 overflow-hidden rounded-full bg-white/80" role="progressbar" aria-label="Profile completion" aria-valuemin={0} aria-valuemax={100} aria-valuenow={readiness.points}><div className="h-full rounded-full bg-gradient-to-r from-brand-600 to-emerald-500 transition-all" style={{ width: `${readiness.points}%` }} /></div></div>
-        <div className="w-full rounded-2xl border border-white/80 bg-white/80 p-4 lg:max-w-sm"><p className="text-xs font-extrabold uppercase tracking-[0.16em] text-slate-500">Next best steps</p>{readiness.nextSteps.length ? <ul className="mt-3 space-y-3">{readiness.nextSteps.map((step) => <li key={step.label} className="flex gap-2.5"><Circle className="mt-0.5 size-4 shrink-0 text-slate-300" /><span><strong className="block text-sm font-bold text-slate-800">{step.label}</strong><span className="block text-xs leading-5 text-slate-500">{step.detail}</span></span></li>)}</ul> : <div className="mt-3 flex gap-2.5 text-sm font-semibold text-emerald-700"><CheckCircle2 className="size-5 shrink-0" />Everything important is covered.</div>}</div>
-      </div>
-      <div className="mt-6 grid gap-2 border-t border-brand-100 pt-5 sm:grid-cols-2 lg:grid-cols-3">{readiness.checks.map((check) => <div key={check.label} className="flex items-center gap-2 text-xs font-semibold text-slate-600">{check.complete ? <CheckCircle2 className="size-4 text-emerald-500" /> : <Circle className="size-4 text-slate-300" />}{check.label}</div>)}</div>
-    </section>
+    <ProfileReadinessPopup checks={readiness.checks} points={readiness.points} recruiterReady={readiness.recruiterReady} variant="athlete" />
     <form onSubmit={saveProfile} className="space-y-6">
       <section className="surface-card p-6 sm:p-8">
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"><div><p className="eyebrow">Public identity</p><h2 className="section-title mt-2">Personal information</h2><p className="mt-1 text-sm text-slate-500">This is what visitors see on your public profile.</p></div>{isEditing ? <button type="button" onClick={stopEditing} className="btn-secondary">Stop editing</button> : <button type="button" onClick={() => { setIsEditing(true); setNotice(null); }} className="btn-dark"><Pencil className="size-4" />Edit profile</button>}</div>

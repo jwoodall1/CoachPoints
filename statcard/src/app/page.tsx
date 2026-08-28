@@ -66,7 +66,8 @@ export default function HomePage() {
     return () => { active = false; };
   }, [ready, userId]);
 
-  const visibleProfiles = useMemo(() => profiles.filter((profile) => profile.account_type === directoryType.slice(0, -1)), [directoryType, profiles]);
+  const visibleAccountType = directoryType === 'athletes' ? 'athlete' : 'coach';
+  const visibleProfiles = useMemo(() => profiles.filter((profile) => profile.account_type === visibleAccountType), [profiles, visibleAccountType]);
   const sports = useMemo(() => uniqueSorted(visibleProfiles.map((profile) => profile.sport)), [visibleProfiles]);
   const positions = useMemo(() => uniqueSorted(visibleProfiles.map((profile) => profile.position)), [visibleProfiles]);
   const classYears = useMemo(() => uniqueSorted(visibleProfiles.map((profile) => profile.graduating_class)), [visibleProfiles]);

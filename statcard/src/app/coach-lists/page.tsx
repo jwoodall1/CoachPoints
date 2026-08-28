@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowDown, ArrowLeft, ArrowUp, Download, GripVertical, ListChecks, MessageCircle, Plus, X } from 'lucide-react';
+import { ArrowDown, ArrowLeft, ArrowUp, Bell, Download, GripVertical, ListChecks, MessageCircle, Plus, Search, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
@@ -10,6 +10,8 @@ import { supabase } from '@/lib/supabase';
 
 type List = { id: string; name: string; created_at: string };
 type Member = { list_id: string; athlete_id: string };
+type Stage = 'New' | 'Interested' | 'Contacted' | 'Evaluating' | 'Offer' | 'Archived';
+type Pipeline = { coach_id: string; athlete_id: string; stage: Stage; notes: string; tags: string[]; reminder: string | null; follow_up_date: string | null; last_activity_at: string; updated_at: string };
 type Athlete = {
   id: string; username: string; first_name: string | null; last_name: string | null;
   sport: string | null; position: string | null; graduating_class: string | null;
@@ -45,7 +47,7 @@ const exportColumns: ExportColumn[] = [
   { key: 'x_url', label: 'X', getValue: (athlete) => athlete.x_url ?? '' },
 ];
 
-type ListSnapshot = { lists: List[]; members: Member[]; athletes: Athlete[]; error: string | null };
+type ListSnapshot = { lists: List[]; members: Member[]; athletes: Athlete[]; pipeline: Pipeline[]; error: string | null };
 type MessageEligibility = {
   listId: string;
   totalAthletes: number;
@@ -56,18 +58,19 @@ type MessageEligibility = {
 
 /** Loads list headers and memberships together, followed by only referenced athletes. */
 async function fetchListSnapshot(): Promise<ListSnapshot> {
-  const [{ data: listData, error: listError }, { data: memberData, error: memberError }] = await Promise.all([
+  const [{ data: listData, error: listError }, { data: memberData, error: memberError }, { data: pipelineData, error: pipelineError }] = await Promise.all([
     supabase.from('coach_lists').select('id, name, created_at').order('created_at', { ascending: true }),
     supabase.from('coach_list_members').select('list_id, athlete_id'),
+    supabase.from('coach_athlete_pipeline').select('coach_id, athlete_id, stage, notes, tags, reminder, follow_up_date, last_activity_at, updated_at'),
   ]);
-  if (listError || memberError) return { lists: [], members: [], athletes: [], error: (listError ?? memberError)?.message ?? 'Unable to load lists.' };
+  if (listError || memberError || pipelineError) return { lists: [], members: [], athletes: [], pipeline: [], error: (listError ?? memberError ?? pipelineError)?.message ?? 'Unable to load lists.' };
 
   const members = memberData ?? [];
   const athleteIds = Array.from(new Set(members.map((member) => member.athlete_id)));
-  if (!athleteIds.length) return { lists: listData ?? [], members, athletes: [], error: null };
+  if (!athleteIds.length) return { lists: listData ?? [], members, athletes: [], pipeline: pipelineData ?? [], error: null };
 
   const { data: athleteData, error: athleteError } = await supabase.from('profiles').select(athleteColumns).in('id', athleteIds);
-  return { lists: listData ?? [], members, athletes: athleteData ?? [], error: athleteError?.message ?? null };
+  return { lists: listData ?? [], members, athletes: athleteData ?? [], pipeline: pipelineData ?? [], error: athleteError?.message ?? null };
 }
 
 async function fetchMessageEligibility(listId: string): Promise<MessageEligibility> {
@@ -93,6 +96,7 @@ export default function CoachListsPage() {
   const [lists, setLists] = useState<List[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [athletes, setAthletes] = useState<Athlete[]>([]);
+  const [pipeline, setPipeline] = useState<Pipeline[]>([]);
   const [selectedListId, setSelectedListId] = useState('');
   const [newListName, setNewListName] = useState('');
   const [editedListName, setEditedListName] = useState('');
@@ -107,14 +111,40 @@ export default function CoachListsPage() {
   const [listMessageSuccess, setListMessageSuccess] = useState<string | null>(null);
   const [exportOpen, setExportOpen] = useState(false);
   const [exportOrder, setExportOrder] = useState<string[]>(() => exportColumns.map((column) => column.key));
+  const [stageFilter, setStageFilter] = useState('All');
+  const [tagFilter, setTagFilter] = useState('');
+  const [sportFilter, setSportFilter] = useState('All');
+  const [classFilter, setClassFilter] = useState('All');
+  const [gpaFilter, setGpaFilter] = useState('');
+  const [searchFilter, setSearchFilter] = useState('');
+  const [sortBy, setSortBy] = useState('last_activity');
+  const [editingAthlete, setEditingAthlete] = useState<Athlete | null>(null);
   const userId = user?.id ?? null;
   const accountType = user?.user_metadata.account_type === 'coach' ? 'coach' : 'athlete';
 
   const selectedList = lists.find((list) => list.id === selectedListId) ?? null;
   const selectedAthletes = useMemo(() => {
     const ids = new Set(members.filter((member) => member.list_id === selectedListId).map((member) => member.athlete_id));
-    return athletes.filter((athlete) => ids.has(athlete.id));
-  }, [athletes, members, selectedListId]);
+    const pipelineByAthlete = new Map(pipeline.map((item) => [item.athlete_id, item]));
+    const filtered = athletes.filter((athlete) => {
+      if (!ids.has(athlete.id)) return false;
+      const item = pipelineByAthlete.get(athlete.id);
+      const haystack = `${athlete.first_name ?? ''} ${athlete.last_name ?? ''} ${athlete.username}`.toLowerCase();
+      return (stageFilter === 'All' || (item?.stage ?? 'New') === stageFilter) &&
+        (!tagFilter.trim() || (item?.tags ?? []).some((tag) => tag.toLowerCase().includes(tagFilter.trim().toLowerCase()))) &&
+        (sportFilter === 'All' || sportFilter === 'All sports' || athlete.sport === sportFilter) && (classFilter === 'All' || classFilter === 'All class years' || athlete.graduating_class === classFilter) &&
+        (!gpaFilter || Number(athlete.gpa) >= Number(gpaFilter)) && (!searchFilter.trim() || haystack.includes(searchFilter.trim().toLowerCase()));
+    });
+    return filtered.sort((a, b) => {
+      const pa = pipelineByAthlete.get(a.id); const pb = pipelineByAthlete.get(b.id);
+      if (sortBy === 'gpa') return Number(b.gpa ?? -Infinity) - Number(a.gpa ?? -Infinity);
+      if (sortBy === 'name') return `${a.last_name} ${a.first_name}`.localeCompare(`${b.last_name} ${b.first_name}`);
+      return new Date(pb?.last_activity_at ?? 0).getTime() - new Date(pa?.last_activity_at ?? 0).getTime();
+    });
+  }, [athletes, classFilter, gpaFilter, members, pipeline, searchFilter, selectedListId, sortBy, sportFilter, stageFilter, tagFilter]);
+  const pipelineByAthlete = useMemo(() => new Map(pipeline.map((item) => [item.athlete_id, item])), [pipeline]);
+  const sports = useMemo(() => Array.from(new Set(selectedAthletes.map((athlete) => athlete.sport).filter(Boolean))) as string[], [selectedAthletes]);
+  const classes = useMemo(() => Array.from(new Set(selectedAthletes.map((athlete) => athlete.graduating_class).filter(Boolean))) as string[], [selectedAthletes]);
   const currentMessageEligibility = messageEligibility?.listId === selectedListId ? messageEligibility : null;
   const listMessageAthleteCount = currentMessageEligibility && !currentMessageEligibility.error
     ? currentMessageEligibility.totalAthletes
@@ -145,6 +175,7 @@ export default function CoachListsPage() {
       setLists(snapshot.lists);
       setMembers(snapshot.members);
       setAthletes(snapshot.athletes);
+      setPipeline(snapshot.pipeline);
       setSelectedListId(firstList?.id ?? '');
       setEditedListName(firstList?.name ?? '');
       setError(snapshot.error);
@@ -225,6 +256,28 @@ export default function CoachListsPage() {
     const { error: removeError } = await supabase.from('coach_list_members').delete().eq('list_id', selectedList.id).eq('athlete_id', athlete.id);
     if (removeError) setError(removeError.message); else setMembers((current) => current.filter((member) => !(member.list_id === selectedList.id && member.athlete_id === athlete.id)));
   };
+
+  const savePipeline = useCallback(async (athleteId: string, values: Pick<Pipeline, 'stage' | 'notes' | 'tags' | 'reminder' | 'follow_up_date'>) => {
+    if (!userId) return;
+    const now = new Date().toISOString();
+    const record = { coach_id: userId, athlete_id: athleteId, ...values, last_activity_at: now, updated_at: now };
+    const { data, error: saveError } = await supabase.from('coach_athlete_pipeline').upsert(record, { onConflict: 'coach_id,athlete_id' }).select().single();
+    if (saveError) { setError(saveError.message); return; }
+    setPipeline((current) => [...current.filter((item) => item.athlete_id !== athleteId), data as Pipeline]);
+    setEditingAthlete(null);
+  }, [userId]);
+
+  useEffect(() => {
+    if (!editingAthlete) return;
+    const current = pipelineByAthlete.get(editingAthlete.id);
+    const stage = window.prompt('Pipeline stage (New, Interested, Contacted, Evaluating, Offer, Archived)', current?.stage ?? 'New');
+    if (!stage || !(['New', 'Interested', 'Contacted', 'Evaluating', 'Offer', 'Archived'] as string[]).includes(stage)) { window.setTimeout(() => setEditingAthlete(null), 0); return; }
+    const notes = window.prompt('Private notes', current?.notes ?? '') ?? current?.notes ?? '';
+    const tags = (window.prompt('Tags, comma separated (needs film, academic fit, priority, follow up)', current?.tags.join(', ') ?? '') ?? current?.tags.join(', ') ?? '').split(',').map((tag) => tag.trim()).filter(Boolean);
+    const followUp = window.prompt('Follow-up date (YYYY-MM-DD), leave blank to clear', current?.follow_up_date ?? '') ?? '';
+    const reminder = window.prompt('Reminder', current?.reminder ?? '') ?? '';
+    window.setTimeout(() => { void savePipeline(editingAthlete.id, { stage: stage as Stage, notes, tags, follow_up_date: followUp || null, reminder: reminder || null }); }, 0);
+  }, [editingAthlete, pipelineByAthlete, savePipeline]);
 
   const openListMessage = () => {
     setListMessageError(null);
@@ -314,6 +367,8 @@ export default function CoachListsPage() {
     {lists.length === 0 ? <div className="rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center"><h2 className="text-xl font-bold text-slate-950">No lists yet</h2><p className="mt-2 text-sm text-slate-500">Create a list, then add athletes from the directory.</p></div> : <>
       <div className="mb-5 flex flex-col gap-4 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm lg:flex-row lg:items-end lg:justify-between"><label className="block lg:max-w-sm lg:flex-1"><span className="mb-2 block text-sm font-semibold text-slate-700">Select a list</span><select value={selectedListId} onChange={(event) => chooseList(event.target.value)} className="input">{lists.map((list) => <option key={list.id} value={list.id}>{list.name}</option>)}</select></label><div className="flex flex-col gap-2 sm:flex-row"><input value={editedListName} onChange={(event) => setEditedListName(event.target.value)} className="input sm:w-64" maxLength={80} aria-label="Selected list name" /><button type="button" disabled={!editedListName.trim() || saving} onClick={renameList} className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50">Rename list</button><button type="button" disabled={saving} onClick={deleteList} className="rounded-xl border border-rose-200 px-4 py-2.5 text-sm font-semibold text-rose-600 hover:bg-rose-50 disabled:opacity-50">Delete list</button></div></div>
       {listMessageAthleteCount > 0 && currentMessageEligibility && <div className={`mb-5 flex flex-col gap-4 rounded-2xl border px-5 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between ${canMessageSelectedList ? 'border-emerald-200 bg-emerald-50' : 'border-amber-200 bg-amber-50'}`}><div><p className={`text-sm font-extrabold ${canMessageSelectedList ? 'text-emerald-900' : 'text-amber-900'}`}>{canMessageSelectedList ? 'This list is ready for messaging' : 'Connect with every athlete to unlock list messaging'}</p><p className={`mt-1 text-sm ${canMessageSelectedList ? 'text-emerald-700' : 'text-amber-700'}`}>{currentMessageEligibility.error ? 'Unable to check mutual connections right now.' : `${currentMessageEligibility.connectedAthletes} of ${currentMessageEligibility.totalAthletes} athletes are mutual connections.`}</p></div>{canMessageSelectedList && <button type="button" onClick={openListMessage} className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-extrabold text-white shadow-lg shadow-emerald-600/15 transition hover:-translate-y-0.5 hover:bg-emerald-700"><MessageCircle className="size-4" />Message list</button>}</div>}
+      <section className="mb-5 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"><div className="mb-4 flex items-center gap-2"><Search className="size-4 text-slate-400" /><h2 className="font-bold text-slate-950">Find and organize prospects</h2><span className="ml-auto text-xs font-semibold text-slate-400">Shared across all lists</span></div><div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4"><input value={searchFilter} onChange={(event) => setSearchFilter(event.target.value)} placeholder="Search athlete" className="input" aria-label="Search athlete" /><select value={stageFilter} onChange={(event) => setStageFilter(event.target.value)} className="input" aria-label="Filter by stage"><option>All</option>{(['New', 'Interested', 'Contacted', 'Evaluating', 'Offer', 'Archived'] as Stage[]).map((stage) => <option key={stage}>{stage}</option>)}</select><input value={tagFilter} onChange={(event) => setTagFilter(event.target.value)} placeholder="Filter by tag" className="input" aria-label="Filter by tag" /><select value={sportFilter} onChange={(event) => setSportFilter(event.target.value)} className="input" aria-label="Filter by sport"><option>All sports</option>{sports.map((sport) => <option key={sport}>{sport}</option>)}</select><select value={classFilter} onChange={(event) => setClassFilter(event.target.value)} className="input" aria-label="Filter by class year"><option>All class years</option>{classes.map((year) => <option key={year}>{year}</option>)}</select><input value={gpaFilter} onChange={(event) => setGpaFilter(event.target.value)} type="number" min="0" max="4" step="0.01" placeholder="Minimum GPA" className="input" aria-label="Minimum GPA" /><select value={sortBy} onChange={(event) => setSortBy(event.target.value)} className="input" aria-label="Sort athletes"><option value="last_activity">Sort: last activity</option><option value="name">Sort: name</option><option value="gpa">Sort: GPA</option></select><button type="button" onClick={() => { setStageFilter('All'); setTagFilter(''); setSportFilter('All'); setClassFilter('All'); setGpaFilter(''); setSearchFilter(''); }} className="btn-secondary">Clear filters</button></div></section>
+      <section className="mb-5 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm"><div className="border-b border-slate-200 px-5 py-5 sm:px-6"><h2 className="text-xl font-bold text-slate-950">Pipeline details</h2><p className="mt-1 text-sm text-slate-500">Notes, tags, and follow-ups stay with the athlete across every list.</p></div><div className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-3">{selectedAthletes.map((athlete) => { const item = pipelineByAthlete.get(athlete.id); return <article key={athlete.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><div className="flex items-start justify-between gap-3"><div><Link href={`/${athlete.username}`} className="font-bold text-slate-950 hover:text-blue-700">{[athlete.first_name, athlete.last_name].filter(Boolean).join(' ') || athlete.username}</Link><p className="mt-1 text-xs text-slate-500">{athlete.sport || 'Sport not set'} · Class {athlete.graduating_class || '—'} · GPA {athlete.gpa || '—'}</p></div><span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-bold text-emerald-800">{item?.stage ?? 'New'}</span></div><div className="mt-3 flex flex-wrap gap-1.5">{(item?.tags ?? []).map((tag) => <span key={tag} className="rounded-full bg-white px-2 py-1 text-xs font-semibold text-slate-600">{tag}</span>)}{!item?.tags?.length && <span className="text-xs text-slate-400">No tags yet</span>}</div><p className="mt-3 line-clamp-2 text-xs text-slate-500">{item?.notes || 'No private notes'}</p>{item?.follow_up_date && <p className="mt-1 flex items-center gap-1 text-xs font-semibold text-amber-700"><Bell className="size-3" />Follow up {item.follow_up_date}{item.reminder ? ` · ${item.reminder}` : ''}</p>}<button type="button" onClick={() => setEditingAthlete(athlete)} className="mt-4 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-700 hover:border-brand-300 hover:text-brand-700">Manage pipeline</button></article>; })}</div></section>
       {selectedAthletes.length > 0 && <div className="mb-3 flex justify-end"><button type="button" onClick={openExport} className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-slate-950/10 transition hover:-translate-y-0.5 hover:bg-slate-800"><Download className="size-4" />Export CSV</button></div>}
       <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm"><div className="flex items-center justify-between gap-4 border-b border-slate-200 px-5 py-5 sm:px-6"><div><h2 className="text-xl font-bold text-slate-950">{selectedList?.name}</h2><p className="mt-1 text-sm text-slate-500">{selectedAthletes.length} {selectedAthletes.length === 1 ? 'athlete' : 'athletes'}</p></div><Link href="/#all-profiles" className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700">Browse athletes</Link></div>{selectedAthletes.length === 0 ? <div className="px-6 py-16 text-center text-sm text-slate-500">No athletes in this list yet.</div> : <div className="overflow-x-auto"><table className="min-w-[2200px] text-left text-sm"><thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500"><tr>{tableHeadings.map((heading) => <th key={heading} className="whitespace-nowrap px-4 py-3 font-bold">{heading}</th>)}</tr></thead><tbody className="divide-y divide-slate-100">{selectedAthletes.map((athlete) => <tr key={athlete.id} className="align-top hover:bg-slate-50"><td className="whitespace-nowrap px-4 py-4 font-semibold text-slate-950"><Link href={`/${athlete.username}`} className="hover:text-blue-700">{[athlete.first_name, athlete.last_name].filter(Boolean).join(' ') || athlete.username}</Link></td><td className="whitespace-nowrap px-4 py-4 text-slate-500">@{athlete.username}</td><td className="whitespace-nowrap px-4 py-4 text-slate-700">{athlete.sport || '—'}</td><td className="whitespace-nowrap px-4 py-4 text-slate-700">{athlete.position || '—'}</td><td className="whitespace-nowrap px-4 py-4 text-slate-700">{athlete.graduating_class || '—'}</td><td className="max-w-48 px-4 py-4 text-slate-700">{athlete.high_school || '—'}</td><td className="whitespace-nowrap px-4 py-4 text-slate-700">{athlete.height || '—'}</td><td className="whitespace-nowrap px-4 py-4 text-slate-700">{athlete.weight || '—'}</td><td className="whitespace-nowrap px-4 py-4 text-slate-700">{athlete.gpa || '—'}</td><td className="max-w-64 whitespace-pre-wrap px-4 py-4 text-slate-600">{athlete.bio || '—'}</td><td className="max-w-56 whitespace-pre-wrap px-4 py-4 text-slate-600">{formatJson(athlete.stats)}</td><td className="max-w-56 whitespace-pre-wrap px-4 py-4 text-slate-600">{formatJson(athlete.measurables)}</td><td className="whitespace-nowrap px-4 py-4 text-slate-700">{athlete.phone_number || '—'}</td><td className="whitespace-nowrap px-4 py-4 text-slate-700">{athlete.contact_email || '—'}</td>{[athlete.hudl_highlight_url, athlete.instagram_url, athlete.tiktok_url, athlete.youtube_url, athlete.x_url].map((url, index) => <td key={index} className="max-w-48 px-4 py-4">{url ? <a href={url} target="_blank" rel="noreferrer" className="break-all text-blue-600 hover:text-blue-700">{url}</a> : <span className="text-slate-400">—</span>}</td>)}<td className="whitespace-nowrap px-4 py-4"><button type="button" onClick={() => removeAthlete(athlete)} className="font-semibold text-rose-600 hover:text-rose-700">Remove</button></td></tr>)}</tbody></table></div>}</section>
     </>}

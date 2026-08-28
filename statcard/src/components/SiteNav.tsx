@@ -46,7 +46,7 @@ export default function SiteNav() {
   useEffect(() => {
     if (initialRouteChecked.current || !signedIn) return;
     initialRouteChecked.current = true;
-    if (pathname === '/') router.replace(`/${username}`);
+    if (pathname === '/' && !new URLSearchParams(window.location.search).has('discover')) router.replace(`/${username}`);
   }, [pathname, router, signedIn, username]);
 
   return <>

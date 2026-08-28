@@ -100,7 +100,7 @@ var _s = __turbopack_context__.k.signature();
 ;
 ;
 ;
-function MessageNavLink({ userId, mobile = false }) {
+function MessageNavLink({ userId, mobile = false, side = false, collapsed = false }) {
     _s();
     const pathname = (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["usePathname"])();
     const [unreadCount, setUnreadCount] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(0);
@@ -143,24 +143,25 @@ function MessageNavLink({ userId, mobile = false }) {
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
         href: "/messages",
         "aria-current": active ? 'page' : undefined,
-        className: `${mobile ? 'flex w-full px-3 py-3' : 'inline-flex min-h-10 px-3.5 py-2'} items-center gap-2 rounded-xl text-sm font-bold transition ${active ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950'}`,
+        title: collapsed ? 'Messages' : undefined,
+        className: `${mobile ? 'flex w-full px-3 py-3' : side ? `relative flex min-h-11 ${collapsed ? 'justify-center px-2' : 'px-3.5'}` : 'inline-flex min-h-10 px-3.5 py-2'} items-center gap-2 rounded-xl text-sm font-bold transition ${active ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950'}`,
         children: [
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$message$2d$circle$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__MessageCircle$3e$__["MessageCircle"], {
-                className: "size-4"
+                className: "size-4 shrink-0"
             }, void 0, false, {
                 fileName: "[project]/statcard/src/components/MessageNavLink.tsx",
                 lineNumber: 23,
-                columnNumber: 322
+                columnNumber: 447
             }, this),
-            "Messages",
+            !collapsed && 'Messages',
             unreadCount > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                 "aria-label": `${unreadCount} unread messages`,
-                className: "ml-auto inline-flex min-w-5 items-center justify-center rounded-full bg-brand-600 px-1.5 py-0.5 text-[10px] font-extrabold leading-4 text-white",
+                className: `${collapsed ? 'absolute -right-1 -top-1' : 'ml-auto'} inline-flex min-w-5 items-center justify-center rounded-full bg-brand-600 px-1.5 py-0.5 text-[10px] font-extrabold leading-4 text-white`,
                 children: unreadCount > 99 ? '99+' : unreadCount
             }, void 0, false, {
                 fileName: "[project]/statcard/src/components/MessageNavLink.tsx",
                 lineNumber: 23,
-                columnNumber: 386
+                columnNumber: 538
             }, this)
         ]
     }, void 0, true, {
@@ -351,6 +352,7 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$
 var __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$image$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/statcard/node_modules/next/image.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/statcard/node_modules/next/dist/client/app-dir/link.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/statcard/node_modules/next/navigation.js [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$left$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronLeft$3e$__ = __turbopack_context__.i("[project]/statcard/node_modules/lucide-react/dist/esm/icons/chevron-left.mjs [app-client] (ecmascript) <export default as ChevronLeft>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$layout$2d$dashboard$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__LayoutDashboard$3e$__ = __turbopack_context__.i("[project]/statcard/node_modules/lucide-react/dist/esm/icons/layout-dashboard.mjs [app-client] (ecmascript) <export default as LayoutDashboard>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$list$2d$checks$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ListChecks$3e$__ = __turbopack_context__.i("[project]/statcard/node_modules/lucide-react/dist/esm/icons/list-checks.mjs [app-client] (ecmascript) <export default as ListChecks>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$menu$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Menu$3e$__ = __turbopack_context__.i("[project]/statcard/node_modules/lucide-react/dist/esm/icons/menu.mjs [app-client] (ecmascript) <export default as Menu>");
@@ -377,10 +379,32 @@ function SiteNav() {
     const pathname = (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["usePathname"])();
     const { ready, user } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$src$2f$components$2f$AuthProvider$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useAuth"])();
     const [profileIdentity, setProfileIdentity] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(null);
+    const [collapsed, setCollapsed] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(false);
     const [mobileOpen, setMobileOpen] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(false);
     const userId = user?.id ?? null;
     const accountType = user?.user_metadata.account_type === 'coach' ? 'coach' : 'athlete';
     const username = profileIdentity?.userId === userId ? profileIdentity.username : null;
+    const signedIn = Boolean(ready && userId && username);
+    const dashboardHref = accountType === 'coach' ? '/coach-dashboard' : '/dashboard';
+    const items = [
+        {
+            href: dashboardHref,
+            label: 'Dashboard',
+            icon: __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$layout$2d$dashboard$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__LayoutDashboard$3e$__["LayoutDashboard"]
+        },
+        ...accountType === 'coach' ? [
+            {
+                href: '/coach-lists',
+                label: 'Lists',
+                icon: __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$list$2d$checks$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ListChecks$3e$__["ListChecks"]
+            }
+        ] : [],
+        {
+            href: '/friends',
+            label: 'Network',
+            icon: __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$users$2d$round$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__UsersRound$3e$__["UsersRound"]
+        }
+    ];
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
         "SiteNav.useEffect": ()=>{
             if (!ready || !userId) return;
@@ -405,327 +429,393 @@ function SiteNav() {
         ready,
         userId
     ]);
-    const dashboardHref = accountType === 'coach' ? '/coach-dashboard' : '/dashboard';
-    const items = [
-        {
-            href: dashboardHref,
-            label: 'Dashboard',
-            icon: __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$layout$2d$dashboard$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__LayoutDashboard$3e$__["LayoutDashboard"]
-        },
-        ...accountType === 'coach' ? [
-            {
-                href: '/coach-lists',
-                label: 'Lists',
-                icon: __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$list$2d$checks$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ListChecks$3e$__["ListChecks"]
-            }
-        ] : [],
-        {
-            href: '/friends',
-            label: 'Network',
-            icon: __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$users$2d$round$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__UsersRound$3e$__["UsersRound"]
-        }
-    ];
-    const signedIn = Boolean(ready && userId && username);
-    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("header", {
-        className: "sticky top-0 z-40 border-b border-slate-200/80 bg-white/85 backdrop-blur-xl supports-[backdrop-filter]:bg-white/75",
-        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("nav", {
-            className: "page-shell",
-            "aria-label": "Main navigation",
-            onClick: (event)=>{
-                if (event.target.closest('a')) setMobileOpen(false);
-            },
-            children: [
-                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                    className: "flex h-18 items-center justify-between gap-5",
-                    children: [
-                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                            className: "flex min-w-0 items-center gap-4",
-                            children: [
-                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
-                                    href: "/",
-                                    "aria-label": "CoachPoints home",
-                                    className: "group inline-flex shrink-0 items-center rounded-lg",
-                                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$image$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
-                                        src: "/coachpoints-logo.png",
-                                        alt: "CoachPoints",
-                                        width: 190,
-                                        height: 65,
-                                        className: "h-20 w-auto object-contain transition group-hover:opacity-80",
-                                        priority: true
-                                    }, void 0, false, {
-                                        fileName: "[project]/statcard/src/components/SiteNav.tsx",
-                                        lineNumber: 47,
-                                        columnNumber: 166
-                                    }, this)
+    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
+        children: [
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("aside", {
+                className: `sticky top-0 z-40 hidden h-screen shrink-0 flex-col border-r border-slate-200 bg-white transition-[width] duration-200 lg:flex ${collapsed ? 'w-20' : 'w-72'}`,
+                children: [
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                        className: `flex h-24 shrink-0 items-center border-b border-slate-100 ${collapsed ? 'justify-center px-3' : 'justify-between px-5'}`,
+                        children: [
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
+                                href: "/",
+                                "aria-label": "CoachPoints home",
+                                className: "group inline-flex items-center rounded-lg",
+                                children: collapsed ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$image$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
+                                    src: "/coachpoints-mark.png",
+                                    alt: "CoachPoints",
+                                    width: 44,
+                                    height: 44,
+                                    className: "size-11 rounded-2xl object-cover transition group-hover:opacity-80",
+                                    priority: true
                                 }, void 0, false, {
                                     fileName: "[project]/statcard/src/components/SiteNav.tsx",
                                     lineNumber: 47,
-                                    columnNumber: 58
-                                }, this),
-                                signedIn && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                    className: `hidden items-center gap-2 rounded-full border px-3 py-1 text-[10px] font-extrabold uppercase tracking-[0.16em] sm:inline-flex ${accountType === 'coach' ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-brand-200 bg-brand-50 text-brand-700'}`,
-                                    children: [
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                            className: `size-1.5 rounded-full ${accountType === 'coach' ? 'bg-emerald-500' : 'bg-brand-500'}`
-                                        }, void 0, false, {
-                                            fileName: "[project]/statcard/src/components/SiteNav.tsx",
-                                            lineNumber: 47,
-                                            columnNumber: 622
-                                        }, this),
-                                        accountType
-                                    ]
-                                }, void 0, true, {
+                                    columnNumber: 121
+                                }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$image$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
+                                    src: "/coachpoints-logo.png",
+                                    alt: "CoachPoints",
+                                    width: 190,
+                                    height: 65,
+                                    className: "h-20 w-auto object-contain transition group-hover:opacity-80",
+                                    priority: true
+                                }, void 0, false, {
                                     fileName: "[project]/statcard/src/components/SiteNav.tsx",
                                     lineNumber: 47,
-                                    columnNumber: 347
+                                    columnNumber: 290
                                 }, this)
-                            ]
-                        }, void 0, true, {
-                            fileName: "[project]/statcard/src/components/SiteNav.tsx",
-                            lineNumber: 47,
-                            columnNumber: 9
-                        }, this),
-                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                            className: "hidden items-center gap-1 lg:flex",
-                            children: [
-                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(NavLink, {
-                                    href: "/",
-                                    label: "Discover",
-                                    active: pathname === '/'
+                            }, void 0, false, {
+                                fileName: "[project]/statcard/src/components/SiteNav.tsx",
+                                lineNumber: 47,
+                                columnNumber: 9
+                            }, this),
+                            !collapsed && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                type: "button",
+                                onClick: ()=>setCollapsed(true),
+                                className: "grid size-9 place-items-center rounded-xl text-slate-400 hover:bg-slate-100 hover:text-slate-700",
+                                "aria-label": "Collapse side navigation",
+                                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$left$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronLeft$3e$__["ChevronLeft"], {
+                                    className: "size-5"
                                 }, void 0, false, {
                                     fileName: "[project]/statcard/src/components/SiteNav.tsx",
                                     lineNumber: 48,
-                                    columnNumber: 60
-                                }, this),
-                                signedIn && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
-                                    children: [
-                                        items.map((item)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(NavLink, {
-                                                ...item,
-                                                active: pathname === item.href
-                                            }, item.href, false, {
-                                                fileName: "[project]/statcard/src/components/SiteNav.tsx",
-                                                lineNumber: 48,
-                                                columnNumber: 159
-                                            }, this)),
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$src$2f$components$2f$MessageNavLink$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
-                                            userId: userId
-                                        }, void 0, false, {
-                                            fileName: "[project]/statcard/src/components/SiteNav.tsx",
-                                            lineNumber: 48,
-                                            columnNumber: 230
-                                        }, this),
-                                        username && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
-                                            href: `/${username}`,
-                                            className: "ml-2 inline-flex min-h-10 items-center gap-2 rounded-xl bg-slate-950 px-4 py-2 text-sm font-bold text-white shadow-lg shadow-slate-950/10 transition hover:-translate-y-0.5 hover:bg-slate-800",
-                                            children: [
-                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$user$2d$round$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__UserRound$3e$__["UserRound"], {
-                                                    className: "size-4"
-                                                }, void 0, false, {
-                                                    fileName: "[project]/statcard/src/components/SiteNav.tsx",
-                                                    lineNumber: 48,
-                                                    columnNumber: 509
-                                                }, this),
-                                                "My profile"
-                                            ]
-                                        }, void 0, true, {
-                                            fileName: "[project]/statcard/src/components/SiteNav.tsx",
-                                            lineNumber: 48,
-                                            columnNumber: 278
-                                        }, this)
-                                    ]
-                                }, void 0, true, {
-                                    fileName: "[project]/statcard/src/components/SiteNav.tsx",
-                                    lineNumber: 48,
-                                    columnNumber: 136
-                                }, this),
-                                ready && !userId && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
-                                    href: "/login?role=athlete",
-                                    className: "ml-1 rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-brand-600/20 transition hover:bg-brand-700",
-                                    children: "Get started"
-                                }, void 0, false, {
-                                    fileName: "[project]/statcard/src/components/SiteNav.tsx",
-                                    lineNumber: 48,
-                                    columnNumber: 584
+                                    columnNumber: 228
                                 }, this)
-                            ]
-                        }, void 0, true, {
-                            fileName: "[project]/statcard/src/components/SiteNav.tsx",
-                            lineNumber: 48,
-                            columnNumber: 9
-                        }, this),
-                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
-                            type: "button",
-                            onClick: ()=>setMobileOpen((open)=>!open),
-                            className: "grid size-10 place-items-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-sm lg:hidden",
-                            "aria-expanded": mobileOpen,
-                            "aria-controls": "mobile-navigation",
-                            "aria-label": mobileOpen ? 'Close navigation' : 'Open navigation',
-                            children: mobileOpen ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$x$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__X$3e$__["X"], {
-                                className: "size-5"
                             }, void 0, false, {
                                 fileName: "[project]/statcard/src/components/SiteNav.tsx",
-                                lineNumber: 49,
-                                columnNumber: 341
-                            }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$menu$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Menu$3e$__["Menu"], {
-                                className: "size-5"
-                            }, void 0, false, {
-                                fileName: "[project]/statcard/src/components/SiteNav.tsx",
-                                lineNumber: 49,
-                                columnNumber: 368
+                                lineNumber: 48,
+                                columnNumber: 24
                             }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "[project]/statcard/src/components/SiteNav.tsx",
+                        lineNumber: 46,
+                        columnNumber: 7
+                    }, this),
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                        className: `border-b border-slate-100 py-4 ${collapsed ? 'px-3' : 'px-5'}`,
+                        children: signedIn ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            className: `flex items-center gap-2 rounded-xl border ${accountType === 'coach' ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-brand-200 bg-brand-50 text-brand-700'} ${collapsed ? 'justify-center p-2' : 'px-3 py-2'}`,
+                            title: collapsed ? accountType : undefined,
+                            children: [
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                    className: `size-2 rounded-full ${accountType === 'coach' ? 'bg-emerald-500' : 'bg-brand-500'}`
+                                }, void 0, false, {
+                                    fileName: "[project]/statcard/src/components/SiteNav.tsx",
+                                    lineNumber: 50,
+                                    columnNumber: 384
+                                }, this),
+                                !collapsed && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                    className: "text-[10px] font-extrabold uppercase tracking-[0.16em]",
+                                    children: accountType
+                                }, void 0, false, {
+                                    fileName: "[project]/statcard/src/components/SiteNav.tsx",
+                                    lineNumber: 50,
+                                    columnNumber: 504
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "[project]/statcard/src/components/SiteNav.tsx",
+                            lineNumber: 50,
+                            columnNumber: 100
+                        }, this) : !collapsed && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                            className: "px-3 text-xs font-semibold text-slate-400",
+                            children: "Performance meets opportunity"
                         }, void 0, false, {
                             fileName: "[project]/statcard/src/components/SiteNav.tsx",
-                            lineNumber: 49,
-                            columnNumber: 9
+                            lineNumber: 50,
+                            columnNumber: 621
                         }, this)
-                    ]
-                }, void 0, true, {
-                    fileName: "[project]/statcard/src/components/SiteNav.tsx",
-                    lineNumber: 46,
-                    columnNumber: 7
-                }, this),
-                mobileOpen && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                    id: "mobile-navigation",
-                    className: "border-t border-slate-100 pb-4 pt-3 lg:hidden",
-                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                        className: "grid gap-1",
+                    }, void 0, false, {
+                        fileName: "[project]/statcard/src/components/SiteNav.tsx",
+                        lineNumber: 50,
+                        columnNumber: 7
+                    }, this),
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("nav", {
+                        className: `flex-1 space-y-1 overflow-y-auto py-5 ${collapsed ? 'px-3' : 'px-4'}`,
+                        "aria-label": "Main navigation",
                         children: [
-                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(MobileLink, {
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(SideLink, {
                                 href: "/",
                                 label: "Discover",
-                                active: pathname === '/'
+                                active: pathname === '/',
+                                collapsed: collapsed
                             }, void 0, false, {
                                 fileName: "[project]/statcard/src/components/SiteNav.tsx",
                                 lineNumber: 51,
-                                columnNumber: 136
+                                columnNumber: 124
                             }, this),
                             signedIn && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
                                 children: [
-                                    items.map((item)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(MobileLink, {
+                                    items.map((item)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(SideLink, {
                                             ...item,
-                                            active: pathname === item.href
+                                            active: pathname === item.href,
+                                            collapsed: collapsed
                                         }, item.href, false, {
                                             fileName: "[project]/statcard/src/components/SiteNav.tsx",
                                             lineNumber: 51,
-                                            columnNumber: 238
+                                            columnNumber: 246
                                         }, this)),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$src$2f$components$2f$MessageNavLink$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
                                         userId: userId,
-                                        mobile: true
+                                        side: true,
+                                        collapsed: collapsed
                                     }, void 0, false, {
                                         fileName: "[project]/statcard/src/components/SiteNav.tsx",
                                         lineNumber: 51,
-                                        columnNumber: 312
+                                        columnNumber: 340
                                     }, this),
-                                    username && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(MobileLink, {
+                                    username && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(SideLink, {
                                         href: `/${username}`,
                                         label: "My profile",
                                         icon: __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$user$2d$round$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__UserRound$3e$__["UserRound"],
-                                        active: pathname === `/${username}`
+                                        active: pathname === `/${username}`,
+                                        collapsed: collapsed
                                     }, void 0, false, {
                                         fileName: "[project]/statcard/src/components/SiteNav.tsx",
                                         lineNumber: 51,
-                                        columnNumber: 367
+                                        columnNumber: 415
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/statcard/src/components/SiteNav.tsx",
                                 lineNumber: 51,
-                                columnNumber: 215
+                                columnNumber: 223
                             }, this),
-                            ready && !userId && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                className: "mt-2",
-                                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
-                                    href: "/login?role=athlete",
-                                    className: "btn-primary w-full",
-                                    children: "Get started"
+                            ready && !userId && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
+                                href: "/login?role=athlete",
+                                className: `mt-5 flex items-center justify-center rounded-xl bg-brand-600 text-sm font-bold text-white shadow-lg shadow-brand-600/20 transition hover:bg-brand-700 ${collapsed ? 'size-11' : 'min-h-11 px-4'}`,
+                                title: collapsed ? 'Get started' : undefined,
+                                children: collapsed ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$user$2d$round$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__UserRound$3e$__["UserRound"], {
+                                    className: "size-4"
                                 }, void 0, false, {
                                     fileName: "[project]/statcard/src/components/SiteNav.tsx",
                                     lineNumber: 51,
-                                    columnNumber: 524
-                                }, this)
+                                    columnNumber: 870
+                                }, this) : 'Get started'
                             }, void 0, false, {
                                 fileName: "[project]/statcard/src/components/SiteNav.tsx",
                                 lineNumber: 51,
-                                columnNumber: 502
+                                columnNumber: 570
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/statcard/src/components/SiteNav.tsx",
                         lineNumber: 51,
-                        columnNumber: 108
+                        columnNumber: 7
+                    }, this),
+                    collapsed && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                        type: "button",
+                        onClick: ()=>setCollapsed(false),
+                        className: "mx-auto mb-5 grid size-9 place-items-center rounded-xl text-slate-400 hover:bg-slate-100 hover:text-slate-700",
+                        "aria-label": "Expand side navigation",
+                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$left$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronLeft$3e$__["ChevronLeft"], {
+                            className: "size-5 rotate-180"
+                        }, void 0, false, {
+                            fileName: "[project]/statcard/src/components/SiteNav.tsx",
+                            lineNumber: 52,
+                            columnNumber: 237
+                        }, this)
+                    }, void 0, false, {
+                        fileName: "[project]/statcard/src/components/SiteNav.tsx",
+                        lineNumber: 52,
+                        columnNumber: 21
                     }, this)
-                }, void 0, false, {
+                ]
+            }, void 0, true, {
+                fileName: "[project]/statcard/src/components/SiteNav.tsx",
+                lineNumber: 45,
+                columnNumber: 5
+            }, this),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                className: "sticky top-0 z-40 flex h-16 items-center justify-between border-b border-slate-200 bg-white/95 px-4 backdrop-blur lg:hidden",
+                children: [
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
+                        href: "/",
+                        "aria-label": "CoachPoints home",
+                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$image$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
+                            src: "/coachpoints-logo.png",
+                            alt: "CoachPoints",
+                            width: 150,
+                            height: 52,
+                            className: "h-12 w-auto object-contain",
+                            priority: true
+                        }, void 0, false, {
+                            fileName: "[project]/statcard/src/components/SiteNav.tsx",
+                            lineNumber: 54,
+                            columnNumber: 191
+                        }, this)
+                    }, void 0, false, {
+                        fileName: "[project]/statcard/src/components/SiteNav.tsx",
+                        lineNumber: 54,
+                        columnNumber: 146
+                    }, this),
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                        type: "button",
+                        onClick: ()=>setMobileOpen((open)=>!open),
+                        className: "grid size-10 place-items-center rounded-xl border border-slate-200 text-slate-700",
+                        "aria-expanded": mobileOpen,
+                        "aria-controls": "mobile-navigation",
+                        "aria-label": mobileOpen ? 'Close navigation' : 'Open navigation',
+                        children: mobileOpen ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$x$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__X$3e$__["X"], {
+                            className: "size-5"
+                        }, void 0, false, {
+                            fileName: "[project]/statcard/src/components/SiteNav.tsx",
+                            lineNumber: 54,
+                            columnNumber: 628
+                        }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$menu$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Menu$3e$__["Menu"], {
+                            className: "size-5"
+                        }, void 0, false, {
+                            fileName: "[project]/statcard/src/components/SiteNav.tsx",
+                            lineNumber: 54,
+                            columnNumber: 655
+                        }, this)
+                    }, void 0, false, {
+                        fileName: "[project]/statcard/src/components/SiteNav.tsx",
+                        lineNumber: 54,
+                        columnNumber: 325
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "[project]/statcard/src/components/SiteNav.tsx",
+                lineNumber: 54,
+                columnNumber: 5
+            }, this),
+            mobileOpen && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                id: "mobile-navigation",
+                className: "fixed inset-x-0 top-16 z-30 border-b border-slate-200 bg-white p-4 shadow-xl lg:hidden",
+                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("nav", {
+                    className: "grid gap-1",
+                    "aria-label": "Mobile navigation",
+                    onClick: (event)=>{
+                        if (event.target.closest('a')) setMobileOpen(false);
+                    },
+                    children: [
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(MobileLink, {
+                            href: "/",
+                            label: "Discover",
+                            active: pathname === '/'
+                        }, void 0, false, {
+                            fileName: "[project]/statcard/src/components/SiteNav.tsx",
+                            lineNumber: 55,
+                            columnNumber: 301
+                        }, this),
+                        signedIn && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
+                            children: [
+                                items.map((item)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(MobileLink, {
+                                        ...item,
+                                        active: pathname === item.href
+                                    }, item.href, false, {
+                                        fileName: "[project]/statcard/src/components/SiteNav.tsx",
+                                        lineNumber: 55,
+                                        columnNumber: 403
+                                    }, this)),
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$src$2f$components$2f$MessageNavLink$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
+                                    userId: userId,
+                                    mobile: true
+                                }, void 0, false, {
+                                    fileName: "[project]/statcard/src/components/SiteNav.tsx",
+                                    lineNumber: 55,
+                                    columnNumber: 477
+                                }, this),
+                                username && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(MobileLink, {
+                                    href: `/${username}`,
+                                    label: "My profile",
+                                    icon: __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$user$2d$round$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__UserRound$3e$__["UserRound"],
+                                    active: pathname === `/${username}`
+                                }, void 0, false, {
+                                    fileName: "[project]/statcard/src/components/SiteNav.tsx",
+                                    lineNumber: 55,
+                                    columnNumber: 532
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "[project]/statcard/src/components/SiteNav.tsx",
+                            lineNumber: 55,
+                            columnNumber: 380
+                        }, this),
+                        ready && !userId && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
+                            href: "/login?role=athlete",
+                            className: "btn-primary mt-2 w-full",
+                            children: "Get started"
+                        }, void 0, false, {
+                            fileName: "[project]/statcard/src/components/SiteNav.tsx",
+                            lineNumber: 55,
+                            columnNumber: 667
+                        }, this)
+                    ]
+                }, void 0, true, {
                     fileName: "[project]/statcard/src/components/SiteNav.tsx",
-                    lineNumber: 51,
-                    columnNumber: 22
+                    lineNumber: 55,
+                    columnNumber: 147
                 }, this)
-            ]
-        }, void 0, true, {
-            fileName: "[project]/statcard/src/components/SiteNav.tsx",
-            lineNumber: 45,
-            columnNumber: 5
-        }, this)
-    }, void 0, false, {
+            }, void 0, false, {
+                fileName: "[project]/statcard/src/components/SiteNav.tsx",
+                lineNumber: 55,
+                columnNumber: 20
+            }, this)
+        ]
+    }, void 0, true, {
         fileName: "[project]/statcard/src/components/SiteNav.tsx",
         lineNumber: 44,
         columnNumber: 10
     }, this);
 }
-_s(SiteNav, "gQC80c5CmRa5WL6BPIfM/AL5bSw=", false, function() {
+_s(SiteNav, "WdjMxHIJJLFFb00VN1R9H/PKGYU=", false, function() {
     return [
         __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["usePathname"],
         __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$src$2f$components$2f$AuthProvider$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useAuth"]
     ];
 });
 _c = SiteNav;
-function NavLink({ href, label, icon: Icon, active }) {
+function SideLink({ href, label, icon: Icon = __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$layout$2d$dashboard$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__LayoutDashboard$3e$__["LayoutDashboard"], active, collapsed }) {
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
         href: href,
         "aria-current": active ? 'page' : undefined,
-        className: `inline-flex min-h-10 items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-bold transition ${active ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950'}`,
+        title: collapsed ? label : undefined,
+        className: `flex min-h-11 items-center gap-3 rounded-xl text-sm font-bold transition ${collapsed ? 'justify-center px-2' : 'px-3.5'} ${active ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950'}`,
         children: [
-            Icon && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(Icon, {
-                className: "size-4"
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(Icon, {
+                className: "size-4.5 shrink-0"
             }, void 0, false, {
                 fileName: "[project]/statcard/src/components/SiteNav.tsx",
-                lineNumber: 57,
-                columnNumber: 286
+                lineNumber: 60,
+                columnNumber: 344
             }, this),
-            label
+            !collapsed && label
         ]
     }, void 0, true, {
         fileName: "[project]/statcard/src/components/SiteNav.tsx",
-        lineNumber: 57,
+        lineNumber: 60,
         columnNumber: 10
     }, this);
 }
-_c1 = NavLink;
-function MobileLink({ href, label, icon: Icon, active }) {
+_c1 = SideLink;
+function MobileLink({ href, label, icon: Icon = __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$layout$2d$dashboard$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__LayoutDashboard$3e$__["LayoutDashboard"], active }) {
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
         href: href,
         "aria-current": active ? 'page' : undefined,
         className: `flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-bold ${active ? 'bg-brand-50 text-brand-700' : 'text-slate-700 hover:bg-slate-50'}`,
         children: [
-            Icon && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(Icon, {
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$statcard$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(Icon, {
                 className: "size-4.5"
             }, void 0, false, {
                 fileName: "[project]/statcard/src/components/SiteNav.tsx",
-                lineNumber: 61,
-                columnNumber: 235
+                lineNumber: 64,
+                columnNumber: 226
             }, this),
             label
         ]
     }, void 0, true, {
         fileName: "[project]/statcard/src/components/SiteNav.tsx",
-        lineNumber: 61,
+        lineNumber: 64,
         columnNumber: 10
     }, this);
 }
 _c2 = MobileLink;
 var _c, _c1, _c2;
 __turbopack_context__.k.register(_c, "SiteNav");
-__turbopack_context__.k.register(_c1, "NavLink");
+__turbopack_context__.k.register(_c1, "SideLink");
 __turbopack_context__.k.register(_c2, "MobileLink");
 if (typeof globalThis.$RefreshHelpers$ === 'object' && globalThis.$RefreshHelpers !== null) {
     __turbopack_context__.k.registerExports(__turbopack_context__.m, globalThis.$RefreshHelpers$);

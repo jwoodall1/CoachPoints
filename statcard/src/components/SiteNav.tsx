@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, ListChecks, Menu, UserRound, UsersRound, X } from 'lucide-react';
+import { ChevronLeft, LayoutDashboard, ListChecks, Menu, UserRound, UsersRound, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import { useAuth } from '@/components/AuthProvider';
@@ -13,15 +13,23 @@ import { supabase } from '@/lib/supabase';
 type ProfileIdentity = { userId: string; username: string | null };
 type NavItem = { href: string; label: string; icon: typeof LayoutDashboard };
 
-/** Responsive application navigation with route state and account context. */
+/** Responsive side navigation for public pages and authenticated workspaces. */
 export default function SiteNav() {
   const pathname = usePathname();
   const { ready, user } = useAuth();
   const [profileIdentity, setProfileIdentity] = useState<ProfileIdentity | null>(null);
+  const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const userId = user?.id ?? null;
   const accountType = user?.user_metadata.account_type === 'coach' ? 'coach' : 'athlete';
   const username = profileIdentity?.userId === userId ? profileIdentity.username : null;
+  const signedIn = Boolean(ready && userId && username);
+  const dashboardHref = accountType === 'coach' ? '/coach-dashboard' : '/dashboard';
+  const items: NavItem[] = [
+    { href: dashboardHref, label: 'Dashboard', icon: LayoutDashboard },
+    ...(accountType === 'coach' ? [{ href: '/coach-lists', label: 'Lists', icon: ListChecks }] : []),
+    { href: '/friends', label: 'Network', icon: UsersRound },
+  ];
 
   useEffect(() => {
     if (!ready || !userId) return;
@@ -33,30 +41,25 @@ export default function SiteNav() {
     return () => { active = false; };
   }, [accountType, ready, userId]);
 
-  const dashboardHref = accountType === 'coach' ? '/coach-dashboard' : '/dashboard';
-  const items: NavItem[] = [
-    { href: dashboardHref, label: 'Dashboard', icon: LayoutDashboard },
-    ...(accountType === 'coach' ? [{ href: '/coach-lists', label: 'Lists', icon: ListChecks }] : []),
-    { href: '/friends', label: 'Network', icon: UsersRound },
-  ];
-  const signedIn = Boolean(ready && userId && username);
-
-  return <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/85 backdrop-blur-xl supports-[backdrop-filter]:bg-white/75">
-    <nav className="page-shell" aria-label="Main navigation" onClick={(event) => { if ((event.target as HTMLElement).closest('a')) setMobileOpen(false); }}>
-      <div className="flex h-18 items-center justify-between gap-5">
-        <div className="flex min-w-0 items-center gap-4"><Link href="/" aria-label="CoachPoints home" className="group inline-flex shrink-0 items-center rounded-lg"><Image src="/coachpoints-logo.png" alt="CoachPoints" width={190} height={65} className="h-20 w-auto object-contain transition group-hover:opacity-80" priority /></Link>{signedIn && <span className={`hidden items-center gap-2 rounded-full border px-3 py-1 text-[10px] font-extrabold uppercase tracking-[0.16em] sm:inline-flex ${accountType === 'coach' ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-brand-200 bg-brand-50 text-brand-700'}`}><span className={`size-1.5 rounded-full ${accountType === 'coach' ? 'bg-emerald-500' : 'bg-brand-500'}`} />{accountType}</span>}</div>
-        <div className="hidden items-center gap-1 lg:flex"><NavLink href="/" label="Discover" active={pathname === '/'} />{signedIn && <>{items.map((item) => <NavLink key={item.href} {...item} active={pathname === item.href} />)}<MessageNavLink userId={userId!} />{username && <Link href={`/${username}`} className="ml-2 inline-flex min-h-10 items-center gap-2 rounded-xl bg-slate-950 px-4 py-2 text-sm font-bold text-white shadow-lg shadow-slate-950/10 transition hover:-translate-y-0.5 hover:bg-slate-800"><UserRound className="size-4" />My profile</Link>}</>}{ready && !userId && <Link href="/login?role=athlete" className="ml-1 rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-brand-600/20 transition hover:bg-brand-700">Get started</Link>}</div>
-        <button type="button" onClick={() => setMobileOpen((open) => !open)} className="grid size-10 place-items-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-sm lg:hidden" aria-expanded={mobileOpen} aria-controls="mobile-navigation" aria-label={mobileOpen ? 'Close navigation' : 'Open navigation'}>{mobileOpen ? <X className="size-5" /> : <Menu className="size-5" />}</button>
+  return <>
+    <aside className={`sticky top-0 z-40 hidden h-screen shrink-0 flex-col border-r border-slate-200 bg-white transition-[width] duration-200 lg:flex ${collapsed ? 'w-20' : 'w-72'}`}>
+      <div className={`flex h-24 shrink-0 items-center border-b border-slate-100 ${collapsed ? 'justify-center px-3' : 'justify-between px-5'}`}>
+        <Link href="/" aria-label="CoachPoints home" className="group inline-flex items-center rounded-lg">{collapsed ? <Image src="/coachpoints-mark.png" alt="CoachPoints" width={44} height={44} className="size-11 rounded-2xl object-cover transition group-hover:opacity-80" priority /> : <Image src="/coachpoints-logo.png" alt="CoachPoints" width={190} height={65} className="h-20 w-auto object-contain transition group-hover:opacity-80" priority />}</Link>
+        {!collapsed && <button type="button" onClick={() => setCollapsed(true)} className="grid size-9 place-items-center rounded-xl text-slate-400 hover:bg-slate-100 hover:text-slate-700" aria-label="Collapse side navigation"><ChevronLeft className="size-5" /></button>}
       </div>
-      {mobileOpen && <div id="mobile-navigation" className="border-t border-slate-100 pb-4 pt-3 lg:hidden"><div className="grid gap-1"><MobileLink href="/" label="Discover" active={pathname === '/'} />{signedIn && <>{items.map((item) => <MobileLink key={item.href} {...item} active={pathname === item.href} />)}<MessageNavLink userId={userId!} mobile />{username && <MobileLink href={`/${username}`} label="My profile" icon={UserRound} active={pathname === `/${username}`} />}</>}{ready && !userId && <div className="mt-2"><Link href="/login?role=athlete" className="btn-primary w-full">Get started</Link></div>}</div></div>}
-    </nav>
-  </header>;
+      <div className={`border-b border-slate-100 py-4 ${collapsed ? 'px-3' : 'px-5'}`}>{signedIn ? <div className={`flex items-center gap-2 rounded-xl border ${accountType === 'coach' ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-brand-200 bg-brand-50 text-brand-700'} ${collapsed ? 'justify-center p-2' : 'px-3 py-2'}`} title={collapsed ? accountType : undefined}><span className={`size-2 rounded-full ${accountType === 'coach' ? 'bg-emerald-500' : 'bg-brand-500'}`} />{!collapsed && <span className="text-[10px] font-extrabold uppercase tracking-[0.16em]">{accountType}</span>}</div> : !collapsed && <p className="px-3 text-xs font-semibold text-slate-400">Performance meets opportunity</p>}</div>
+      <nav className={`flex-1 space-y-1 overflow-y-auto py-5 ${collapsed ? 'px-3' : 'px-4'}`} aria-label="Main navigation"><SideLink href="/" label="Discover" active={pathname === '/'} collapsed={collapsed} />{signedIn && <>{items.map((item) => <SideLink key={item.href} {...item} active={pathname === item.href} collapsed={collapsed} />)}<MessageNavLink userId={userId!} side collapsed={collapsed} />{username && <SideLink href={`/${username}`} label="My profile" icon={UserRound} active={pathname === `/${username}`} collapsed={collapsed} />}</>}{ready && !userId && <Link href="/login?role=athlete" className={`mt-5 flex items-center justify-center rounded-xl bg-brand-600 text-sm font-bold text-white shadow-lg shadow-brand-600/20 transition hover:bg-brand-700 ${collapsed ? 'size-11' : 'min-h-11 px-4'}`} title={collapsed ? 'Get started' : undefined}>{collapsed ? <UserRound className="size-4" /> : 'Get started'}</Link>}</nav>
+      {collapsed && <button type="button" onClick={() => setCollapsed(false)} className="mx-auto mb-5 grid size-9 place-items-center rounded-xl text-slate-400 hover:bg-slate-100 hover:text-slate-700" aria-label="Expand side navigation"><ChevronLeft className="size-5 rotate-180" /></button>}
+    </aside>
+    <div className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-slate-200 bg-white/95 px-4 backdrop-blur lg:hidden"><Link href="/" aria-label="CoachPoints home"><Image src="/coachpoints-logo.png" alt="CoachPoints" width={150} height={52} className="h-12 w-auto object-contain" priority /></Link><button type="button" onClick={() => setMobileOpen((open) => !open)} className="grid size-10 place-items-center rounded-xl border border-slate-200 text-slate-700" aria-expanded={mobileOpen} aria-controls="mobile-navigation" aria-label={mobileOpen ? 'Close navigation' : 'Open navigation'}>{mobileOpen ? <X className="size-5" /> : <Menu className="size-5" />}</button></div>
+    {mobileOpen && <div id="mobile-navigation" className="fixed inset-x-0 top-16 z-30 border-b border-slate-200 bg-white p-4 shadow-xl lg:hidden"><nav className="grid gap-1" aria-label="Mobile navigation" onClick={(event) => { if ((event.target as HTMLElement).closest('a')) setMobileOpen(false); }}><MobileLink href="/" label="Discover" active={pathname === '/'} />{signedIn && <>{items.map((item) => <MobileLink key={item.href} {...item} active={pathname === item.href} />)}<MessageNavLink userId={userId!} mobile />{username && <MobileLink href={`/${username}`} label="My profile" icon={UserRound} active={pathname === `/${username}`} />}</>}{ready && !userId && <Link href="/login?role=athlete" className="btn-primary mt-2 w-full">Get started</Link>}</nav></div>}
+  </>;
 }
 
-function NavLink({ href, label, icon: Icon, active }: { href: string; label: string; icon?: typeof LayoutDashboard; active: boolean }) {
-  return <Link href={href} aria-current={active ? 'page' : undefined} className={`inline-flex min-h-10 items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-bold transition ${active ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950'}`}>{Icon && <Icon className="size-4" />}{label}</Link>;
+function SideLink({ href, label, icon: Icon = LayoutDashboard, active, collapsed }: { href: string; label: string; icon?: typeof LayoutDashboard; active: boolean; collapsed: boolean }) {
+  return <Link href={href} aria-current={active ? 'page' : undefined} title={collapsed ? label : undefined} className={`flex min-h-11 items-center gap-3 rounded-xl text-sm font-bold transition ${collapsed ? 'justify-center px-2' : 'px-3.5'} ${active ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950'}`}><Icon className="size-4.5 shrink-0" />{!collapsed && label}</Link>;
 }
 
-function MobileLink({ href, label, icon: Icon, active }: { href: string; label: string; icon?: typeof LayoutDashboard; active: boolean }) {
-  return <Link href={href} aria-current={active ? 'page' : undefined} className={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-bold ${active ? 'bg-brand-50 text-brand-700' : 'text-slate-700 hover:bg-slate-50'}`}>{Icon && <Icon className="size-4.5" />}{label}</Link>;
+function MobileLink({ href, label, icon: Icon = LayoutDashboard, active }: { href: string; label: string; icon?: typeof LayoutDashboard; active: boolean }) {
+  return <Link href={href} aria-current={active ? 'page' : undefined} className={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-bold ${active ? 'bg-brand-50 text-brand-700' : 'text-slate-700 hover:bg-slate-50'}`}><Icon className="size-4.5" />{label}</Link>;
 }

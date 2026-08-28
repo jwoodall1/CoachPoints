@@ -23,9 +23,10 @@ export default function RootLayout({
       <body>
         <AuthProvider>
           <PresenceProvider>
-            <SiteNav />
-            {children}
-            <SiteFooter />
+            <div className="flex min-h-screen">
+              <SiteNav />
+              <div className="min-w-0 flex-1">{children}<SiteFooter /></div>
+            </div>
             <Analytics />
           </PresenceProvider>
         </AuthProvider>

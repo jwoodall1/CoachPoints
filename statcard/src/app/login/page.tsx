@@ -48,7 +48,7 @@ function LoginForm() {
       if (reservedUsernames.has(publicUsername)) { setError('That username is reserved by CoachPoints. Please choose another.'); setLoading(false); return; }
       const { data, error: signUpError } = await supabase.auth.signUp({ email, password, options: { data: { first_name: firstName.trim(), last_name: lastName.trim(), username: publicUsername, account_type: accountType }, emailRedirectTo: `${window.location.origin}/${isCoach ? 'coach-dashboard' : 'dashboard'}` } });
       if (signUpError) setError(signUpError.message);
-      else if (data.session) { trackEvent('auth_completed', { action: 'sign_up', account_type: accountType }); if (isCoach) await supabase.from('coachprofiles').upsert({ id: data.session.user.id, first_name: firstName.trim(), last_name: lastName.trim(), username: publicUsername }, { onConflict: 'id' }); router.push(`/${publicUsername}`); }
+      else if (data.session) { trackEvent('auth_completed', { action: 'sign_up', account_type: accountType }); if (isCoach) await supabase.from('coachprofiles').upsert({ id: data.session.user.id, first_name: firstName.trim(), last_name: lastName.trim(), username: publicUsername }, { onConflict: 'id' }); else await supabase.from('profiles').upsert({ id: data.session.user.id, first_name: firstName.trim(), last_name: lastName.trim(), username: publicUsername, account_type: 'athlete' }, { onConflict: 'id' }); router.push(`/${publicUsername}`); }
       else setMessage('Your account is ready. Check your email to confirm it, then sign in.');
     } else {
       const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password });

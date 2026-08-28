@@ -9,7 +9,7 @@ import { useAuth } from '@/components/AuthProvider';
 import { OnlineStatus } from '@/components/PresenceProvider';
 import ProfileAvatar from '@/components/ProfileAvatar';
 import { supabase } from '@/lib/supabase';
-import { getPositions } from '@/lib/sports';
+import { coachPositions, getPositions } from '@/lib/sports';
 
 const AddToListButton = dynamic(() => import('@/components/AddToListButton'));
 
@@ -41,7 +41,7 @@ export default function HomePage() {
     const load = async () => {
       const [{ data, error: profilesError }, { data: coachData, error: coachesError }] = await Promise.all([
         supabase.from('profiles').select('id, first_name, last_name, username, avatar_url, sport, position, graduating_class, high_school').order('last_name', { ascending: true }).limit(1000),
-        supabase.from('coachprofiles').select('id, first_name, last_name, username, avatar_url, sport, college_university').order('last_name', { ascending: true }).limit(1000),
+        supabase.from('coachprofiles').select('id, first_name, last_name, username, avatar_url, sport, position, college_university').order('last_name', { ascending: true }).limit(1000),
       ]);
       if (!active) return;
       if (profilesError || coachesError) return setDirectory({ userId, profiles: [], error: 'Unable to load athlete and coach profiles right now.' });
@@ -60,7 +60,7 @@ export default function HomePage() {
   const classYears = useMemo(() => uniqueSorted(profiles.map((profile) => profile.graduating_class)), [profiles]);
   const highSchools = useMemo(() => uniqueSorted(profiles.map((profile) => profile.high_school)), [profiles]);
   const colleges = useMemo(() => uniqueSorted(profiles.map((profile) => profile.college_university)), [profiles]);
-  const availablePositions = sportFilter === 'all' ? positions : getPositions(sportFilter);
+  const availablePositions = sportFilter === 'all' ? positions : uniqueSorted([...getPositions(sportFilter), ...coachPositions]);
   const { filteredAthletes, filteredCoaches } = useMemo(() => {
     const query = search.trim().toLowerCase();
     const filtered = profiles.filter((profile) => {

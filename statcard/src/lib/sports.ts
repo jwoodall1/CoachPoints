@@ -38,6 +38,19 @@ export const positionsBySport: Record<string, readonly string[]> = {
 // Keep sport selectors and position lookups backed by one canonical list.
 export const collegiateSports = Object.freeze(Object.keys(positionsBySport));
 
+export const coachPositions = Object.freeze([
+  'Head Coach',
+  'Associate Head Coach',
+  'Assistant Coach',
+  'Offensive Coordinator',
+  'Defensive Coordinator',
+  'Special Teams Coordinator',
+  'Position Coach',
+  'Recruiting Coordinator',
+  'Strength & Conditioning Coach',
+  'Other',
+]);
+
 export function getPositions(sport: string) {
   return positionsBySport[sport] ?? [];
 }

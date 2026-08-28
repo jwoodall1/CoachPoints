@@ -15,9 +15,9 @@ type ProfilePageProps = { params: Promise<{ username: string }> };
 
 const getPublicProfile = cache(async (username: string) => {
   const athleteQuery = supabase.from('profiles').select('id, first_name, last_name, account_type, height, weight, graduating_class, high_school, gpa, sport, position, bio, avatar_url, hudl_highlight_url, hudl_secondary_urls, phone_number, contact_email, instagram_url, tiktok_url, youtube_url, x_url, stats, measurables').eq('username', username).maybeSingle();
-  const coachQuery = supabase.from('coachprofiles').select('id, first_name, last_name, college_university, sport, bio, avatar_url, phone_number, contact_email, instagram_url, tiktok_url, youtube_url, x_url').eq('username', username).maybeSingle();
+  const coachQuery = supabase.from('coachprofiles').select('id, first_name, last_name, college_university, sport, position, bio, avatar_url, phone_number, contact_email, instagram_url, tiktok_url, youtube_url, x_url').eq('username', username).maybeSingle();
   const [{ data: athleteProfile, error: athleteError }, { data: coachProfile, error: coachError }] = await Promise.all([athleteQuery, coachQuery]);
-  const profile = athleteProfile ? { ...athleteProfile, college_university: null } : coachProfile ? { ...coachProfile, account_type: 'coach' as const, height: null, weight: null, graduating_class: null, high_school: null, gpa: null, sport: coachProfile.sport, position: null, hudl_highlight_url: null, hudl_secondary_urls: [], stats: null, measurables: null } : null;
+  const profile = athleteProfile ? { ...athleteProfile, college_university: null } : coachProfile ? { ...coachProfile, account_type: 'coach' as const, height: null, weight: null, graduating_class: null, high_school: null, gpa: null, sport: coachProfile.sport, position: coachProfile.position, hudl_highlight_url: null, hudl_secondary_urls: [], stats: null, measurables: null } : null;
   return { error: athleteProfile ? athleteError : coachError, profile };
 });
 

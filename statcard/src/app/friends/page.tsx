@@ -62,7 +62,7 @@ async function fetchFriendSnapshot(userId: string): Promise<FriendSnapshot> {
       .in('id', profileIds),
     supabase
       .from('coachprofiles')
-      .select('id, username, first_name, last_name, avatar_url, sport, college_university')
+      .select('id, username, first_name, last_name, avatar_url, sport, position, college_university')
       .in('id', profileIds),
   ]);
 
@@ -85,7 +85,7 @@ async function fetchFriendSnapshot(userId: string): Promise<FriendSnapshot> {
     avatarUrl: profile.avatar_url,
     accountType: 'coach',
     sport: profile.sport,
-    detail: profile.college_university,
+    detail: [profile.position, profile.college_university].filter(Boolean).join(' · ') || null,
     resolved: true,
   }));
   const profileError = athleteResult.error ?? coachResult.error;

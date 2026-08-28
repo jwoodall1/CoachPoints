@@ -2,9 +2,9 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { ChevronLeft, Compass, LayoutDashboard, ListChecks, Menu, UserRound, UsersRound, X } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { useAuth } from '@/components/AuthProvider';
 import MessageNavLink from '@/components/MessageNavLink';
@@ -16,12 +16,10 @@ type NavItem = { href: string; label: string; icon: typeof LayoutDashboard };
 /** Responsive side navigation for public pages and authenticated workspaces. */
 export default function SiteNav() {
   const pathname = usePathname();
-  const router = useRouter();
   const { ready, user } = useAuth();
   const [profileIdentity, setProfileIdentity] = useState<ProfileIdentity | null>(null);
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const initialRouteChecked = useRef(false);
   const userId = user?.id ?? null;
   const accountType = user?.user_metadata.account_type === 'coach' ? 'coach' : 'athlete';
   const username = profileIdentity?.userId === userId ? profileIdentity.username : null;
@@ -42,12 +40,6 @@ export default function SiteNav() {
     void query.then(({ data }) => { if (active) setProfileIdentity({ userId, username: data?.username ?? null }); });
     return () => { active = false; };
   }, [accountType, ready, userId]);
-
-  useEffect(() => {
-    if (initialRouteChecked.current || !signedIn) return;
-    initialRouteChecked.current = true;
-    if (pathname === '/' && !new URLSearchParams(window.location.search).has('discover')) router.replace(`/${username}`);
-  }, [pathname, router, signedIn, username]);
 
   return <>
     <aside className={`sticky top-0 z-40 hidden h-screen shrink-0 flex-col border-r border-slate-200 bg-white transition-[width] duration-200 lg:flex ${collapsed ? 'w-20' : 'w-72'}`}>

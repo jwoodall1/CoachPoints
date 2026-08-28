@@ -267,6 +267,15 @@ export default function CoachListsPage() {
     setEditingAthlete(null);
   }, [userId]);
 
+  const moveAthlete = useCallback(async (athleteId: string, targetListId: string) => {
+    if (!selectedListId || targetListId === selectedListId) return;
+    const { error: addError } = await supabase.from('coach_list_members').upsert({ list_id: targetListId, athlete_id: athleteId }, { onConflict: 'list_id,athlete_id' });
+    if (addError) { setError(addError.message); return; }
+    const { error: removeError } = await supabase.from('coach_list_members').delete().eq('list_id', selectedListId).eq('athlete_id', athleteId);
+    if (removeError) { setError(removeError.message); return; }
+    setMembers((current) => [...current.filter((member) => !(member.list_id === selectedListId && member.athlete_id === athleteId)), { list_id: targetListId, athlete_id: athleteId }]);
+  }, [selectedListId]);
+
   useEffect(() => {
     if (!editingAthlete) return;
     const current = pipelineByAthlete.get(editingAthlete.id);
@@ -277,7 +286,14 @@ export default function CoachListsPage() {
     const followUp = window.prompt('Follow-up date (YYYY-MM-DD), leave blank to clear', current?.follow_up_date ?? '') ?? '';
     const reminder = window.prompt('Reminder', current?.reminder ?? '') ?? '';
     window.setTimeout(() => { void savePipeline(editingAthlete.id, { stage: stage as Stage, notes, tags, follow_up_date: followUp || null, reminder: reminder || null }); }, 0);
-  }, [editingAthlete, pipelineByAthlete, savePipeline]);
+    const currentLists = lists.filter((list) => members.some((member) => member.list_id === list.id && member.athlete_id === editingAthlete.id));
+    const otherLists = lists.filter((list) => !currentLists.some((currentList) => currentList.id === list.id));
+    if (otherLists.length) {
+      const target = window.prompt(`Move this athlete to another list? Enter a list name, or Cancel.\n\n${otherLists.map((list) => list.name).join('\n')}`);
+      const targetList = otherLists.find((list) => list.name.toLowerCase() === target?.trim().toLowerCase());
+      if (targetList) window.setTimeout(() => { void moveAthlete(editingAthlete.id, targetList.id); }, 0);
+    }
+  }, [editingAthlete, lists, members, moveAthlete, pipelineByAthlete, savePipeline]);
 
   const openListMessage = () => {
     setListMessageError(null);

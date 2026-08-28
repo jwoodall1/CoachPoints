@@ -14,7 +14,7 @@ type ProfileReadinessPopupProps = {
 
 /** Compact, collapsible setup helper shared by athlete and coach dashboards. */
 export default function ProfileReadinessPopup({ checks, points, recruiterReady, variant }: ProfileReadinessPopupProps) {
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(false);
   const nextSteps = checks.filter((check) => !check.complete).slice(0, 3);
   const athlete = variant === 'athlete';
   const accent = athlete ? 'brand' : 'emerald';

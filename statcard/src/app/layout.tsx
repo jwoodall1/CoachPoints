@@ -23,7 +23,7 @@ export default function RootLayout({
       <body>
         <AuthProvider>
           <PresenceProvider>
-            <div className="flex min-h-screen">
+            <div className="flex min-h-screen flex-col lg:flex-row">
               <SiteNav />
               <div className="min-w-0 flex-1">{children}<SiteFooter /></div>
             </div>

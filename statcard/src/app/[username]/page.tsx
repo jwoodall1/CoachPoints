@@ -39,6 +39,7 @@ export default async function PublicProfile({ params }: ProfilePageProps) {
   const name = [profile.first_name, profile.last_name].filter(Boolean).join(' ') || username;
   const stats = profile.stats && typeof profile.stats === 'object' && !Array.isArray(profile.stats) ? Object.entries(profile.stats) : [];
   const measurables = profile.measurables && typeof profile.measurables === 'object' && !Array.isArray(profile.measurables) ? Object.entries(profile.measurables) : [];
+  const hasHudlHighlights = Boolean(profile.hudl_highlight_url || profile.hudl_secondary_urls?.length);
   const { data: { publicUrl: fallbackAvatarUrl } } = supabase.storage.from('avatars').getPublicUrl(`${username}/profile.png`);
   const avatarUrl = profile.avatar_url ?? fallbackAvatarUrl;
   const details = [
@@ -57,7 +58,7 @@ export default async function PublicProfile({ params }: ProfilePageProps) {
     <div className="page-shell pt-10"><div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_340px]"><div className="space-y-8"><section className="surface-card p-6 sm:p-8"><SectionHeading icon={UserRound} eyebrow="Profile" title="About" /><p className="mt-5 whitespace-pre-wrap text-base leading-8 text-slate-600">{profile.bio || (isCoach ? 'This coach has not added a biography yet.' : 'This athlete has not added a biography yet.')}</p></section>
       {!isCoach && <section className="surface-card p-6 sm:p-8"><SectionHeading icon={Gauge} eyebrow="Performance" title="Stats that define the game" />{stats.length ? <dl className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">{stats.map(([label, value]) => <DataTile key={label} label={label} value={String(value)} />)}</dl> : <EmptyData text="Performance statistics will be added soon." />}</section>}
       {!isCoach && <section className="surface-card p-6 sm:p-8"><SectionHeading icon={Ruler} eyebrow="Athletic profile" title="Measurables" />{measurables.length ? <dl className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">{measurables.map(([label, value]) => <DataTile key={label} label={label} value={String(value)} compact />)}</dl> : <EmptyData text="Measurables will be added soon." />}</section>}
-      {(profile.hudl_highlight_url || profile.hudl_secondary_urls?.length) && <section className="surface-card p-6 sm:p-8"><SectionHeading icon={Video} eyebrow="Film" title="Hudl highlight reel" /><div className="mt-6"><HudlHighlight primaryUrl={profile.hudl_highlight_url} secondaryUrls={profile.hudl_secondary_urls} /></div></section>}</div><aside className="lg:sticky lg:top-28 lg:self-start"><ProfileShareCard username={username} /></aside></div></div>
+      {hasHudlHighlights && <section className="surface-card p-6 sm:p-8"><SectionHeading icon={Video} eyebrow="Film" title="Hudl highlight reel" /><div className="mt-6"><HudlHighlight primaryUrl={profile.hudl_highlight_url} secondaryUrls={profile.hudl_secondary_urls} /></div></section>}</div><aside className="lg:sticky lg:top-28 lg:self-start"><ProfileShareCard username={username} /></aside></div></div>
   </main>;
 }
 

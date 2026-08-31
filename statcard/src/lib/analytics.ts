@@ -13,6 +13,9 @@ export type AnalyticsEvent =
   | 'recruiting_list_action'
   | 'directory_filter_used';
 
-export function trackEvent(event: AnalyticsEvent, properties?: Record<string, string | number | boolean>) {
+export function trackEvent(
+  event: AnalyticsEvent,
+  properties?: Record<string, string | number | boolean>,
+) {
   void track(event, properties);
 }

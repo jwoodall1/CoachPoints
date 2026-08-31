@@ -87,8 +87,15 @@ export function OnlineStatus({ userId, compact = false }: { userId: string; comp
   const { connected, onlineUserIds } = usePresence();
   const isOnline = connected && onlineUserIds.has(userId);
 
-  return <span className={`inline-flex items-center gap-1.5 whitespace-nowrap ${compact ? 'text-xs' : 'text-sm'} ${isOnline ? 'text-emerald-700' : 'text-slate-400'}`}>
-    <span aria-hidden="true" className={`size-2 rounded-full ${isOnline ? 'bg-emerald-500 ring-4 ring-emerald-100' : 'bg-slate-300'}`} />
-    {isOnline ? 'Active now' : 'Offline'}
-  </span>;
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 whitespace-nowrap ${compact ? 'text-xs' : 'text-sm'} ${isOnline ? 'text-emerald-700' : 'text-slate-400'}`}
+    >
+      <span
+        aria-hidden="true"
+        className={`size-2 rounded-full ${isOnline ? 'bg-emerald-500 ring-4 ring-emerald-100' : 'bg-slate-300'}`}
+      />
+      {isOnline ? 'Active now' : 'Offline'}
+    </span>
+  );
 }

@@ -46,6 +46,7 @@ export async function generateMetadata({ params }: PageProps) {
     .from('institutions')
     .select('name, tagline')
     .eq('slug', slug)
+    .eq('status', 'published')
     .maybeSingle();
 
   return {
@@ -63,6 +64,7 @@ export default async function InstitutionPage({ params }: PageProps) {
       'id, name, slug, location, mascot, logo_url, primary_color, secondary_color, tagline, about, website_url, athletics_url, gpa_requirement, sat_min_score, act_min_score, admissions_requirements, admissions_url, sports(id, sport_name, gender, display_name, description, official_url)',
     )
     .eq('slug', slug)
+    .eq('status', 'published')
     .maybeSingle();
 
   if (error || !data) {

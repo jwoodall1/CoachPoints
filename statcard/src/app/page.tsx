@@ -131,8 +131,9 @@ export default function HomePage() {
         supabase
           .from('institutions')
           .select(
-            'id, name, slug, location, mascot, logo_url, primary_color, secondary_color, tagline',
+            'id, name, slug, location, mascot, logo_url, primary_color, secondary_color, tagline, status',
           )
+          .eq('status', 'published')
           .order('name', { ascending: true }),
       ]);
       if (!active) return;

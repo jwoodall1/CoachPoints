@@ -23,6 +23,12 @@ type Institution = {
   name: string;
   slug: string;
   location: string;
+  address_line1: string;
+  city: string;
+  state_code: string;
+  postal_code: string;
+  latitude: number | null;
+  longitude: number | null;
   mascot: string;
   logo_url: string | null;
   primary_color: string;
@@ -48,7 +54,7 @@ type Account = {
 };
 
 const emptyInstitution = (): Institution => ({
-  id: '', name: '', slug: '', location: '', mascot: '', logo_url: null,
+  id: '', name: '', slug: '', location: '', address_line1: '', city: '', state_code: '', postal_code: '', latitude: null, longitude: null, mascot: '', logo_url: null,
   primary_color: '#0f172a', secondary_color: '#e2e8f0', tagline: '', about: '',
   website_url: '', athletics_url: '', gpa_requirement: '', sat_min_score: null,
   act_min_score: null, admissions_requirements: '', admissions_url: '', status: 'draft', sports: [],
@@ -101,7 +107,7 @@ export default function InstitutionAdminPage() {
       setAuthorized(true);
       const [{ data, error }, { data: accountData, error: accountError }] = await Promise.all([supabase
         .from('institutions')
-        .select('id, name, slug, location, mascot, logo_url, primary_color, secondary_color, tagline, about, website_url, athletics_url, gpa_requirement, sat_min_score, act_min_score, admissions_requirements, admissions_url, status, sports(id, sport_name, gender, display_name, description, official_url)')
+        .select('id, name, slug, location, address_line1, city, state_code, postal_code, latitude, longitude, mascot, logo_url, primary_color, secondary_color, tagline, about, website_url, athletics_url, gpa_requirement, sat_min_score, act_min_score, admissions_requirements, admissions_url, status, sports(id, sport_name, gender, display_name, description, official_url)')
         .order('name'), supabase.rpc('list_assignable_accounts')]);
       if (!active) return;
       if (error) setNotice(error.message);
@@ -141,6 +147,9 @@ export default function InstitutionAdminPage() {
     try {
       const payload = {
         name: textValue(selected.name).trim(), slug: slugify(textValue(selected.slug) || textValue(selected.name)), location: textValue(selected.location).trim(),
+        address_line1: textValue(selected.address_line1).trim() || null, city: textValue(selected.city).trim() || null,
+        state_code: textValue(selected.state_code).trim().toUpperCase() || null, postal_code: textValue(selected.postal_code).trim() || null,
+        latitude: selected.latitude, longitude: selected.longitude,
         mascot: textValue(selected.mascot).trim() || null, logo_url: selected.logo_url || null,
         primary_color: selected.primary_color, secondary_color: selected.secondary_color,
         tagline: textValue(selected.tagline).trim() || null, about: textValue(selected.about).trim() || null,
@@ -169,7 +178,7 @@ export default function InstitutionAdminPage() {
         }))), 'Saving sports');
         if (error) throw new Error(error.message);
       }
-      const { data: refreshed, error: refreshError } = await withTimeout(supabase.from('institutions').select('id, name, slug, location, mascot, logo_url, primary_color, secondary_color, tagline, about, website_url, athletics_url, gpa_requirement, sat_min_score, act_min_score, admissions_requirements, admissions_url, status, sports(id, sport_name, gender, display_name, description, official_url)').eq('id', result.data.id).single(), 'Refreshing institution');
+      const { data: refreshed, error: refreshError } = await withTimeout(supabase.from('institutions').select('id, name, slug, location, address_line1, city, state_code, postal_code, latitude, longitude, mascot, logo_url, primary_color, secondary_color, tagline, about, website_url, athletics_url, gpa_requirement, sat_min_score, act_min_score, admissions_requirements, admissions_url, status, sports(id, sport_name, gender, display_name, description, official_url)').eq('id', result.data.id).single(), 'Refreshing institution');
       if (refreshError) throw new Error(refreshError.message);
       const next = (refreshed as unknown as Institution) ?? saved;
       setInstitutions((current) => current.some((item) => item.id === next.id) ? current.map((item) => item.id === next.id ? next : item) : [...current, next].sort((a, b) => a.name.localeCompare(b.name)));
@@ -249,6 +258,7 @@ type EditorProps = {
 function Editor({ institution, update, save, saving, addSport, removeSport, onUpload, admins, accounts, selectedAdminId, setSelectedAdminId, addAdmin, removeAdmin }: EditorProps) {
   return <section className="surface-card p-6 sm:p-8"><div className="flex flex-col gap-4 border-b border-slate-100 pb-6 sm:flex-row sm:items-start sm:justify-between"><div><p className="eyebrow">Institution details</p><h2 className="mt-2 text-2xl font-black text-slate-950">{institution.name || 'New institution'}</h2></div><div className="flex flex-wrap gap-2"><Link href={institution.slug ? `/institutions/${institution.slug}` : '#'} className={`btn-secondary ${institution.slug ? '' : 'pointer-events-none opacity-50'}`}><Eye className="size-4" /> Preview</Link><button type="button" onClick={save} disabled={saving} className="btn-primary"><Save className="size-4" /> {saving ? 'Saving…' : 'Save institution'}</button></div></div>
     <div className="mt-6 grid gap-4 sm:grid-cols-2"><Field label="School name" value={institution.name} required onChange={(v: string) => update('name', v)} /><Field label="Slug" value={institution.slug} hint="Leave blank to generate from the school name." onChange={(v: string) => update('slug', v)} /><Field label="Location" value={institution.location} required onChange={(v: string) => update('location', v)} /><Field label="Mascot" value={institution.mascot} onChange={(v: string) => update('mascot', v)} /><Field label="Logo URL" value={institution.logo_url ?? ''} type="url" onChange={(v: string) => update('logo_url', v || null)} /><div><span className="mb-2 block text-xs font-extrabold uppercase tracking-wider text-slate-500">Logo upload</span><button type="button" onClick={onUpload} disabled={!institution.id} className="btn-secondary"><ImagePlus className="size-4" /> Upload image</button>{!institution.id && <p className="mt-2 text-xs text-slate-500">Save the institution first.</p>}</div><Field label="Primary color" value={institution.primary_color} onChange={(v: string) => update('primary_color', v)} /><Field label="Secondary color" value={institution.secondary_color} onChange={(v: string) => update('secondary_color', v)} /><Field label="GPA requirement" value={institution.gpa_requirement} onChange={(v: string) => update('gpa_requirement', v)} /><Field label="SAT minimum" value={institution.sat_min_score?.toString() ?? ''} type="number" onChange={(v: string) => update('sat_min_score', v ? Number(v) : null)} /><Field label="ACT minimum" value={institution.act_min_score?.toString() ?? ''} type="number" onChange={(v: string) => update('act_min_score', v ? Number(v) : null)} /><Field label="Admissions URL" value={institution.admissions_url} type="url" onChange={(v: string) => update('admissions_url', v)} /><Field label="College website" value={institution.website_url} type="url" onChange={(v: string) => update('website_url', v)} /><Field label="Athletics website" value={institution.athletics_url} type="url" onChange={(v: string) => update('athletics_url', v)} /></div>
+    <div className="mt-6 rounded-2xl border border-slate-200 p-4"><p className="eyebrow">Structured location</p><p className="mt-1 text-sm text-slate-500">These fields support state filtering and future distance searches.</p><div className="mt-4 grid gap-4 sm:grid-cols-2"><Field label="Street address" value={institution.address_line1} onChange={(v: string) => update('address_line1', v)} /><Field label="City" value={institution.city} onChange={(v: string) => update('city', v)} /><Field label="State code" value={institution.state_code} hint="Two-letter code, such as MN." onChange={(v: string) => update('state_code', v.toUpperCase())} /><Field label="Postal code" value={institution.postal_code} onChange={(v: string) => update('postal_code', v)} /><Field label="Latitude" value={institution.latitude?.toString() ?? ''} type="number" onChange={(v: string) => update('latitude', v ? Number(v) : null)} /><Field label="Longitude" value={institution.longitude?.toString() ?? ''} type="number" onChange={(v: string) => update('longitude', v ? Number(v) : null)} /></div></div>
     <TextArea label="Tagline" value={institution.tagline} onChange={(v: string) => update('tagline', v)} /><TextArea label="About" value={institution.about} onChange={(v: string) => update('about', v)} /><TextArea label="Admissions requirements" value={institution.admissions_requirements} onChange={(v: string) => update('admissions_requirements', v)} />
     <div className="mt-6 flex items-center gap-3"><label className="text-sm font-bold text-slate-700">Status<select className="input mt-2" value={institution.status} onChange={(e) => update('status', e.target.value as Institution['status'])}><option value="draft">Draft</option><option value="published">Published</option><option value="archived">Archived</option></select></label></div>
     <div className="mt-8 border-t border-slate-100 pt-6"><div className="flex items-center justify-between"><div><p className="eyebrow">Athletic programs</p><h3 className="mt-1 text-xl font-black text-slate-950">Sports</h3></div><button type="button" onClick={addSport} className="btn-secondary"><Plus className="size-4" /> Add sport</button></div><div className="mt-4 space-y-3">{institution.sports.map((sport: Sport, index: number) => <div key={sport.id ?? index} className="rounded-2xl border border-slate-200 p-4"><div className="grid gap-3 sm:grid-cols-2"><Field label="Sport name" value={sport.sport_name} onChange={(v: string) => update('sports', institution.sports.map((s: Sport, i: number) => i === index ? { ...s, sport_name: v } : s))} /><Field label="Display name" value={sport.display_name} onChange={(v: string) => update('sports', institution.sports.map((s: Sport, i: number) => i === index ? { ...s, display_name: v } : s))} /><label className="block"><span className="mb-2 block text-xs font-extrabold uppercase tracking-wider text-slate-500">Gender</span><select className="input" value={sport.gender} onChange={(e) => update('sports', institution.sports.map((s: Sport, i: number) => i === index ? { ...s, gender: e.target.value } : s))}><option value="men">Men</option><option value="women">Women</option><option value="coed">Coed</option></select></label><Field label="Official URL" value={sport.official_url} type="url" onChange={(v: string) => update('sports', institution.sports.map((s: Sport, i: number) => i === index ? { ...s, official_url: v } : s))} /></div><TextArea label="Description" value={sport.description} onChange={(v: string) => update('sports', institution.sports.map((s: Sport, i: number) => i === index ? { ...s, description: v } : s))} /><button type="button" onClick={() => removeSport(index)} className="mt-2 inline-flex items-center gap-1 text-sm font-bold text-rose-600"><Trash2 className="size-4" /> Remove sport</button></div>)}</div></div>

@@ -53,6 +53,8 @@ type Institution = {
   primary_color: string;
   secondary_color: string;
   tagline: string | null;
+  city: string | null;
+  state_code: string | null;
 };
 type DirectoryState = {
   userId: string;
@@ -74,6 +76,7 @@ export default function HomePage() {
   const [classFilter, setClassFilter] = useState('all');
   const [highSchoolFilter, setHighSchoolFilter] = useState('all');
   const [collegeFilter, setCollegeFilter] = useState('all');
+  const [institutionStateFilter, setInstitutionStateFilter] = useState('all');
   const [directoryType, setDirectoryType] = useState<DirectoryType>('athletes');
   const userId = user?.id ?? null;
   const isSignedIn = Boolean(userId);
@@ -99,6 +102,7 @@ export default function HomePage() {
       setClassFilter('all');
       setHighSchoolFilter('all');
       setCollegeFilter('all');
+      setInstitutionStateFilter('all');
       setSearch('');
     };
     window.addEventListener('directory-type-change', changeDirectoryType);
@@ -131,7 +135,7 @@ export default function HomePage() {
         supabase
           .from('institutions')
           .select(
-            'id, name, slug, location, mascot, logo_url, primary_color, secondary_color, tagline, status',
+            'id, name, slug, location, city, state_code, mascot, logo_url, primary_color, secondary_color, tagline, status',
           )
           .eq('status', 'published')
           .order('name', { ascending: true }),
@@ -225,9 +229,21 @@ export default function HomePage() {
     setClassFilter('all');
     setHighSchoolFilter('all');
     setCollegeFilter('all');
+    setInstitutionStateFilter('all');
   }, []);
 
-  const institutions = directory?.institutions ?? [];
+  const institutions = useMemo(() => directory?.institutions ?? [], [directory?.institutions]);
+  const institutionStates = useMemo(
+    () => uniqueSorted(institutions.map((institution) => institution.state_code)),
+    [institutions],
+  );
+  const filteredInstitutions = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    return institutions.filter((institution) =>
+      (!query || institution.name.toLowerCase().includes(query) || institution.location.toLowerCase().includes(query)) &&
+      (institutionStateFilter === 'all' || institution.state_code === institutionStateFilter),
+    );
+  }, [institutions, search, institutionStateFilter]);
 
   if (loading) return <LoadingState label="Preparing CoachPoints…" />;
   if (!isSignedIn) return <MarketingHome />;
@@ -283,10 +299,25 @@ export default function HomePage() {
                   <input
                     value={search}
                     onChange={(event) => setSearch(event.target.value)}
-                    placeholder="Name or @username"
+                    placeholder={directoryType === 'institutions' ? 'School name or location' : 'Name or @username'}
                     className="input pl-10"
                   />
                 </label>
+                {directoryType === 'institutions' ? (
+                  <>
+                    <Filter
+                      label="State"
+                      value={institutionStateFilter}
+                      onChange={setInstitutionStateFilter}
+                      options={institutionStates}
+                      allLabel="All states"
+                    />
+                    <button type="button" onClick={clearFilters} className="btn-secondary px-4">
+                      Reset
+                    </button>
+                  </>
+                ) : (
+                  <>
                 <Filter
                   label="Sport"
                   value={sportFilter}
@@ -312,8 +343,10 @@ export default function HomePage() {
                 <button type="button" onClick={clearFilters} className="btn-secondary px-4">
                   Reset
                 </button>
+                  </>
+                )}
               </div>
-              <details className="group mt-4 border-t border-slate-100 pt-4">
+              {directoryType !== 'institutions' && <details className="group mt-4 border-t border-slate-100 pt-4">
                 <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-bold text-slate-600 hover:text-slate-950">
                   <span className="grid size-7 place-items-center rounded-lg bg-slate-100">
                     <GraduationCap className="size-4" />
@@ -349,7 +382,7 @@ export default function HomePage() {
                     wide
                   />
                 </div>
-              </details>
+              </details>}
             </section>
 
             <section id="all-profiles" className="scroll-mt-28 pt-12">
@@ -361,7 +394,7 @@ export default function HomePage() {
                   </h2>
                   <p className="mt-2 text-sm text-slate-500">
                     {directoryType === 'institutions'
-                      ? `${institutions.length} institutions available`
+                      ? `${filteredInstitutions.length} institutions available`
                       : `${filteredAthletes.length + filteredCoaches.length} profiles match your search`}
                   </p>
                 </div>
@@ -394,7 +427,7 @@ export default function HomePage() {
                 </>
               )}
               <InstitutionGroup
-                institutions={institutions}
+                institutions={filteredInstitutions}
                 visible={directoryType === 'institutions'}
               />
             </section>

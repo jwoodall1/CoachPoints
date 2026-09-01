@@ -364,11 +364,12 @@ export default function HomePage() {
                       : `${filteredAthletes.length + filteredCoaches.length} profiles match your search`}
                   </p>
                 </div>
-                <div className="inline-flex self-start rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-500 shadow-sm">
+              <div className="inline-flex self-start rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-500 shadow-sm">
                   <Sparkles className="mr-1.5 size-3.5 text-brand-500" />
                   Profiles update in real time
                 </div>
               </div>
+              <DirectoryToggle value={directoryType} />
               {directoryType !== 'institutions' && (
                 <>
                   <ProfileGroup
@@ -378,6 +379,7 @@ export default function HomePage() {
                     emptyMessage="No athletes match these filters."
                     onClear={clearFilters}
                     showListActions={canManageLists}
+                    visible={directoryType === 'athletes'}
                   />
                   <ProfileGroup
                     title="Coaches"
@@ -386,6 +388,7 @@ export default function HomePage() {
                     emptyMessage="No coaches match these filters."
                     onClear={clearFilters}
                     showListActions={false}
+                    visible={directoryType === 'coaches'}
                   />
                 </>
               )}
@@ -725,6 +728,41 @@ function uniqueSorted(values: Array<string | null | undefined>) {
   ).sort((a, b) => a.localeCompare(b));
 }
 
+function DirectoryToggle({ value }: { value: DirectoryType }) {
+  const change = (next: DirectoryType) =>
+    window.dispatchEvent(new CustomEvent('directory-type-change', { detail: next }));
+
+  return (
+    <div
+      className="mt-6 inline-flex rounded-xl border border-slate-200 bg-white p-1 shadow-sm"
+      role="group"
+      aria-label="Choose directory type"
+    >
+      <button
+        type="button"
+        onClick={() => change('athletes')}
+        className={`rounded-lg px-3 py-2 text-xs font-extrabold transition ${value === 'athletes' ? 'bg-brand-600 text-white' : 'text-slate-500 hover:bg-slate-50'}`}
+      >
+        Athletes
+      </button>
+      <button
+        type="button"
+        onClick={() => change('institutions')}
+        className={`rounded-lg px-3 py-2 text-xs font-extrabold transition ${value === 'institutions' ? 'bg-slate-950 text-white' : 'text-slate-500 hover:bg-slate-50'}`}
+      >
+        Institutions
+      </button>
+      <button
+        type="button"
+        onClick={() => change('coaches')}
+        className={`rounded-lg px-3 py-2 text-xs font-extrabold transition ${value === 'coaches' ? 'bg-emerald-600 text-white' : 'text-slate-500 hover:bg-slate-50'}`}
+      >
+        Coaches
+      </button>
+    </div>
+  );
+}
+
 const ProfileGroup = memo(function ProfileGroup({
   title,
   description,
@@ -732,6 +770,7 @@ const ProfileGroup = memo(function ProfileGroup({
   emptyMessage,
   onClear,
   showListActions,
+  visible,
 }: {
   title: string;
   description: string;
@@ -739,66 +778,15 @@ const ProfileGroup = memo(function ProfileGroup({
   emptyMessage: string;
   onClear: () => void;
   showListActions: boolean;
+  visible: boolean;
 }) {
-  const { user } = useAuth();
-  const initialType = user?.user_metadata.account_type === 'athlete' ? 'coaches' : 'athletes';
-  const [directoryType, setDirectoryType] = useState<DirectoryType>(initialType);
-  useEffect(() => {
-    window.setTimeout(() => setDirectoryType(initialType), 0);
-  }, [initialType]);
-  useEffect(() => {
-    const syncDirectoryType = (event: Event) =>
-      setDirectoryType((event as CustomEvent<'athletes' | 'coaches'>).detail);
-    window.addEventListener('directory-type-change', syncDirectoryType);
-    return () => window.removeEventListener('directory-type-change', syncDirectoryType);
-  }, []);
-  if ((directoryType === 'athletes' ? 'Athletes' : 'Coaches') !== title) return null;
+  if (!visible) return null;
   return (
     <section className="mt-10">
       <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h3 className="text-xl font-black tracking-tight text-slate-950">{title}</h3>
           <p className="mt-1 text-sm text-slate-500">{description}</p>
-        </div>
-        <div
-          className="inline-flex rounded-xl border border-slate-200 bg-white p-1 shadow-sm"
-          role="group"
-          aria-label="Choose directory type"
-        >
-          <button
-            type="button"
-            onClick={() => {
-              setDirectoryType('athletes');
-              window.dispatchEvent(
-                new CustomEvent('directory-type-change', { detail: 'athletes' }),
-              );
-            }}
-            className={`rounded-lg px-3 py-2 text-xs font-extrabold transition ${directoryType === 'athletes' ? 'bg-brand-600 text-white' : 'text-slate-500 hover:bg-slate-50'}`}
-          >
-            Athletes
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setDirectoryType('institutions');
-              window.dispatchEvent(
-                new CustomEvent('directory-type-change', { detail: 'institutions' }),
-              );
-            }}
-            className={`rounded-lg px-3 py-2 text-xs font-extrabold transition ${directoryType === 'institutions' ? 'bg-slate-950 text-white' : 'text-slate-500 hover:bg-slate-50'}`}
-          >
-            Institutions
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setDirectoryType('coaches');
-              window.dispatchEvent(new CustomEvent('directory-type-change', { detail: 'coaches' }));
-            }}
-            className={`rounded-lg px-3 py-2 text-xs font-extrabold transition ${directoryType === 'coaches' ? 'bg-emerald-600 text-white' : 'text-slate-500 hover:bg-slate-50'}`}
-          >
-            Coaches
-          </button>
         </div>
         <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-extrabold text-slate-600">
           {profiles.length}

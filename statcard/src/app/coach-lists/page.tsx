@@ -20,6 +20,7 @@ import { useRouter } from 'next/navigation';
 
 import { useAuth } from '@/components/AuthProvider';
 import { supabase } from '@/lib/supabase';
+import { safeHttpsUrl } from '@/lib/safeExternalUrl';
 
 // ── List, pipeline, and export models ─────────────────────────────────────────
 
@@ -62,7 +63,7 @@ type Athlete = {
 };
 
 const athleteColumns =
-  'id, username, first_name, last_name, sport, position, graduating_class, high_school, height, weight, gpa, bio, phone_number, contact_email, hudl_highlight_url, instagram_url, tiktok_url, youtube_url, x_url, stats, measurables';
+  'id, username, first_name, last_name, sport, position, graduating_class, high_school, height, weight, gpa, bio, hudl_highlight_url, instagram_url, tiktok_url, youtube_url, x_url, stats, measurables';
 const tableHeadings = [
   'Athlete',
   'Username',
@@ -179,16 +180,27 @@ async function fetchListSnapshot(): Promise<ListSnapshot> {
       error: null,
     };
 
-  const { data: athleteData, error: athleteError } = await supabase
-    .from('profiles')
-    .select(athleteColumns)
-    .in('id', athleteIds);
+  const [athleteResult, contactResult] = await Promise.all([
+    supabase.from('public_profile_details').select(athleteColumns).in('id', athleteIds),
+    supabase
+      .from('profile_contacts')
+      .select('user_id, phone_number, contact_email')
+      .in('user_id', athleteIds),
+  ]);
+  const contacts = new Map(
+    (contactResult.data ?? []).map((contact) => [contact.user_id, contact] as const),
+  );
+  const athletes = (athleteResult.data ?? []).map((athlete) => ({
+    ...athlete,
+    phone_number: contacts.get(athlete.id)?.phone_number ?? null,
+    contact_email: contacts.get(athlete.id)?.contact_email ?? null,
+  }));
   return {
     lists: listData ?? [],
     members,
-    athletes: athleteData ?? [],
+    athletes,
     pipeline: pipelineData ?? [],
-    error: athleteError?.message ?? null,
+    error: (athleteResult.error ?? contactResult.error)?.message ?? null,
   };
 }
 
@@ -1079,11 +1091,11 @@ export default function CoachListsPage() {
                             athlete.x_url,
                           ].map((url, index) => (
                             <td key={index} className="max-w-48 px-4 py-4">
-                              {url ? (
+                              {safeHttpsUrl(url) ? (
                                 <a
-                                  href={url}
+                                  href={safeHttpsUrl(url) ?? '#'}
                                   target="_blank"
-                                  rel="noreferrer"
+                                  rel="noopener noreferrer"
                                   className="break-all text-blue-600 hover:text-blue-700"
                                 >
                                   {url}

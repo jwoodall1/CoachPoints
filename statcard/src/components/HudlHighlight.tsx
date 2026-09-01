@@ -3,24 +3,18 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 
+import { safeHudlEmbedUrl } from '@/lib/safeExternalUrl';
+
 type HudlHighlightProps = {
   primaryUrl: string | null | undefined;
   secondaryUrls?: string[] | null;
 };
 
-/** Converts a public Hudl URL into the equivalent embeddable player URL. */
-function formatHudlEmbedUrl(url: string) {
-  const secureUrl = url.replace(/^http:\/\//i, 'https://');
-  if (secureUrl.includes('/embed/')) return secureUrl;
-  if (secureUrl.includes('/video/')) return secureUrl.replace('/video/', '/embed/video/');
-  return secureUrl.replace('/v/', '/embed/v/');
-}
-
 /** Embeds a responsive Hudl player only when the profile supplies a URL. */
 export default function HudlHighlight({ primaryUrl, secondaryUrls = [] }: HudlHighlightProps) {
-  const urls = [primaryUrl, ...(secondaryUrls ?? [])].filter((url): url is string =>
-    Boolean(url?.trim()),
-  );
+  const urls = [primaryUrl, ...(secondaryUrls ?? [])]
+    .map(safeHudlEmbedUrl)
+    .filter((url): url is string => Boolean(url));
   const [activeIndex, setActiveIndex] = useState(0);
   if (!urls.length) return null;
   const activeUrl = urls[activeIndex] ?? urls[0];
@@ -29,11 +23,13 @@ export default function HudlHighlight({ primaryUrl, secondaryUrls = [] }: HudlHi
     <div>
       <div className="relative w-full overflow-hidden rounded-2xl bg-slate-950 pb-[56.25%]">
         <iframe
-          src={formatHudlEmbedUrl(activeUrl.trim())}
+          src={activeUrl}
           title={`Hudl highlight ${activeIndex + 1}`}
           className="absolute inset-0 size-full"
           frameBorder="0"
           loading="lazy"
+          referrerPolicy="strict-origin-when-cross-origin"
+          sandbox="allow-scripts allow-same-origin allow-presentation"
           allowFullScreen
         />
       </div>

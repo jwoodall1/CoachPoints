@@ -119,14 +119,14 @@ export default function HomePage() {
         { data: institutionData, error: institutionsError },
       ] = await Promise.all([
         supabase
-          .from('profiles')
+          .from('public_profile_cards')
           .select(
             'id, first_name, last_name, username, avatar_url, sport, position, graduating_class, high_school',
           )
           .order('last_name', { ascending: true })
           .limit(1000),
         supabase
-          .from('coachprofiles')
+          .from('public_coach_profile_cards')
           .select(
             'id, first_name, last_name, username, avatar_url, sport, position, college_university',
           )

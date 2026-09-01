@@ -5,6 +5,7 @@ import { ArrowLeft, ArrowUpRight, Building2, MapPin, Trophy } from 'lucide-react
 
 import { supabase } from '@/lib/supabase';
 import InstitutionEditor from '@/components/InstitutionEditor';
+import { safeHttpsUrl } from '@/lib/safeExternalUrl';
 
 type Sport = {
   id: string;
@@ -82,6 +83,10 @@ export default async function InstitutionPage({ params }: PageProps) {
   }
 
   const institution = data as unknown as Institution;
+  const logoUrl = safeHttpsUrl(institution.logo_url);
+  const websiteUrl = safeHttpsUrl(institution.website_url);
+  const athleticsUrl = safeHttpsUrl(institution.athletics_url);
+  const admissionsUrl = safeHttpsUrl(institution.admissions_url);
 
   return (
     <main
@@ -109,9 +114,9 @@ export default async function InstitutionPage({ params }: PageProps) {
             <ArrowLeft className="size-4" /> Back to discover
           </Link>
           <div className="mt-12 flex flex-col gap-8 sm:flex-row sm:items-center">
-            {institution.logo_url ? (
+            {logoUrl ? (
               <img
-                src={institution.logo_url}
+                src={logoUrl}
                 alt={`${institution.name} logo`}
                 className="size-32 rounded-3xl bg-white p-3 object-contain shadow-2xl"
               />
@@ -154,21 +159,21 @@ export default async function InstitutionPage({ params }: PageProps) {
             </p>
           </div>
           <div className="flex flex-wrap items-start gap-3 lg:flex-col">
-            {institution.website_url && (
+            {websiteUrl && (
               <a
-                href={institution.website_url}
+                href={websiteUrl}
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 className="btn-secondary"
               >
                 College website <ArrowUpRight className="size-4" />
               </a>
             )}
-            {institution.athletics_url && (
+            {athleticsUrl && (
               <a
-                href={institution.athletics_url}
+                href={athleticsUrl}
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 className="btn-primary"
               >
                 Athletics site <ArrowUpRight className="size-4" />
@@ -181,7 +186,7 @@ export default async function InstitutionPage({ params }: PageProps) {
           institution.sat_min_score ||
           institution.act_min_score ||
           institution.admissions_requirements ||
-          institution.admissions_url) && (
+          admissionsUrl) && (
           <section className="surface-card mt-6 p-6 sm:p-8">
             <p className="eyebrow">Admissions snapshot</p>
             <div className="mt-5 grid gap-5 sm:grid-cols-3">
@@ -221,11 +226,11 @@ export default async function InstitutionPage({ params }: PageProps) {
                 {institution.admissions_requirements}
               </p>
             )}
-            {institution.admissions_url && (
+            {admissionsUrl && (
               <a
-                href={institution.admissions_url}
+                href={admissionsUrl}
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 className="btn-secondary mt-5"
               >
                 Admissions information <ArrowUpRight className="size-4" />
@@ -271,11 +276,11 @@ export default async function InstitutionPage({ params }: PageProps) {
                 <p className="mt-2 min-h-12 text-sm leading-6 text-slate-500">
                   {sport.description ?? 'Explore this athletic program.'}
                 </p>
-                {sport.official_url && (
+                {safeHttpsUrl(sport.official_url) && (
                   <a
-                    href={sport.official_url}
+                    href={safeHttpsUrl(sport.official_url) ?? undefined}
                     target="_blank"
-                    rel="noreferrer"
+                    rel="noopener noreferrer"
                     className="mt-4 inline-flex items-center gap-1 text-sm font-extrabold"
                     style={{ color: institution.primary_color }}
                   >

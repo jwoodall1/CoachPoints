@@ -51,8 +51,8 @@ export default function SiteNav() {
     let active = true;
     const query =
       accountType === 'coach'
-        ? supabase.from('coachprofiles').select('username').eq('id', userId).maybeSingle()
-        : supabase.from('profiles').select('username').eq('id', userId).maybeSingle();
+        ? supabase.from('public_coach_profile_cards').select('username').eq('id', userId).maybeSingle()
+        : supabase.from('public_profile_cards').select('username').eq('id', userId).maybeSingle();
     void query.then(({ data }) => {
       if (active) setProfileIdentity({ userId, username: data?.username ?? null });
     });

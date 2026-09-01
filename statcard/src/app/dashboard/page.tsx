@@ -12,6 +12,7 @@ import { supabase } from '@/lib/supabase';
 import { collegiateSports, getPositions } from '@/lib/sports';
 import { trackEvent } from '@/lib/analytics';
 import ProfileReadinessPopup from '@/components/ProfileReadinessPopup';
+import { safeHudlEmbedUrl } from '@/lib/safeExternalUrl';
 
 // The image cropper and its canvas logic are downloaded only after this route needs them.
 const UploadModal = dynamic(() => import('@/components/UploadModal'));
@@ -72,18 +73,7 @@ const emptyProfile: Profile = {
 // Accept only Hudl player URLs that the public profile knows how to embed.
 const isValidHudlUrl = (value: string) => {
   if (!value.trim()) return true;
-  try {
-    const url = new URL(value.trim());
-    return (
-      ['http:', 'https:'].includes(url.protocol) &&
-      url.hostname === 'www.hudl.com' &&
-      (url.pathname.includes('/video/') ||
-        url.pathname.includes('/v/') ||
-        url.pathname.includes('/embed/'))
-    );
-  } catch {
-    return false;
-  }
+  return Boolean(safeHudlEmbedUrl(value));
 };
 const asHudlUrls = (value: unknown): string[] =>
   Array.isArray(value)
@@ -116,7 +106,7 @@ export default function DashboardPage() {
   const hudlUrlError = useMemo(
     () =>
       profile.hudl_highlight_url.trim() && !isValidHudlUrl(profile.hudl_highlight_url)
-        ? 'Enter a valid Hudl video link, such as http://www.hudl.com/v/2JrhL4 or https://www.hudl.com/video/....'
+        ? 'Enter an HTTPS Hudl video link, such as https://www.hudl.com/v/2JrhL4.'
         : null,
     [profile.hudl_highlight_url],
   );
@@ -240,14 +230,21 @@ export default function DashboardPage() {
           .maybeSingle();
         data = result.data;
       } else {
-        const result = await supabase
-          .from('profiles')
-          .select(
-            'first_name, last_name, username, height, weight, graduating_class, high_school, gpa, sport, position, bio, avatar_url, hudl_highlight_url, hudl_secondary_urls, phone_number, contact_email, instagram_url, tiktok_url, youtube_url, x_url, stats, measurables',
-          )
-          .eq('id', user.id)
-          .maybeSingle();
-        data = result.data;
+        const [{ data: profileData }, { data: contactData }] = await Promise.all([
+          supabase
+            .from('profiles')
+            .select(
+              'first_name, last_name, username, height, weight, graduating_class, high_school, gpa, sport, position, bio, avatar_url, hudl_highlight_url, hudl_secondary_urls, instagram_url, tiktok_url, youtube_url, x_url, stats, measurables',
+            )
+            .eq('id', user.id)
+            .maybeSingle(),
+          supabase
+            .from('profile_contacts')
+            .select('phone_number, contact_email')
+            .eq('user_id', user.id)
+            .maybeSingle(),
+        ]);
+        data = { ...profileData, ...contactData };
       }
       if (!active) return;
       const loaded: Profile = {
@@ -394,8 +391,6 @@ export default function DashboardPage() {
                   .map((url) => url.trim())
                   .filter(Boolean)
                   .slice(0, 5),
-                phone_number: profile.phone_number.trim() || null,
-                contact_email: profile.contact_email.trim() || null,
                 instagram_url: profile.instagram_url.trim() || null,
                 tiktok_url: profile.tiktok_url.trim() || null,
                 youtube_url: profile.youtube_url.trim() || null,
@@ -410,7 +405,18 @@ export default function DashboardPage() {
               { onConflict: 'id' },
             )
           ).error;
-    if (error) setNotice(error.message);
+    const contactError = (
+      await supabase.from('profile_contacts').upsert(
+        {
+          user_id: user.id,
+          phone_number: profile.phone_number.trim() || null,
+          contact_email: profile.contact_email.trim() || null,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'user_id' },
+      )
+    ).error;
+    if (error || contactError) setNotice((error ?? contactError)?.message ?? 'Unable to save profile.');
     else {
       const saved = { ...profile, username };
       setProfile(saved);

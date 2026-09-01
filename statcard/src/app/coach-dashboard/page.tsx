@@ -112,13 +112,20 @@ export default function CoachDashboardPage() {
     }
     let active = true;
     const load = async () => {
-      const { data } = await supabase
-        .from('coachprofiles')
-        .select(
-          'first_name, last_name, username, college_university, sport, position, bio, phone_number, contact_email, instagram_url, tiktok_url, youtube_url, x_url',
-        )
-        .eq('id', user.id)
-        .maybeSingle();
+      const [{ data }, { data: contact }] = await Promise.all([
+        supabase
+          .from('coachprofiles')
+          .select(
+            'first_name, last_name, username, college_university, sport, position, bio, instagram_url, tiktok_url, youtube_url, x_url',
+          )
+          .eq('id', user.id)
+          .maybeSingle(),
+        supabase
+          .from('profile_contacts')
+          .select('phone_number, contact_email')
+          .eq('user_id', user.id)
+          .maybeSingle(),
+      ]);
       if (!active) return;
       setProfile({
         firstName: data?.first_name ?? user.user_metadata.first_name ?? '',
@@ -128,8 +135,8 @@ export default function CoachDashboardPage() {
         sport: data?.sport ?? '',
         position: data?.position ?? '',
         bio: data?.bio ?? '',
-        phoneNumber: data?.phone_number ?? '',
-        contactEmail: data?.contact_email ?? user.email ?? '',
+        phoneNumber: contact?.phone_number ?? '',
+        contactEmail: contact?.contact_email ?? user.email ?? '',
         instagramUrl: data?.instagram_url ?? '',
         tiktokUrl: data?.tiktok_url ?? '',
         youtubeUrl: data?.youtube_url ?? '',
@@ -162,8 +169,6 @@ export default function CoachDashboardPage() {
         sport: profile.sport.trim(),
         position: profile.position.trim() || null,
         bio: profile.bio.trim(),
-        phone_number: profile.phoneNumber.trim() || null,
-        contact_email: profile.contactEmail.trim() || null,
         instagram_url: profile.instagramUrl.trim() || null,
         tiktok_url: profile.tiktokUrl.trim() || null,
         youtube_url: profile.youtubeUrl.trim() || null,
@@ -171,7 +176,17 @@ export default function CoachDashboardPage() {
       },
       { onConflict: 'id' },
     );
-    if (error) setNotice(error.message);
+    const { error: contactError } = await supabase.from('profile_contacts').upsert(
+      {
+        user_id: user.id,
+        phone_number: profile.phoneNumber.trim() || null,
+        contact_email: profile.contactEmail.trim() || null,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'user_id' },
+    );
+    if (error || contactError)
+      setNotice((error ?? contactError)?.message ?? 'Unable to save coach profile.');
     else {
       setProfile((current) => ({ ...current, username: current.username.trim().toLowerCase() }));
       setEditing(false);

@@ -2,6 +2,7 @@
 
 import { Mail, Phone } from 'lucide-react';
 import { trackEvent } from '@/lib/analytics';
+import { safeHttpsUrl } from '@/lib/safeExternalUrl';
 
 export type SocialLinks = {
   phoneNumber?: string | null;
@@ -12,6 +13,7 @@ export type SocialLinks = {
   xUrl?: string | null;
 };
 type SocialLink = { label: string; url: string; icon: 'instagram' | 'tiktok' | 'youtube' | 'x' };
+type CandidateSocialLink = Omit<SocialLink, 'url'> & { url: string | null };
 
 function SocialIcon({ icon }: { icon: SocialLink['icon'] }) {
   if (icon === 'instagram')
@@ -52,12 +54,20 @@ export default function SocialLinks({ links }: { links: SocialLinks }) {
   const phoneHref = phoneNumber ? `tel:${phoneNumber.replace(/[^+\d]/g, '')}` : '';
   const socialLinks = (
     [
-      { label: 'Instagram', url: links.instagramUrl ?? '', icon: 'instagram' },
-      { label: 'TikTok', url: links.tiktokUrl ?? '', icon: 'tiktok' },
-      { label: 'YouTube', url: links.youtubeUrl ?? '', icon: 'youtube' },
-      { label: 'X', url: links.xUrl ?? '', icon: 'x' },
-    ] satisfies SocialLink[]
-  ).filter(({ url }) => url.trim());
+      {
+        label: 'Instagram',
+        url: safeHttpsUrl(links.instagramUrl, ['instagram.com']),
+        icon: 'instagram',
+      },
+      { label: 'TikTok', url: safeHttpsUrl(links.tiktokUrl, ['tiktok.com']), icon: 'tiktok' },
+      {
+        label: 'YouTube',
+        url: safeHttpsUrl(links.youtubeUrl, ['youtube.com', 'youtu.be']),
+        icon: 'youtube',
+      },
+      { label: 'X', url: safeHttpsUrl(links.xUrl, ['x.com', 'twitter.com']), icon: 'x' },
+    ] satisfies CandidateSocialLink[]
+  ).filter((link): link is SocialLink => Boolean(link.url));
   if (!socialLinks.length && !phoneNumber && !contactEmail) return null;
 
   return (
@@ -89,7 +99,7 @@ export default function SocialLinks({ links }: { links: SocialLinks }) {
           key={label}
           href={url}
           target="_blank"
-          rel="noreferrer"
+          rel="noopener noreferrer"
           onClick={() => trackEvent('profile_contact_action', { channel: label.toLowerCase() })}
           aria-label={label}
           title={label}

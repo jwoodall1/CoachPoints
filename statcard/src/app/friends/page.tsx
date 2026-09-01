@@ -60,11 +60,11 @@ async function fetchFriendSnapshot(userId: string): Promise<FriendSnapshot> {
 
   const [athleteResult, coachResult] = await Promise.all([
     supabase
-      .from('profiles')
+      .from('public_profile_cards')
       .select('id, username, first_name, last_name, avatar_url, sport, position, high_school')
       .in('id', profileIds),
     supabase
-      .from('coachprofiles')
+      .from('public_coach_profile_cards')
       .select(
         'id, username, first_name, last_name, avatar_url, sport, position, college_university',
       )

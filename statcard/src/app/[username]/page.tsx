@@ -27,16 +27,16 @@ type ProfilePageProps = { params: Promise<{ username: string }> };
 
 const getPublicProfile = cache(async (username: string) => {
   const athleteQuery = supabase
-    .from('profiles')
+    .from('public_profile_details')
     .select(
-      'id, first_name, last_name, account_type, height, weight, graduating_class, high_school, gpa, sport, position, bio, avatar_url, hudl_highlight_url, hudl_secondary_urls, phone_number, contact_email, instagram_url, tiktok_url, youtube_url, x_url, stats, measurables',
+      'id, first_name, last_name, account_type, height, weight, graduating_class, high_school, gpa, sport, position, bio, avatar_url, hudl_highlight_url, hudl_secondary_urls, instagram_url, tiktok_url, youtube_url, x_url, stats, measurables',
     )
     .eq('username', username)
     .maybeSingle();
   const coachQuery = supabase
-    .from('coachprofiles')
+    .from('public_coach_profile_details')
     .select(
-      'id, first_name, last_name, college_university, sport, position, bio, avatar_url, phone_number, contact_email, instagram_url, tiktok_url, youtube_url, x_url',
+      'id, first_name, last_name, college_university, sport, position, bio, avatar_url, instagram_url, tiktok_url, youtube_url, x_url',
     )
     .eq('username', username)
     .maybeSingle();
@@ -151,8 +151,6 @@ export default async function PublicProfile({ params }: ProfilePageProps) {
               )}
               <SocialLinks
                 links={{
-                  phoneNumber: profile.phone_number,
-                  contactEmail: profile.contact_email,
                   instagramUrl: profile.instagram_url,
                   tiktokUrl: profile.tiktok_url,
                   youtubeUrl: profile.youtube_url,

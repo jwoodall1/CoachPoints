@@ -371,6 +371,7 @@ function LoginForm() {
                   <Link
                     href="/terms"
                     target="_blank"
+                    rel="noopener noreferrer"
                     className="font-bold text-brand-700 underline underline-offset-2"
                   >
                     Terms of Agreement
@@ -379,6 +380,7 @@ function LoginForm() {
                   <Link
                     href="/privacy"
                     target="_blank"
+                    rel="noopener noreferrer"
                     className="font-bold text-brand-700 underline underline-offset-2"
                   >
                     Privacy Policy

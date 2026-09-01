@@ -46,7 +46,7 @@ async function fetchListSnapshot(): Promise<ListSnapshot> {
   if (!athleteIds.length) return { lists: listData ?? [], members, athletes: [], error: null };
 
   const { data: athleteData, error: athleteError } = await supabase
-    .from('profiles')
+    .from('public_profile_cards')
     .select('id, username, first_name, last_name')
     .in('id', athleteIds);
   return {

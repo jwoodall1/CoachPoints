@@ -73,11 +73,11 @@ async function loadInbox(): Promise<InboxSnapshot> {
 
   const [athleteResult, coachResult] = await Promise.all([
     supabase
-      .from('profiles')
+      .from('public_profile_cards')
       .select('id, username, first_name, last_name, avatar_url')
       .in('id', friendIds),
     supabase
-      .from('coachprofiles')
+      .from('public_coach_profile_cards')
       .select('id, username, first_name, last_name, avatar_url')
       .in('id', friendIds),
   ]);

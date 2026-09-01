@@ -6,6 +6,7 @@ import { ArrowLeft, ArrowUpRight, Building2, MapPin, Trophy } from 'lucide-react
 import { supabase } from '@/lib/supabase';
 import InstitutionEditor from '@/components/InstitutionEditor';
 import { safeHttpsUrl } from '@/lib/safeExternalUrl';
+import SportBadge from '@/components/SportBadge';
 
 type Sport = {
   id: string;
@@ -259,7 +260,7 @@ export default async function InstitutionPage({ params }: PageProps) {
                     className="grid size-10 place-items-center rounded-xl text-white"
                     style={{ backgroundColor: institution.primary_color }}
                   >
-                    <Trophy className="size-4" />
+                    <SportBadge sportName={sport.sport_name || sport.display_name} />
                   </span>
                   <span
                     className="rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider"

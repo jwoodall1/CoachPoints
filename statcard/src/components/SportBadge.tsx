@@ -1,18 +1,34 @@
 import {
   Accessibility,
-  CircleDot,
-  Footprints,
-  Goal,
-  LucideIcon,
   PersonStanding,
-  ShipWheel,
-  SportShoe,
-  Sword,
-  Target,
   Trophy,
-  Volleyball,
-  Waves,
 } from 'lucide-react';
+import {
+  GiAmericanFootballBall,
+  GiArcheryTarget,
+  GiBaseballGlove,
+  GiBasketballBall,
+  GiBoxingGlove,
+  GiBowlingPin,
+  GiCanoe,
+  GiCricket,
+  GiFencer,
+  GiGolfFlag,
+  GiHockey,
+  GiIceSkate,
+  GiMountainClimbing,
+  GiPingPongBat,
+  GiRugbyConversion,
+  GiRunningShoe,
+  GiSkiBoot,
+  GiSoccerBall,
+  GiSwimfins,
+  GiShuttlecock,
+  GiTennisRacket,
+  GiVolleyballBall,
+  GiWaterPolo,
+} from 'react-icons/gi';
+import type { IconType } from 'react-icons';
 import { createElement } from 'react';
 
 type SportBadgeProps = {
@@ -20,34 +36,40 @@ type SportBadgeProps = {
   className?: string;
 };
 
-const sportBadgeRules: Array<{ matches: string[]; icon: LucideIcon }> = [
-  { matches: ['football', 'flag football'], icon: Goal },
-  { matches: ['basketball'], icon: CircleDot },
-  { matches: ['baseball', 'softball'], icon: CircleDot },
-  { matches: ['soccer'], icon: CircleDot },
-  { matches: ['hockey'], icon: CircleDot },
-  { matches: ['tennis'], icon: CircleDot },
-  { matches: ['volleyball'], icon: Volleyball },
-  { matches: ['golf'], icon: Target },
-  { matches: ['track', 'cross country', 'running'], icon: SportShoe },
-  { matches: ['swimming', 'water polo'], icon: Waves },
-  { matches: ['rowing'], icon: ShipWheel },
-  { matches: ['lacrosse'], icon: Target },
-  { matches: ['fencing'], icon: Sword },
+const sportBadgeRules: Array<{ matches: string[]; icon: IconType }> = [
+  { matches: ['football', 'flag football'], icon: GiAmericanFootballBall },
+  { matches: ['basketball'], icon: GiBasketballBall },
+  { matches: ['baseball', 'softball'], icon: GiBaseballGlove },
+  { matches: ['soccer'], icon: GiSoccerBall },
+  { matches: ['field hockey', 'ice hockey', 'hockey'], icon: GiHockey },
+  { matches: ['tennis'], icon: GiTennisRacket },
+  { matches: ['volleyball'], icon: GiVolleyballBall },
+  { matches: ['golf'], icon: GiGolfFlag },
+  { matches: ['track', 'cross country', 'running'], icon: GiRunningShoe },
+  { matches: ['swimming'], icon: GiSwimfins },
+  { matches: ['water polo'], icon: GiWaterPolo },
+  { matches: ['rowing'], icon: GiCanoe },
+  { matches: ['lacrosse'], icon: GiHockey },
+  { matches: ['fencing'], icon: GiFencer },
   { matches: ['gymnastics'], icon: PersonStanding },
   { matches: ['wrestling'], icon: Accessibility },
-  { matches: ['field hockey'], icon: Target },
+  { matches: ['rugby'], icon: GiRugbyConversion },
+  { matches: ['cricket'], icon: GiCricket },
+  { matches: ['boxing'], icon: GiBoxingGlove },
+  { matches: ['badminton'], icon: GiShuttlecock },
+  { matches: ['table tennis', 'ping pong'], icon: GiPingPongBat },
+  { matches: ['bowling'], icon: GiBowlingPin },
+  { matches: ['ski', 'snowboard'], icon: GiSkiBoot },
+  { matches: ['skating'], icon: GiIceSkate },
+  { matches: ['climbing'], icon: GiMountainClimbing },
   { matches: ['dance'], icon: PersonStanding },
   { matches: ['cheer'], icon: PersonStanding },
-  { matches: ['bowling'], icon: CircleDot },
-  { matches: ['archery'], icon: Target },
-  { matches: ['climbing'], icon: Target },
+  { matches: ['archery'], icon: GiArcheryTarget },
   { matches: ['equestrian'], icon: Trophy },
-  { matches: ['ski', 'snowboard'], icon: Footprints },
 ];
 
 /** Selects a recognizable badge icon from a sport name, with a safe fallback. */
-export function getSportBadgeIcon(sportName: string | null | undefined): LucideIcon {
+export function getSportBadgeIcon(sportName: string | null | undefined): IconType {
   const normalized = sportName?.trim().toLowerCase() ?? '';
   return (
     sportBadgeRules.find(({ matches }) =>

@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 'use client';
 
 import dynamic from 'next/dynamic';
@@ -5,6 +6,7 @@ import Link from 'next/link';
 import {
   ArrowRight,
   BarChart3,
+  Building2,
   Check,
   Dumbbell,
   GraduationCap,
@@ -40,7 +42,24 @@ type Athlete = {
   college_university?: string | null;
   account_type: 'athlete' | 'coach' | null;
 };
-type DirectoryState = { userId: string; profiles: Athlete[]; error: string | null };
+type DirectoryType = 'athletes' | 'coaches' | 'institutions';
+type Institution = {
+  id: string;
+  name: string;
+  slug: string;
+  location: string;
+  mascot: string | null;
+  logo_url: string | null;
+  primary_color: string;
+  secondary_color: string;
+  tagline: string | null;
+};
+type DirectoryState = {
+  userId: string;
+  profiles: Athlete[];
+  institutions: Institution[];
+  error: string | null;
+};
 const EMPTY_PROFILES: Athlete[] = [];
 
 // ── Signed-in directory ──────────────────────────────────────────────────────
@@ -55,7 +74,7 @@ export default function HomePage() {
   const [classFilter, setClassFilter] = useState('all');
   const [highSchoolFilter, setHighSchoolFilter] = useState('all');
   const [collegeFilter, setCollegeFilter] = useState('all');
-  const [directoryType, setDirectoryType] = useState<'athletes' | 'coaches'>('athletes');
+  const [directoryType, setDirectoryType] = useState<DirectoryType>('athletes');
   const userId = user?.id ?? null;
   const isSignedIn = Boolean(userId);
   const canManageLists = user?.user_metadata.account_type === 'coach';
@@ -74,7 +93,7 @@ export default function HomePage() {
 
   useEffect(() => {
     const changeDirectoryType = (event: Event) => {
-      setDirectoryType((event as CustomEvent<'athletes' | 'coaches'>).detail);
+      setDirectoryType((event as CustomEvent<DirectoryType>).detail);
       setSportFilter('all');
       setPositionFilter('all');
       setClassFilter('all');
@@ -90,28 +109,38 @@ export default function HomePage() {
     if (!ready || !userId) return;
     let active = true;
     const load = async () => {
-      const [{ data, error: profilesError }, { data: coachData, error: coachesError }] =
-        await Promise.all([
-          supabase
-            .from('profiles')
-            .select(
-              'id, first_name, last_name, username, avatar_url, sport, position, graduating_class, high_school',
-            )
-            .order('last_name', { ascending: true })
-            .limit(1000),
-          supabase
-            .from('coachprofiles')
-            .select(
-              'id, first_name, last_name, username, avatar_url, sport, position, college_university',
-            )
-            .order('last_name', { ascending: true })
-            .limit(1000),
-        ]);
+      const [
+        { data, error: profilesError },
+        { data: coachData, error: coachesError },
+        { data: institutionData, error: institutionsError },
+      ] = await Promise.all([
+        supabase
+          .from('profiles')
+          .select(
+            'id, first_name, last_name, username, avatar_url, sport, position, graduating_class, high_school',
+          )
+          .order('last_name', { ascending: true })
+          .limit(1000),
+        supabase
+          .from('coachprofiles')
+          .select(
+            'id, first_name, last_name, username, avatar_url, sport, position, college_university',
+          )
+          .order('last_name', { ascending: true })
+          .limit(1000),
+        supabase
+          .from('institutions')
+          .select(
+            'id, name, slug, location, mascot, logo_url, primary_color, secondary_color, tagline',
+          )
+          .order('name', { ascending: true }),
+      ]);
       if (!active) return;
-      if (profilesError || coachesError)
+      if (profilesError || coachesError || institutionsError)
         return setDirectory({
           userId,
           profiles: [],
+          institutions: [],
           error: 'Unable to load athlete and coach profiles right now.',
         });
       const loadedProfiles = [
@@ -120,7 +149,12 @@ export default function HomePage() {
       ]
         .filter((profile) => profile.username)
         .sort((a, b) => (a.last_name ?? '').localeCompare(b.last_name ?? ''));
-      setDirectory({ userId, profiles: loadedProfiles, error: null });
+      setDirectory({
+        userId,
+        profiles: loadedProfiles,
+        institutions: institutionData ?? [],
+        error: null,
+      });
     };
     void load();
     return () => {
@@ -192,6 +226,8 @@ export default function HomePage() {
     setCollegeFilter('all');
   }, []);
 
+  const institutions = directory?.institutions ?? [];
+
   if (loading) return <LoadingState label="Preparing CoachPoints…" />;
   if (!isSignedIn) return <MarketingHome />;
 
@@ -226,7 +262,7 @@ export default function HomePage() {
           <div className="surface-card border-rose-200 bg-rose-50 p-5 text-sm font-medium text-rose-700">
             {error}
           </div>
-        ) : profiles.length === 0 ? (
+        ) : profiles.length === 0 && institutions.length === 0 ? (
           <EmptyState />
         ) : (
           <>
@@ -317,7 +353,9 @@ export default function HomePage() {
                     Athletes and coaches
                   </h2>
                   <p className="mt-2 text-sm text-slate-500">
-                    {filteredAthletes.length + filteredCoaches.length} profiles match your search
+                    {directoryType === 'institutions'
+                      ? `${institutions.length} institutions available`
+                      : `${filteredAthletes.length + filteredCoaches.length} profiles match your search`}
                   </p>
                 </div>
                 <div className="inline-flex self-start rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-500 shadow-sm">
@@ -340,6 +378,10 @@ export default function HomePage() {
                 emptyMessage="No coaches match these filters."
                 onClear={clearFilters}
                 showListActions={false}
+              />
+              <InstitutionGroup
+                institutions={institutions}
+                visible={directoryType === 'institutions'}
               />
             </section>
           </>
@@ -690,7 +732,7 @@ const ProfileGroup = memo(function ProfileGroup({
 }) {
   const { user } = useAuth();
   const initialType = user?.user_metadata.account_type === 'athlete' ? 'coaches' : 'athletes';
-  const [directoryType, setDirectoryType] = useState<'athletes' | 'coaches'>(initialType);
+  const [directoryType, setDirectoryType] = useState<DirectoryType>(initialType);
   useEffect(() => {
     window.setTimeout(() => setDirectoryType(initialType), 0);
   }, [initialType]);
@@ -724,6 +766,18 @@ const ProfileGroup = memo(function ProfileGroup({
             className={`rounded-lg px-3 py-2 text-xs font-extrabold transition ${directoryType === 'athletes' ? 'bg-brand-600 text-white' : 'text-slate-500 hover:bg-slate-50'}`}
           >
             Athletes
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setDirectoryType('institutions');
+              window.dispatchEvent(
+                new CustomEvent('directory-type-change', { detail: 'institutions' }),
+              );
+            }}
+            className={`rounded-lg px-3 py-2 text-xs font-extrabold transition ${directoryType === 'institutions' ? 'bg-slate-950 text-white' : 'text-slate-500 hover:bg-slate-50'}`}
+          >
+            Institutions
           </button>
           <button
             type="button"
@@ -837,6 +891,84 @@ const ProfileCard = memo(function ProfileCard({
     </article>
   );
 });
+
+function InstitutionGroup({
+  institutions,
+  visible,
+}: {
+  institutions: Institution[];
+  visible: boolean;
+}) {
+  if (!visible) return null;
+
+  return (
+    <section className="mt-10">
+      <div className="mb-5 flex items-end justify-between gap-4">
+        <div>
+          <p className="eyebrow">Schools and colleges</p>
+          <h3 className="mt-2 text-2xl font-black tracking-tight text-slate-950">
+            Explore institutions
+          </h3>
+          <p className="mt-1 text-sm text-slate-500">Browse athletic programs by institution.</p>
+        </div>
+        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-extrabold text-slate-600">
+          {institutions.length}
+        </span>
+      </div>
+      {institutions.length ? (
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {institutions.map((institution) => (
+            <Link
+              key={institution.id}
+              href={`/institutions/${institution.slug}`}
+              className="group overflow-hidden rounded-3xl border border-slate-200/80 bg-white p-5 shadow-card transition duration-300 hover:-translate-y-1 hover:shadow-card-hover"
+            >
+              <div
+                className="flex items-center gap-4 rounded-2xl p-4"
+                style={{ backgroundColor: `${institution.primary_color}12` }}
+              >
+                {institution.logo_url ? (
+                  <img
+                    src={institution.logo_url}
+                    alt={`${institution.name} logo`}
+                    className="size-16 rounded-full object-contain"
+                  />
+                ) : (
+                  <div
+                    className="grid size-16 place-items-center rounded-full text-2xl font-black text-white"
+                    style={{ backgroundColor: institution.primary_color }}
+                  >
+                    {institution.name.charAt(0)}
+                  </div>
+                )}
+                <div>
+                  <h4 className="text-lg font-black text-slate-950 group-hover:text-brand-700">
+                    {institution.name}
+                  </h4>
+                  <p className="mt-1 text-sm font-medium text-slate-500">{institution.location}</p>
+                </div>
+              </div>
+              <p className="mt-4 text-sm font-semibold text-slate-600">
+                {institution.mascot ? `${institution.mascot} · ` : ''}
+                {institution.tagline ?? 'View institution profile'}
+              </p>
+              <span className="mt-5 inline-flex text-sm font-extrabold text-brand-700">
+                View institution <ArrowRight className="ml-1 size-4" />
+              </span>
+            </Link>
+          ))}
+        </div>
+      ) : (
+        <div className="surface-card border-dashed px-6 py-12 text-center">
+          <Building2 className="mx-auto size-9 text-slate-400" />
+          <p className="mt-3 text-sm font-semibold text-slate-500">
+            No institution profiles are available yet.
+          </p>
+        </div>
+      )}
+    </section>
+  );
+}
 
 function LoadingState({ label }: { label: string }) {
   return (

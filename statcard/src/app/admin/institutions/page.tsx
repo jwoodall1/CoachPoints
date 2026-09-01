@@ -60,6 +60,10 @@ function slugify(value: string) {
   return value.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }
 
+function textValue(value: string | null | undefined) {
+  return value ?? '';
+}
+
 async function withTimeout<T>(promise: PromiseLike<T>, label: string, milliseconds = 15000): Promise<T> {
   let timer: ReturnType<typeof setTimeout> | undefined;
   try {
@@ -132,19 +136,19 @@ export default function InstitutionAdminPage() {
 
   const save = async () => {
     if (!selected) return;
-    if (!selected.name.trim() || !selected.location.trim()) return setNotice('Name and location are required.');
+    if (!textValue(selected.name).trim() || !textValue(selected.location).trim()) return setNotice('Name and location are required.');
     setSaving(true); setNotice(null);
     try {
       const payload = {
-        name: selected.name.trim(), slug: slugify(selected.slug || selected.name), location: selected.location.trim(),
-        mascot: selected.mascot.trim() || null, logo_url: selected.logo_url || null,
+        name: textValue(selected.name).trim(), slug: slugify(textValue(selected.slug) || textValue(selected.name)), location: textValue(selected.location).trim(),
+        mascot: textValue(selected.mascot).trim() || null, logo_url: selected.logo_url || null,
         primary_color: selected.primary_color, secondary_color: selected.secondary_color,
-        tagline: selected.tagline.trim() || null, about: selected.about.trim() || null,
-        website_url: selected.website_url.trim() || null, athletics_url: selected.athletics_url.trim() || null,
-        gpa_requirement: selected.gpa_requirement.trim() || null,
+        tagline: textValue(selected.tagline).trim() || null, about: textValue(selected.about).trim() || null,
+        website_url: textValue(selected.website_url).trim() || null, athletics_url: textValue(selected.athletics_url).trim() || null,
+        gpa_requirement: textValue(selected.gpa_requirement).trim() || null,
         sat_min_score: selected.sat_min_score || null, act_min_score: selected.act_min_score || null,
-        admissions_requirements: selected.admissions_requirements.trim() || null,
-        admissions_url: selected.admissions_url.trim() || null, status: selected.status,
+        admissions_requirements: textValue(selected.admissions_requirements).trim() || null,
+        admissions_url: textValue(selected.admissions_url).trim() || null, status: selected.status,
         published_at: selected.status === 'published' ? new Date().toISOString() : null,
         updated_by: user?.id ?? null,
       };
@@ -156,12 +160,12 @@ export default function InstitutionAdminPage() {
       const originalIds = new Set(originalSportIds);
       const currentIds = new Set(selected.sports.map((sport) => sport.id).filter(Boolean));
       for (const id of originalIds) if (!currentIds.has(id)) await withTimeout(supabase.from('sports').delete().eq('id', id), 'Removing sport');
-      const sports = selected.sports.filter((sport) => sport.sport_name.trim() && sport.display_name.trim());
+      const sports = selected.sports.filter((sport) => textValue(sport.sport_name).trim() && textValue(sport.display_name).trim());
       if (sports.length) {
         const { error } = await withTimeout(supabase.from('sports').upsert(sports.map((sport) => ({
           ...(sport.id ? { id: sport.id } : {}), institution_id: result.data.id,
-          sport_name: sport.sport_name.trim(), gender: sport.gender, display_name: sport.display_name.trim(),
-          description: sport.description.trim() || null, official_url: sport.official_url.trim() || null,
+          sport_name: textValue(sport.sport_name).trim(), gender: sport.gender, display_name: textValue(sport.display_name).trim(),
+          description: textValue(sport.description).trim() || null, official_url: textValue(sport.official_url).trim() || null,
         }))), 'Saving sports');
         if (error) throw new Error(error.message);
       }

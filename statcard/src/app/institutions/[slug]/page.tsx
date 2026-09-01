@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { ArrowLeft, ArrowUpRight, Building2, MapPin, Trophy } from 'lucide-react';
 
 import { supabase } from '@/lib/supabase';
+import InstitutionEditor from '@/components/InstitutionEditor';
 
 type Sport = {
   id: string;
@@ -27,6 +28,11 @@ type Institution = {
   about: string | null;
   website_url: string | null;
   athletics_url: string | null;
+  gpa_requirement: string | null;
+  sat_min_score: number | null;
+  act_min_score: number | null;
+  admissions_requirements: string | null;
+  admissions_url: string | null;
   sports: Sport[];
 };
 
@@ -54,7 +60,7 @@ export default async function InstitutionPage({ params }: PageProps) {
   const { data, error } = await supabase
     .from('institutions')
     .select(
-      'id, name, slug, location, mascot, logo_url, primary_color, secondary_color, tagline, about, website_url, athletics_url, sports(id, sport_name, gender, display_name, description, official_url)',
+      'id, name, slug, location, mascot, logo_url, primary_color, secondary_color, tagline, about, website_url, athletics_url, gpa_requirement, sat_min_score, act_min_score, admissions_requirements, admissions_url, sports(id, sport_name, gender, display_name, description, official_url)',
     )
     .eq('slug', slug)
     .maybeSingle();
@@ -143,6 +149,7 @@ export default async function InstitutionPage({ params }: PageProps) {
             </p>
           </div>
           <div className="flex flex-wrap items-start gap-3 lg:flex-col">
+            <InstitutionEditor institution={institution} />
             {institution.website_url && (
               <a
                 href={institution.website_url}
@@ -165,6 +172,63 @@ export default async function InstitutionPage({ params }: PageProps) {
             )}
           </div>
         </section>
+
+        {(institution.gpa_requirement ||
+          institution.sat_min_score ||
+          institution.act_min_score ||
+          institution.admissions_requirements ||
+          institution.admissions_url) && (
+          <section className="surface-card mt-6 p-6 sm:p-8">
+            <p className="eyebrow">Admissions snapshot</p>
+            <div className="mt-5 grid gap-5 sm:grid-cols-3">
+              {institution.gpa_requirement && (
+                <div className="rounded-2xl bg-slate-50 p-4">
+                  <p className="text-xs font-extrabold uppercase tracking-wider text-slate-500">
+                    GPA requirement
+                  </p>
+                  <p className="mt-2 text-lg font-black text-slate-950">
+                    {institution.gpa_requirement}
+                  </p>
+                </div>
+              )}
+              {institution.sat_min_score && (
+                <div className="rounded-2xl bg-slate-50 p-4">
+                  <p className="text-xs font-extrabold uppercase tracking-wider text-slate-500">
+                    SAT minimum
+                  </p>
+                  <p className="mt-2 text-lg font-black text-slate-950">
+                    {institution.sat_min_score}
+                  </p>
+                </div>
+              )}
+              {institution.act_min_score && (
+                <div className="rounded-2xl bg-slate-50 p-4">
+                  <p className="text-xs font-extrabold uppercase tracking-wider text-slate-500">
+                    ACT minimum
+                  </p>
+                  <p className="mt-2 text-lg font-black text-slate-950">
+                    {institution.act_min_score}
+                  </p>
+                </div>
+              )}
+            </div>
+            {institution.admissions_requirements && (
+              <p className="mt-5 max-w-3xl text-sm leading-7 text-slate-600">
+                {institution.admissions_requirements}
+              </p>
+            )}
+            {institution.admissions_url && (
+              <a
+                href={institution.admissions_url}
+                target="_blank"
+                rel="noreferrer"
+                className="btn-secondary mt-5"
+              >
+                Admissions information <ArrowUpRight className="size-4" />
+              </a>
+            )}
+          </section>
+        )}
 
         <section className="pt-14">
           <div className="flex items-end justify-between gap-4">

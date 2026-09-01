@@ -250,8 +250,14 @@ export default function HomePage() {
               </p>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <Metric value={filteredAthletes.length} label="Athletes" />
-              <Metric value={filteredCoaches.length} label="Coaches" />
+              {directoryType === 'institutions' ? (
+                <Metric value={institutions.length} label="Institutions" />
+              ) : (
+                <>
+                  <Metric value={filteredAthletes.length} label="Athletes" />
+                  <Metric value={filteredCoaches.length} label="Coaches" />
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -350,7 +356,7 @@ export default function HomePage() {
                 <div>
                   <p className="eyebrow">Talent directory</p>
                   <h2 className="mt-2 text-3xl font-black tracking-tight text-slate-950">
-                    Athletes and coaches
+                    {directoryType === 'institutions' ? 'Institutions' : 'Athletes and coaches'}
                   </h2>
                   <p className="mt-2 text-sm text-slate-500">
                     {directoryType === 'institutions'
@@ -363,22 +369,26 @@ export default function HomePage() {
                   Profiles update in real time
                 </div>
               </div>
-              <ProfileGroup
-                title="Athletes"
-                description="Performance, academics, film, and contact details."
-                profiles={filteredAthletes}
-                emptyMessage="No athletes match these filters."
-                onClear={clearFilters}
-                showListActions={canManageLists}
-              />
-              <ProfileGroup
-                title="Coaches"
-                description="Programs, recruiting contacts, and coaching profiles."
-                profiles={filteredCoaches}
-                emptyMessage="No coaches match these filters."
-                onClear={clearFilters}
-                showListActions={false}
-              />
+              {directoryType !== 'institutions' && (
+                <>
+                  <ProfileGroup
+                    title="Athletes"
+                    description="Performance, academics, film, and contact details."
+                    profiles={filteredAthletes}
+                    emptyMessage="No athletes match these filters."
+                    onClear={clearFilters}
+                    showListActions={canManageLists}
+                  />
+                  <ProfileGroup
+                    title="Coaches"
+                    description="Programs, recruiting contacts, and coaching profiles."
+                    profiles={filteredCoaches}
+                    emptyMessage="No coaches match these filters."
+                    onClear={clearFilters}
+                    showListActions={false}
+                  />
+                </>
+              )}
               <InstitutionGroup
                 institutions={institutions}
                 visible={directoryType === 'institutions'}

@@ -412,6 +412,14 @@ function LoginForm() {
               {loading ? 'Please wait…' : isSignUp ? 'Create account' : 'Sign in'}
               {!loading && <ArrowRight className="size-4" />}
             </button>
+            {!isSignUp && (
+              <Link
+                href="/forgot-password"
+                className="block text-center text-sm font-bold text-brand-700 underline underline-offset-4 hover:text-brand-800"
+              >
+                Forgot your password?
+              </Link>
+            )}
             <p className="flex items-center justify-center gap-2 text-center text-xs font-medium text-slate-400">
               <ShieldCheck className="size-3.5" />
               Your account is protected by secure authentication.

@@ -97,6 +97,9 @@ export default async function InstitutionPage({ params }: PageProps) {
       >
         <div className="athletic-grid absolute inset-0 opacity-40" />
         <div className="page-shell relative">
+          <div className="absolute right-4 top-0 sm:right-0">
+            <InstitutionEditor institution={institution} />
+          </div>
           <Link
             href="/"
             className="inline-flex items-center gap-2 text-sm font-bold text-white/75 transition hover:text-white"
@@ -149,7 +152,6 @@ export default async function InstitutionPage({ params }: PageProps) {
             </p>
           </div>
           <div className="flex flex-wrap items-start gap-3 lg:flex-col">
-            <InstitutionEditor institution={institution} />
             {institution.website_url && (
               <a
                 href={institution.website_url}

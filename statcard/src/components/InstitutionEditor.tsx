@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import { useAuth } from '@/components/AuthProvider';
+import UploadModal from '@/components/UploadModal';
 import { supabase } from '@/lib/supabase';
 
 type Institution = {
@@ -69,6 +70,7 @@ export default function InstitutionEditor({ institution }: { institution: Instit
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminUserId, setAdminUserId] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
+  const [isLogoModalOpen, setIsLogoModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [form, setForm] = useState(() => toFormState(institution));
@@ -101,6 +103,30 @@ export default function InstitutionEditor({ institution }: { institution: Instit
 
   const updateField = (field: keyof FormState, value: string) => {
     setForm((current) => ({ ...current, [field]: value }));
+  };
+
+  const saveLogo = async (image: string) => {
+    if (!user) return;
+    const imageBlob = await (await fetch(image)).blob();
+    const path = `institutions/${institution.id}/logo.png`;
+    const { error: uploadError } = await supabase.storage
+      .from('avatars')
+      .upload(path, imageBlob, { contentType: 'image/png', upsert: true });
+    if (uploadError) throw new Error(uploadError.message);
+
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from('avatars').getPublicUrl(path);
+    const finalUrl = `${publicUrl}?v=${Date.now()}`;
+    const { error: updateError } = await supabase
+      .from('institutions')
+      .update({ logo_url: finalUrl, updated_by: user.id })
+      .eq('id', institution.id);
+    if (updateError) throw new Error(updateError.message);
+
+    setForm((current) => ({ ...current, logo_url: finalUrl }));
+    setMessage('School logo updated.');
+    router.refresh();
   };
 
   const save = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -166,7 +192,16 @@ export default function InstitutionEditor({ institution }: { institution: Instit
                 <EditorInput label="School name" value={form.name} onChange={(v) => updateField('name', v)} required />
                 <EditorInput label="Location" value={form.location} onChange={(v) => updateField('location', v)} required />
                 <EditorInput label="Mascot" value={form.mascot} onChange={(v) => updateField('mascot', v)} />
-                <EditorInput label="Logo URL" value={form.logo_url} onChange={(v) => updateField('logo_url', v)} type="url" />
+                <div>
+                  <EditorInput label="Logo URL" value={form.logo_url} onChange={(v) => updateField('logo_url', v)} type="url" />
+                  <button
+                    type="button"
+                    onClick={() => setIsLogoModalOpen(true)}
+                    className="mt-2 text-sm font-extrabold text-brand-700 hover:text-brand-800"
+                  >
+                    {form.logo_url ? 'Replace with uploaded image' : 'Upload school logo'}
+                  </button>
+                </div>
                 <EditorInput label="Primary color" value={form.primary_color} onChange={(v) => updateField('primary_color', v)} type="text" required />
                 <EditorInput label="Secondary color" value={form.secondary_color} onChange={(v) => updateField('secondary_color', v)} type="text" required />
                 <EditorInput label="GPA requirement" value={form.gpa_requirement} onChange={(v) => updateField('gpa_requirement', v)} />
@@ -190,6 +225,11 @@ export default function InstitutionEditor({ institution }: { institution: Instit
           </div>
         </div>
       )}
+      <UploadModal
+        isOpen={isLogoModalOpen}
+        onClose={() => setIsLogoModalOpen(false)}
+        onSave={saveLogo}
+      />
     </>
   );
 }

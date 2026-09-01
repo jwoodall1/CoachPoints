@@ -60,6 +60,18 @@ function slugify(value: string) {
   return value.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }
 
+async function withTimeout<T>(promise: PromiseLike<T>, label: string, milliseconds = 15000): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      Promise.resolve(promise),
+      new Promise<T>((_, reject) => { timer = setTimeout(() => reject(new Error(`${label} timed out. Please try again.`)), milliseconds); }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
 export default function InstitutionAdminPage() {
   const router = useRouter();
   const { ready, user } = useAuth();
@@ -122,40 +134,47 @@ export default function InstitutionAdminPage() {
     if (!selected) return;
     if (!selected.name.trim() || !selected.location.trim()) return setNotice('Name and location are required.');
     setSaving(true); setNotice(null);
-    const payload = {
-      name: selected.name.trim(), slug: slugify(selected.slug || selected.name), location: selected.location.trim(),
-      mascot: selected.mascot.trim() || null, logo_url: selected.logo_url || null,
-      primary_color: selected.primary_color, secondary_color: selected.secondary_color,
-      tagline: selected.tagline.trim() || null, about: selected.about.trim() || null,
-      website_url: selected.website_url.trim() || null, athletics_url: selected.athletics_url.trim() || null,
-      gpa_requirement: selected.gpa_requirement.trim() || null,
-      sat_min_score: selected.sat_min_score || null, act_min_score: selected.act_min_score || null,
-      admissions_requirements: selected.admissions_requirements.trim() || null,
-      admissions_url: selected.admissions_url.trim() || null, status: selected.status,
-      published_at: selected.status === 'published' ? new Date().toISOString() : null,
-      updated_by: user?.id ?? null,
-    };
-    const result = selected.id
-      ? await supabase.from('institutions').update(payload).eq('id', selected.id).select().single()
-      : await supabase.from('institutions').insert({ ...payload, created_by: user?.id ?? null }).select().single();
-    if (result.error || !result.data) { setSaving(false); setNotice(result.error?.message ?? 'Unable to save institution.'); return; }
-    const saved = { ...selected, ...result.data, slug: payload.slug, sports: selected.sports } as Institution;
-    const originalIds = new Set(originalSportIds);
-    const currentIds = new Set(selected.sports.map((sport) => sport.id).filter(Boolean));
-    for (const id of originalIds) if (!currentIds.has(id)) await supabase.from('sports').delete().eq('id', id);
-    const sports = selected.sports.filter((sport) => sport.sport_name.trim() && sport.display_name.trim());
-    if (sports.length) {
-      const { error } = await supabase.from('sports').upsert(sports.map((sport) => ({
-        ...(sport.id ? { id: sport.id } : {}), institution_id: result.data.id,
-        sport_name: sport.sport_name.trim(), gender: sport.gender, display_name: sport.display_name.trim(),
-        description: sport.description.trim() || null, official_url: sport.official_url.trim() || null,
-      })));
-      if (error) { setSaving(false); setNotice(error.message); return; }
+    try {
+      const payload = {
+        name: selected.name.trim(), slug: slugify(selected.slug || selected.name), location: selected.location.trim(),
+        mascot: selected.mascot.trim() || null, logo_url: selected.logo_url || null,
+        primary_color: selected.primary_color, secondary_color: selected.secondary_color,
+        tagline: selected.tagline.trim() || null, about: selected.about.trim() || null,
+        website_url: selected.website_url.trim() || null, athletics_url: selected.athletics_url.trim() || null,
+        gpa_requirement: selected.gpa_requirement.trim() || null,
+        sat_min_score: selected.sat_min_score || null, act_min_score: selected.act_min_score || null,
+        admissions_requirements: selected.admissions_requirements.trim() || null,
+        admissions_url: selected.admissions_url.trim() || null, status: selected.status,
+        published_at: selected.status === 'published' ? new Date().toISOString() : null,
+        updated_by: user?.id ?? null,
+      };
+      const result = selected.id
+        ? await withTimeout(supabase.from('institutions').update(payload).eq('id', selected.id).select().single(), 'Saving institution')
+        : await withTimeout(supabase.from('institutions').insert({ ...payload, created_by: user?.id ?? null }).select().single(), 'Creating institution');
+      if (result.error || !result.data) throw new Error(result.error?.message ?? 'Unable to save institution.');
+      const saved = { ...selected, ...result.data, slug: payload.slug, sports: selected.sports } as Institution;
+      const originalIds = new Set(originalSportIds);
+      const currentIds = new Set(selected.sports.map((sport) => sport.id).filter(Boolean));
+      for (const id of originalIds) if (!currentIds.has(id)) await withTimeout(supabase.from('sports').delete().eq('id', id), 'Removing sport');
+      const sports = selected.sports.filter((sport) => sport.sport_name.trim() && sport.display_name.trim());
+      if (sports.length) {
+        const { error } = await withTimeout(supabase.from('sports').upsert(sports.map((sport) => ({
+          ...(sport.id ? { id: sport.id } : {}), institution_id: result.data.id,
+          sport_name: sport.sport_name.trim(), gender: sport.gender, display_name: sport.display_name.trim(),
+          description: sport.description.trim() || null, official_url: sport.official_url.trim() || null,
+        }))), 'Saving sports');
+        if (error) throw new Error(error.message);
+      }
+      const { data: refreshed, error: refreshError } = await withTimeout(supabase.from('institutions').select('id, name, slug, location, mascot, logo_url, primary_color, secondary_color, tagline, about, website_url, athletics_url, gpa_requirement, sat_min_score, act_min_score, admissions_requirements, admissions_url, status, sports(id, sport_name, gender, display_name, description, official_url)').eq('id', result.data.id).single(), 'Refreshing institution');
+      if (refreshError) throw new Error(refreshError.message);
+      const next = (refreshed as unknown as Institution) ?? saved;
+      setInstitutions((current) => current.some((item) => item.id === next.id) ? current.map((item) => item.id === next.id ? next : item) : [...current, next].sort((a, b) => a.name.localeCompare(b.name)));
+      setSelected(next); setOriginalSportIds(next.sports.map((sport) => sport.id).filter(Boolean) as string[]); setNotice('Institution saved successfully.');
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : 'Unable to save institution.');
+    } finally {
+      setSaving(false);
     }
-    const { data: refreshed } = await supabase.from('institutions').select('id, name, slug, location, mascot, logo_url, primary_color, secondary_color, tagline, about, website_url, athletics_url, gpa_requirement, sat_min_score, act_min_score, admissions_requirements, admissions_url, status, sports(id, sport_name, gender, display_name, description, official_url)').eq('id', result.data.id).single();
-    const next = (refreshed as unknown as Institution) ?? saved;
-    setInstitutions((current) => current.some((item) => item.id === next.id) ? current.map((item) => item.id === next.id ? next : item) : [...current, next].sort((a, b) => a.name.localeCompare(b.name)));
-    setSelected(next); setOriginalSportIds(next.sports.map((sport) => sport.id).filter(Boolean) as string[]); setSaving(false); setNotice('Institution saved successfully.');
   };
 
   const addAdmin = async () => {

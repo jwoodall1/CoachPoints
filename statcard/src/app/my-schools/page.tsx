@@ -299,18 +299,15 @@ export default function MySchoolsPage() {
                         )}
                       </div>
                       {item ? (
-                        <div className="flex items-center gap-2.5">
-                          <span
-                            className="grid size-12 shrink-0 place-items-center rounded-xl p-1.5 shadow-sm"
-                            style={{ backgroundColor: '#ffffff', border: `2px solid ${institution?.primary_color ?? '#cbd5e1'}` }}
-                          >
+                        <div className="flex flex-col items-center gap-1.5 text-center">
+                          <span className="mx-auto grid size-14 shrink-0 place-items-center p-1">
                             {logo ? (
                               <img src={logo} alt="" className="size-10 rounded-lg object-contain" />
                             ) : (
                               <span className="text-lg font-black" style={{ color: institution?.primary_color ?? '#0f172a' }}>{schoolName(item.institution_id).charAt(0)}</span>
                             )}
                           </span>
-                          <span className="truncate text-sm font-black text-slate-800">{schoolName(item.institution_id)}</span>
+                          <span className="max-w-full truncate text-sm font-black text-slate-800">{schoolName(item.institution_id)}</span>
                         </div>
                       ) : (
                         <span className="truncate text-sm text-slate-400">Drop a school here</span>

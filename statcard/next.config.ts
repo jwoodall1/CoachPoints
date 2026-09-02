@@ -7,12 +7,14 @@ const avatarRemotePatterns: Array<{
   pathname: string;
 }> = [];
 let supabaseOrigin = '';
+let supabaseRealtimeOrigin = '';
 
 // Limit the image optimizer to this project's public Supabase avatar bucket.
 try {
   const supabaseUrl = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL ?? '');
   if (supabaseUrl.protocol === 'http:' || supabaseUrl.protocol === 'https:') {
     supabaseOrigin = supabaseUrl.origin;
+    supabaseRealtimeOrigin = `wss://${supabaseUrl.host}`;
     avatarRemotePatterns.push({
       protocol: supabaseUrl.protocol.slice(0, -1) as 'http' | 'https',
       hostname: supabaseUrl.hostname,
@@ -29,7 +31,7 @@ const contentSecurityPolicy = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${isDevelopment ? " 'unsafe-eval'" : ''}`,
   "style-src 'self' 'unsafe-inline'",
-  `connect-src 'self'${supabaseOrigin ? ` ${supabaseOrigin}` : ''}${isDevelopment ? ' ws: wss:' : ''}`,
+  `connect-src 'self'${supabaseOrigin ? ` ${supabaseOrigin}` : ''}${supabaseRealtimeOrigin ? ` ${supabaseRealtimeOrigin}` : ''}${isDevelopment ? ' ws: wss:' : ''}`,
   `img-src 'self' blob: data:${supabaseOrigin ? ` ${supabaseOrigin}` : ''}`,
   "font-src 'self' data:",
   "frame-src https://hudl.com https://*.hudl.com",

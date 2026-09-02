@@ -302,21 +302,20 @@ export default function MySchoolsPage() {
                         <div className="flex items-center gap-2.5">
                           <span
                             className="grid size-12 shrink-0 place-items-center rounded-xl p-1.5 shadow-sm"
-                            style={{ backgroundColor: institution?.primary_color ?? '#0f172a' }}
+                            style={{ backgroundColor: '#ffffff', border: `2px solid ${institution?.primary_color ?? '#cbd5e1'}` }}
                           >
                             {logo ? (
                               <img src={logo} alt="" className="size-10 rounded-lg object-contain" />
                             ) : (
-                              <span className="text-lg font-black text-white">{schoolName(item.institution_id).charAt(0)}</span>
+                              <span className="text-lg font-black" style={{ color: institution?.primary_color ?? '#0f172a' }}>{schoolName(item.institution_id).charAt(0)}</span>
                             )}
                           </span>
-                          <span className="truncate text-sm font-black text-slate-800">
-                            {schoolName(item.institution_id)}
-                          </span>
+                          <span className="truncate text-sm font-black text-slate-800">{schoolName(item.institution_id)}</span>
                         </div>
                       ) : (
                         <span className="truncate text-sm text-slate-400">Drop a school here</span>
                       )}
+                      {item && institution && <Link href={`/institutions/${institution.slug}`} className="mt-2 inline-flex items-center justify-center gap-1 rounded-lg bg-slate-950 px-2.5 py-1.5 text-[10px] font-extrabold text-white transition hover:bg-brand-700">View institution <ArrowUpRight className="size-3" /></Link>}
                     </div>
                   );
                 })}
@@ -446,12 +445,12 @@ function SchoolCard({
       <div className="flex items-center gap-3 p-4">
         <span
           className="grid size-11 shrink-0 place-items-center rounded-xl"
-          style={{ backgroundColor: logo ? '#f1f5f9' : item.primary_color }}
+          style={{ backgroundColor: '#ffffff', border: `2px solid ${item.primary_color}` }}
         >
           {logo ? (
             <img src={logo} alt="" className="size-9 rounded-lg object-contain" />
           ) : (
-            <span className="text-lg font-black text-white">{item.name.charAt(0)}</span>
+            <span className="text-lg font-black" style={{ color: item.primary_color }}>{item.name.charAt(0)}</span>
           )}
         </span>
         <div className="min-w-0 flex-1">

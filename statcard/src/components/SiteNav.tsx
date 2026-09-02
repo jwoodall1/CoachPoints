@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import {
   ChevronLeft,
   Compass,
+  Bookmark,
   LayoutDashboard,
   ListChecks,
   Menu,
@@ -42,7 +43,8 @@ export default function SiteNav() {
     },
     ...(accountType === 'coach'
       ? [{ href: '/coach-lists', label: 'Lists', icon: ListChecks }]
-      : []),
+      : [{ href: '/my-schools', label: 'My Schools', icon: Bookmark }]
+      ),
     { href: '/friends', label: 'Network', icon: UsersRound },
   ];
 

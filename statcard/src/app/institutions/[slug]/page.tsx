@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase';
 import InstitutionEditor from '@/components/InstitutionEditor';
 import { safeHttpsUrl } from '@/lib/safeExternalUrl';
 import SportBadge from '@/components/SportBadge';
+import SaveSchoolButton from '@/components/SaveSchoolButton';
 
 type Sport = {
   id: string;
@@ -149,6 +150,7 @@ export default async function InstitutionPage({ params }: PageProps) {
                   </span>
                 )}
               </div>
+              <div className="mt-5"><SaveSchoolButton institutionId={institution.id} /></div>
             </div>
           </div>
         </div>

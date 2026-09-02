@@ -314,8 +314,12 @@ export default function DashboardPage() {
 
   const saveAvatar = async (image: string) => {
     if (!user) return;
-    const imageBlob = await (await fetch(image)).blob();
-    const path = `${profile.username}/profile.png`;
+    const [, encodedImage] = image.split(',');
+    if (!encodedImage) throw new Error('The selected image could not be prepared.');
+    const binary = window.atob(encodedImage);
+    const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
+    const imageBlob = new Blob([bytes], { type: 'image/png' });
+    const path = `${user.id}/profile.png`;
     const { error: uploadError } = await supabase.storage
       .from('avatars')
       .upload(path, imageBlob, { contentType: 'image/png', upsert: true });

@@ -1,0 +1,68 @@
+# Dependencies and package-manager files
+node_modules/
+.npm/
+.pnpm-store/
+.yarn/
+.pnp.*
+
+# Expo and local development state
+.expo/
+.expo-shared/
+.metro-health-check*
+web-build/
+
+# Environment files and local secrets
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.local
+
+# EAS, native credentials, and signing material
+.eas/
+credentials.json
+google-services.json
+GoogleService-Info.plist
+*.jks
+*.keystore
+*.p12
+*.mobileprovision
+*.provisionprofile
+*.p8
+*.pem
+*.key
+*.cer
+
+# Build output and archives
+dist/
+build/
+android/app/build/
+ios/build/
+*.apk
+*.aab
+*.ipa
+*.app
+*.xcarchive
+
+# Logs, caches, coverage, and generated metadata
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+coverage/
+.cache/
+.turbo/
+*.tsbuildinfo
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+Desktop.ini
+.idea/
+.vscode/
+
+# Temporary and local test files
+tmp/
+temp/
+*.tmp
+*.temp

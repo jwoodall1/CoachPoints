@@ -1,12 +1,29 @@
 {
   "expo": {
-    "name": "CoachPoints Passport",
+    "name": "CoachPoints PASSport",
     "slug": "coachpoints-passport",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "scheme": "coachpoints",
-    "ios": { "supportsTablet": true },
-    "android": { "adaptiveIcon": { "backgroundColor": "#0b1220" } }
+    "plugins": [
+      "expo-notifications"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.coachpoints.passport"
+    },
+    "android": {
+      "package": "com.coachpoints.passport",
+      "adaptiveIcon": {
+        "backgroundColor": "#0b1220"
+      }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "dd8c97b9-5f1e-4978-bc1c-2d42d71af635"
+      }
+    },
+    "owner": "jonathanwoodall"
   }
 }

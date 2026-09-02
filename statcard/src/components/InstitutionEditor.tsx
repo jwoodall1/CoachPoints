@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/components/AuthProvider';
 import UploadModal from '@/components/UploadModal';
 import { supabase } from '@/lib/supabase';
+import { competitionLevels } from '@/lib/competitionLevels';
 
 type Institution = {
   id: string;
@@ -15,6 +16,7 @@ type Institution = {
   logo_url: string | null;
   primary_color: string;
   secondary_color: string;
+  competition_level: string | null;
   tagline: string | null;
   about: string | null;
   website_url: string | null;
@@ -33,6 +35,7 @@ type FormState = {
   logo_url: string;
   primary_color: string;
   secondary_color: string;
+  competition_level: string;
   tagline: string;
   about: string;
   website_url: string;
@@ -52,6 +55,7 @@ function toFormState(institution: Institution): FormState {
     logo_url: institution.logo_url ?? '',
     primary_color: institution.primary_color,
     secondary_color: institution.secondary_color,
+    competition_level: institution.competition_level ?? '',
     tagline: institution.tagline ?? '',
     about: institution.about ?? '',
     website_url: institution.website_url ?? '',
@@ -143,6 +147,7 @@ export default function InstitutionEditor({ institution }: { institution: Instit
         logo_url: form.logo_url.trim() || null,
         primary_color: form.primary_color,
         secondary_color: form.secondary_color,
+        competition_level: form.competition_level || null,
         tagline: form.tagline.trim() || null,
         about: form.about.trim() || null,
         website_url: form.website_url.trim() || null,
@@ -204,6 +209,7 @@ export default function InstitutionEditor({ institution }: { institution: Instit
                 </div>
                 <EditorInput label="Primary color" value={form.primary_color} onChange={(v) => updateField('primary_color', v)} type="text" required />
                 <EditorInput label="Secondary color" value={form.secondary_color} onChange={(v) => updateField('secondary_color', v)} type="text" required />
+                <label className="block"><span className="mb-2 block text-xs font-extrabold uppercase tracking-wider text-slate-500">Competition level</span><select className="input" value={form.competition_level} onChange={(event) => updateField('competition_level', event.target.value)}><option value="">Not specified</option>{competitionLevels.map((level) => <option key={level} value={level}>{level}</option>)}</select></label>
                 <EditorInput label="GPA requirement" value={form.gpa_requirement} onChange={(v) => updateField('gpa_requirement', v)} />
                 <EditorInput label="SAT minimum" value={form.sat_min_score} onChange={(v) => updateField('sat_min_score', v)} type="number" min="0" />
                 <EditorInput label="ACT minimum" value={form.act_min_score} onChange={(v) => updateField('act_min_score', v)} type="number" min="0" />

@@ -26,6 +26,7 @@ type Institution = {
   logo_url: string | null;
   primary_color: string;
   secondary_color: string;
+  competition_level: string | null;
   tagline: string | null;
   about: string | null;
   website_url: string | null;
@@ -63,7 +64,7 @@ export default async function InstitutionPage({ params }: PageProps) {
   const { data, error } = await supabase
     .from('institutions')
     .select(
-      'id, name, slug, location, mascot, logo_url, primary_color, secondary_color, tagline, about, website_url, athletics_url, gpa_requirement, sat_min_score, act_min_score, admissions_requirements, admissions_url, sports(id, sport_name, gender, display_name, description, official_url)',
+      'id, name, slug, location, mascot, logo_url, primary_color, secondary_color, competition_level, tagline, about, website_url, athletics_url, gpa_requirement, sat_min_score, act_min_score, admissions_requirements, admissions_url, sports(id, sport_name, gender, display_name, description, official_url)',
     )
     .eq('slug', slug)
     .eq('status', 'published')
@@ -133,6 +134,11 @@ export default async function InstitutionPage({ params }: PageProps) {
               <h1 className="mt-3 text-4xl font-black tracking-tight sm:text-6xl">
                 {institution.name}
               </h1>
+              {institution.competition_level && (
+                <span className="mt-4 inline-flex rounded-full border border-white/25 bg-white/15 px-3 py-1.5 text-xs font-extrabold tracking-wide text-white backdrop-blur">
+                  {institution.competition_level}
+                </span>
+              )}
               <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm font-semibold text-white/80">
                 <span className="inline-flex items-center gap-2">
                   <MapPin className="size-4" /> {institution.location}

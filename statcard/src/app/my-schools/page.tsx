@@ -215,7 +215,7 @@ export default function MySchoolsPage() {
               </h1>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-500">
                 A private shortlist for the programs you’re considering. Drag your saved schools
-                into your Top 10 priority order.
+                into your Top 5 priority order.
               </p>
             </div>
             <Link href="/?discover=1" className="btn-primary shrink-0">
@@ -224,8 +224,8 @@ export default function MySchoolsPage() {
           </div>
           <div className="mt-8 grid max-w-2xl grid-cols-2 gap-3 sm:grid-cols-3">
             <Stat label="Saved schools" value={schools.length} />
-            <Stat label="Top 10 filled" value={`${rankedIds.size}/10`} />
-            <Stat label="Open positions" value={10 - rankedIds.size} />
+            <Stat label="Top 5 filled" value={`${rankedIds.size}/5`} />
+            <Stat label="Open positions" value={5 - rankedIds.size} />
           </div>
         </div>
       </div>
@@ -251,13 +251,13 @@ export default function MySchoolsPage() {
                     <Trophy className="size-4" /> Priority board
                   </div>
                   <h2 className="mt-2 text-2xl font-black tracking-tight text-slate-950">
-                    Top 10 ranking
+                    Top 5 ranking
                   </h2>
                 </div>
                 <p className="text-xs font-semibold text-slate-400">Drag and drop to reorder</p>
               </div>
               <div className="mt-5 flex gap-3 overflow-x-auto pb-2">
-                {Array.from({ length: 10 }, (_, index) => index + 1).map((rank) => {
+                {Array.from({ length: 5 }, (_, index) => index + 1).map((rank) => {
                   const item = ranking.find((entry) => entry.rank === rank);
                   return (
                     <div
@@ -475,7 +475,7 @@ function SchoolCard({
           onChange={(event) => onRank(event.target.value ? Number(event.target.value) : null)}
         >
           <option value="">Rank</option>
-          {Array.from({ length: 10 }, (_, index) => index + 1).map((rank) => (
+          {Array.from({ length: 5 }, (_, index) => index + 1).map((rank) => (
             <option key={rank} value={rank}>
               #{rank}
             </option>

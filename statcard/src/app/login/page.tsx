@@ -344,7 +344,7 @@ function LoginForm() {
                   className="input px-10"
                   placeholder="At least 8 characters"
                   autoComplete={isSignUp ? 'new-password' : 'current-password'}
-                  minLength={8}
+                  minLength={isSignUp ? 8 : undefined}
                   required
                 />
                 <button

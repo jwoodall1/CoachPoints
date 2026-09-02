@@ -302,7 +302,7 @@ export default function MySchoolsPage() {
                         <div className="flex flex-col items-center gap-1.5 text-center">
                           <span className="mx-auto grid size-14 shrink-0 place-items-center p-1">
                             {logo ? (
-                              <img src={logo} alt="" className="size-10 rounded-lg object-contain" />
+                              <img src={logo} alt="" className="size-10 object-contain" />
                             ) : (
                               <span className="text-lg font-black" style={{ color: institution?.primary_color ?? '#0f172a' }}>{schoolName(item.institution_id).charAt(0)}</span>
                             )}
@@ -442,10 +442,9 @@ function SchoolCard({
       <div className="flex items-center gap-3 p-4">
         <span
           className="grid size-11 shrink-0 place-items-center rounded-xl"
-          style={{ backgroundColor: '#ffffff', border: `2px solid ${item.primary_color}` }}
         >
           {logo ? (
-            <img src={logo} alt="" className="size-9 rounded-lg object-contain" />
+            <img src={logo} alt="" className="size-9 object-contain" />
           ) : (
             <span className="text-lg font-black" style={{ color: item.primary_color }}>{item.name.charAt(0)}</span>
           )}

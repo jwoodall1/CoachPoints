@@ -121,7 +121,7 @@ export default async function InstitutionPage({ params }: PageProps) {
               <img
                 src={logoUrl}
                 alt={`${institution.name} logo`}
-                className="size-32 rounded-3xl bg-white p-3 object-contain shadow-2xl"
+                className="size-32 rounded-3xl object-contain"
               />
             ) : (
               <div className="grid size-32 place-items-center rounded-3xl bg-white/15 text-6xl font-black">

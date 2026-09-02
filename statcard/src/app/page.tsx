@@ -955,10 +955,7 @@ function InstitutionGroup({
               href={`/institutions/${institution.slug}`}
               className="group overflow-hidden rounded-3xl border border-slate-200/80 bg-white p-5 shadow-card transition duration-300 hover:-translate-y-1 hover:shadow-card-hover"
             >
-              <div
-                className="flex items-center gap-4 rounded-2xl p-4"
-                style={{ backgroundColor: `${institution.primary_color}12` }}
-              >
+              <div className="flex items-center gap-4 rounded-2xl p-4">
                 {institution.logo_url ? (
                   <img
                     src={institution.logo_url}

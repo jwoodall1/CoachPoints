@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "name": "CoachPoints Passport",
+    "slug": "coachpoints-passport",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "scheme": "coachpoints",
+    "ios": { "supportsTablet": true },
+    "android": { "adaptiveIcon": { "backgroundColor": "#0b1220" } }
+  }
+}

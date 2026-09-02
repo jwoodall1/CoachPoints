@@ -1,0 +1,32 @@
+{
+  "name": "coachpoints-passport",
+  "version": "1.0.0",
+  "private": true,
+  "main": "expo/AppEntry.js",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@react-native-async-storage/async-storage": "^2.2.0",
+    "@supabase/supabase-js": "^2.112.3",
+    "expo": "~54.0.0",
+    "expo-clipboard": "~8.0.0",
+    "expo-linear-gradient": "~15.0.7",
+    "expo-status-bar": "~3.0.8",
+    "lucide-react-native": "^0.468.0",
+    "qrcode": "^1.5.4",
+    "react": "19.1.0",
+    "react-native": "0.81.5",
+    "react-native-qrcode-svg": "^6.3.20",
+    "react-native-svg": "15.12.1",
+    "react-native-safe-area-context": "~5.6.0"
+  },
+  "devDependencies": {
+    "@types/react": "~19.1.10",
+    "typescript": "~5.9.2"
+  }
+}

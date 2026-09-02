@@ -259,6 +259,10 @@ export default function MySchoolsPage() {
               <div className="mt-5 flex gap-3 overflow-x-auto pb-2">
                 {Array.from({ length: 5 }, (_, index) => index + 1).map((rank) => {
                   const item = ranking.find((entry) => entry.rank === rank);
+                  const institution = item
+                    ? schools.find((school) => school.institution_id === item.institution_id)?.institution
+                    : null;
+                  const logo = institution ? safeHttpsUrl(institution.logo_url) : null;
                   return (
                     <div
                       key={rank}
@@ -275,13 +279,13 @@ export default function MySchoolsPage() {
                         setDraggedId(null);
                         setDragOverRank(null);
                       }}
-                      className={`flex min-h-24 min-w-44 flex-1 flex-col justify-between rounded-2xl border p-3 transition ${dragOverRank === rank ? 'border-brand-400 bg-brand-50 ring-2 ring-brand-100' : item ? 'border-slate-200 bg-slate-50' : 'border-dashed border-slate-200 bg-white'}`}
+                      className={`flex min-h-32 min-w-44 flex-1 flex-col justify-between rounded-2xl border p-3 transition ${dragOverRank === rank ? 'border-brand-400 bg-brand-50 ring-2 ring-brand-100' : item ? 'border-slate-200 bg-slate-50' : 'border-dashed border-slate-200 bg-white'}`}
                     >
                       <div className="flex items-center justify-between">
                         <span
-                          className={`grid size-7 place-items-center rounded-lg text-xs font-black ${item ? 'bg-slate-950 text-white' : 'bg-slate-100 text-slate-400'}`}
+                          className={`grid size-8 place-items-center rounded-lg text-sm font-black ${item ? 'bg-slate-950 text-white' : 'bg-slate-100 text-slate-400'}`}
                         >
-                          {rank}
+                          #{rank}
                         </span>
                         {item && (
                           <button
@@ -294,11 +298,25 @@ export default function MySchoolsPage() {
                           </button>
                         )}
                       </div>
-                      <span
-                        className={`truncate text-sm ${item ? 'font-bold text-slate-800' : 'text-slate-400'}`}
-                      >
-                        {item ? schoolName(item.institution_id) : 'Drop a school here'}
-                      </span>
+                      {item ? (
+                        <div className="flex items-center gap-2.5">
+                          <span
+                            className="grid size-12 shrink-0 place-items-center rounded-xl p-1.5 shadow-sm"
+                            style={{ backgroundColor: institution?.primary_color ?? '#0f172a' }}
+                          >
+                            {logo ? (
+                              <img src={logo} alt="" className="size-10 rounded-lg object-contain" />
+                            ) : (
+                              <span className="text-lg font-black text-white">{schoolName(item.institution_id).charAt(0)}</span>
+                            )}
+                          </span>
+                          <span className="truncate text-sm font-black text-slate-800">
+                            {schoolName(item.institution_id)}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="truncate text-sm text-slate-400">Drop a school here</span>
+                      )}
                     </div>
                   );
                 })}

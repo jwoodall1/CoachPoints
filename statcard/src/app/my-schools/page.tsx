@@ -25,12 +25,28 @@ export default function MySchoolsPage() {
     if (!user) { router.replace('/login?role=athlete'); return; }
     if (user.user_metadata.account_type === 'coach') { router.replace('/coach-dashboard'); return; }
     let active = true;
-    void supabase.from('athlete_saved_institutions').select('institution_id, institutions(name, slug, location, logo_url, primary_color, competition_level)').eq('athlete_id', user.id).order('created_at', { ascending: false }).then(({ data, error: loadError }) => {
+    void (async () => {
+      const { data: saved, error: savedError } = await supabase
+        .from('athlete_saved_institutions')
+        .select('institution_id, created_at')
+        .eq('athlete_id', user.id)
+        .order('created_at', { ascending: false });
       if (!active) return;
-      if (loadError) setError(loadError.message);
-      else setSchools((data ?? []) as unknown as School[]);
+      if (savedError) { setError(savedError.message); setLoading(false); return; }
+      const ids = (saved ?? []).map((row) => row.institution_id);
+      if (!ids.length) { setSchools([]); setLoading(false); return; }
+      const { data: institutions, error: institutionError } = await supabase
+        .from('institutions')
+        .select('id, name, slug, location, logo_url, primary_color, competition_level')
+        .in('id', ids);
+      if (!active) return;
+      if (institutionError) setError(institutionError.message);
+      else {
+        const byId = new Map((institutions ?? []).map((institution) => [institution.id, institution]));
+        setSchools(ids.map((id) => ({ institution_id: id, institution: byId.get(id) ?? null })));
+      }
       setLoading(false);
-    });
+    })();
     return () => { active = false; };
   }, [ready, router, user]);
 

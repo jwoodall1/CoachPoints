@@ -7,3 +7,13 @@ This version has breaking changes — APIs, conventions, and file structure may 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
 <!-- END:nextjs-agent-rules -->
+
+# CoachPoints essentials
+
+- Preserve existing behavior and visual style.
+- Keep athlete data private; never expose service-role keys.
+- New Supabase tables require RLS, ownership policies, foreign keys, and appropriate indexes.
+- Use migrations for schema changes and do not remove applied migrations.
+- Reuse shared components and validate external URLs.
+- Verify changes with `npm.cmd run lint` and `npm.cmd run build`.
+- For code changes, provide a short, descriptive commit message in the final response.

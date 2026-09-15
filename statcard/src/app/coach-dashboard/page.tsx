@@ -9,6 +9,9 @@ import { useAuth } from '@/components/AuthProvider';
 import { supabase } from '@/lib/supabase';
 import ProfileReadinessPopup from '@/components/ProfileReadinessPopup';
 import { coachPositions } from '@/lib/sports';
+import CoachInstitutionMembership, {
+  type CoachMembership,
+} from '@/components/CoachInstitutionMembership';
 
 // ── Coach profile model ──────────────────────────────────────────────────────
 
@@ -52,6 +55,8 @@ export default function CoachDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const [membership, setMembership] = useState<CoachMembership | null>(null);
+  const [membershipError, setMembershipError] = useState(false);
   const readiness = (() => {
     const checks = [
       {
@@ -112,7 +117,7 @@ export default function CoachDashboardPage() {
     }
     let active = true;
     const load = async () => {
-      const [{ data }, { data: contact }] = await Promise.all([
+      const [{ data }, { data: contact }, membershipResult] = await Promise.all([
         supabase
           .from('coachprofiles')
           .select(
@@ -125,8 +130,15 @@ export default function CoachDashboardPage() {
           .select('phone_number, contact_email')
           .eq('user_id', user.id)
           .maybeSingle(),
+        supabase
+          .from('coach_institution_memberships')
+          .select('institution_id, primary_sport_id, status')
+          .eq('coach_id', user.id)
+          .maybeSingle(),
       ]);
       if (!active) return;
+      setMembership(membershipResult.data as CoachMembership | null);
+      setMembershipError(Boolean(membershipResult.error));
       setProfile({
         firstName: data?.first_name ?? user.user_metadata.first_name ?? '',
         lastName: data?.last_name ?? user.user_metadata.last_name ?? '',
@@ -279,6 +291,18 @@ export default function CoachDashboardPage() {
           variant="coach"
         />
 
+        {membershipError ? (
+          <p role="alert" className="mt-6 text-sm text-rose-600">
+            Unable to load institution membership. Reload to try again.
+          </p>
+        ) : (
+          <CoachInstitutionMembership
+            membership={membership}
+            institution={profile.collegeUniversity}
+            sport={profile.sport}
+          />
+        )}
+
         <form onSubmit={save} className="surface-card mt-6 p-6 sm:p-8">
           <div className="mb-7 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
@@ -323,12 +347,14 @@ export default function CoachDashboardPage() {
             />
             <Field
               label="College / university"
+              readOnly={Boolean(membership) || membershipError}
               value={profile.collegeUniversity}
               onChange={(value) => update('collegeUniversity', value)}
               placeholder="State University"
             />
             <Field
               label="Sport or program"
+              readOnly={Boolean(membership) || membershipError}
               value={profile.sport}
               onChange={(value) => update('sport', value)}
               placeholder="Football"
@@ -431,12 +457,14 @@ function Field({
   onChange,
   placeholder,
   required = false,
+  readOnly = false,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   placeholder: string;
   required?: boolean;
+  readOnly?: boolean;
 }) {
   return (
     <label className="block text-sm font-bold text-slate-700">
@@ -446,6 +474,7 @@ function Field({
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
         required={required}
+        readOnly={readOnly}
         className="input"
       />
     </label>

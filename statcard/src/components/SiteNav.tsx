@@ -7,6 +7,7 @@ import {
   ChevronLeft,
   Compass,
   Bookmark,
+  Building2,
   LayoutDashboard,
   ListChecks,
   Package,
@@ -21,7 +22,12 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/components/AuthProvider';
 import { supabase } from '@/lib/supabase';
 
-type ProfileIdentity = { userId: string; username: string | null; hasCoachProfile: boolean };
+type ProfileIdentity = {
+  userId: string;
+  username: string | null;
+  hasCoachProfile: boolean;
+  managesInstitutions: boolean;
+};
 type NavItem = { href: string; label: string; icon: typeof LayoutDashboard };
 
 // ── Primary navigation ────────────────────────────────────────────────────────
@@ -49,6 +55,9 @@ export default function SiteNav() {
     ...(profileIdentity?.userId === userId && profileIdentity?.hasCoachProfile
       ? [{ href: '/equipment', label: 'Equipment', icon: Package }]
       : []),
+    ...(profileIdentity?.userId === userId && profileIdentity?.managesInstitutions
+      ? [{ href: '/institution-coaches', label: 'Institution coaches', icon: Building2 }]
+      : []),
   ];
 
   useEffect(() => {
@@ -65,12 +74,14 @@ export default function SiteNav() {
     void Promise.all([
       query,
       supabase.from('coachprofiles').select('id').eq('id', userId).maybeSingle(),
-    ]).then(([{ data }, coach]) => {
+      supabase.rpc('get_coach_admin_institutions'),
+    ]).then(([{ data }, coach, institutions]) => {
       if (active)
         setProfileIdentity({
           userId,
           username: data?.username ?? null,
           hasCoachProfile: !coach.error && Boolean(coach.data),
+          managesInstitutions: !institutions.error && Boolean(institutions.data?.length),
         });
     });
     return () => {

@@ -20,6 +20,9 @@ import { useRouter, useSearchParams } from 'next/navigation';
 
 import { supabase } from '@/lib/supabase';
 import { trackEvent } from '@/lib/analytics';
+import InstitutionSportPicker, {
+  type InstitutionSportSelection,
+} from '@/components/InstitutionSportPicker';
 
 type Mode = 'sign-in' | 'sign-up';
 type AccountType = 'athlete' | 'coach';
@@ -28,6 +31,8 @@ const reservedUsernames = new Set([
   'coach-dashboard',
   'coach-lists',
   'dashboard',
+  'equipment',
+  'institution-coaches',
   'friends',
   'login',
   'messages',
@@ -61,6 +66,7 @@ function LoginForm() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [institutionSport, setInstitutionSport] = useState<InstitutionSportSelection | null>(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -83,6 +89,11 @@ function LoginForm() {
     }
     setLoading(true);
     if (isSignUp) {
+      if (isCoach && !institutionSport?.sportId) {
+        setError('Select your institution and one of its available sports.');
+        setLoading(false);
+        return;
+      }
       const publicUsername = username
         .trim()
         .toLowerCase()
@@ -108,6 +119,12 @@ function LoginForm() {
             last_name: lastName.trim(),
             username: publicUsername,
             account_type: accountType,
+            ...(isCoach && institutionSport
+              ? {
+                  institution_id: institutionSport.institutionId,
+                  sport_id: institutionSport.sportId,
+                }
+              : {}),
           },
           emailRedirectTo: `${window.location.origin}/${isCoach ? 'coach-dashboard' : 'dashboard'}`,
         },
@@ -115,17 +132,8 @@ function LoginForm() {
       if (signUpError) setError(signUpError.message);
       else if (data.session) {
         trackEvent('auth_completed', { action: 'sign_up', account_type: accountType });
-        if (isCoach)
-          await supabase.from('coachprofiles').upsert(
-            {
-              id: data.session.user.id,
-              first_name: firstName.trim(),
-              last_name: lastName.trim(),
-              username: publicUsername,
-            },
-            { onConflict: 'id' },
-          );
-        else
+        // The signup trigger creates the coach profile and pending membership atomically.
+        if (!isCoach)
           await supabase.from('profiles').upsert(
             {
               id: data.session.user.id,
@@ -136,7 +144,7 @@ function LoginForm() {
             },
             { onConflict: 'id' },
           );
-        router.push(`/${publicUsername}`);
+        router.push(isCoach ? '/coach-dashboard' : `/${publicUsername}`);
       } else setMessage('Your account is ready. Check your email to confirm it, then sign in.');
     } else {
       const { data, error: signInError } = await supabase.auth.signInWithPassword({
@@ -323,6 +331,19 @@ function LoginForm() {
                   This becomes your permanent profile address.
                 </span>
               </Field>
+            )}
+            {isSignUp && isCoach && (
+              <div className="space-y-3">
+                <InstitutionSportPicker
+                  value={institutionSport}
+                  onChange={setInstitutionSport}
+                  disabled={loading}
+                />
+                <p className="text-xs leading-5 text-slate-500">
+                  You can use your account while an institution administrator reviews your request.
+                  Team access starts after approval.
+                </p>
+              </div>
             )}
             <Field label="Email address" icon={Mail}>
               <input

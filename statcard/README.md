@@ -26,13 +26,22 @@ Equipment is available at `/equipment` to accounts with an existing `coachprofil
 The list, add, and detail routes share a coach access guard and the app's existing styles.
 
 - `equipment_items.team_id` references `sports.id`: the existing institution-specific sports program is the current team boundary.
-- Access mirrors sports management: an assigned `sport_admins` user or super admin must also have a coach profile. A coach with no authorized program sees the no-teams state.
+- Approved coach sport memberships grant access to their teams. Legacy program admins retain access where no institution membership applies; super admins with coach profiles can access all teams. Pending or removed members cannot use legacy assignments to bypass approval.
 - The database enforces access with RLS. Clients can create equipment and edit its basic fields; ownership, team transfers, player assignments, and deletion are not exposed.
 - `assigned_player_id` references the existing athlete `profiles` table. New items are unassigned. Future roster work must validate team membership before enabling assignment.
 - Apply `supabase/migrations/20260915171603_add_equipment_items.sql` through the normal migration process for other environments. It is already applied to the connected CoachPoints project.
 
 Validation: `npm run lint`, `npm run build`, and `supabase/tests/equipment_access.sql`.
 Run the SQL test with a database-owner connection (for example `psql -v ON_ERROR_STOP=1 -f supabase/tests/equipment_access.sql`); it creates temporary fixtures, tests role/team isolation and field validation, and rolls back all test data.
+
+## Coach institution membership
+
+- Coach signup searches all published institutions and their existing sports. The signup database trigger creates a pending membership atomically with the account, with email confirmation enabled or disabled.
+- Pending coaches retain ordinary account access. The selected institution and sport populate existing profile cards; approval status appears in the coach dashboard.
+- Institution admins use **Institution coaches** (`/institution-coaches`) to accept/decline requests, change assigned sports, or remove membership. This uses existing `institution_admins` permissions; super admins can manage all institutions.
+- Approved `coach_sport_memberships` grant Equipment access without making coaches institution or program administrators. Removing a sport revokes its access; removing institution membership clears the profile affiliation and preserves the account.
+- A coach has one institution membership and may have multiple sports. The requested sport is the initial profile sport; when removed, the first remaining assigned sport becomes primary. Existing coaches can request membership from their dashboard. Free-text affiliations are not automatically approved.
+- Migration: `supabase/migrations/20260915174723_add_coach_institution_memberships.sql` (applied to the connected database). Run `supabase/tests/coach_memberships.sql` with a database-owner connection to verify signup, approval, isolation, removal, and profile synchronization. The test rolls back all fixtures.
 
 ## Next.js Resources
 

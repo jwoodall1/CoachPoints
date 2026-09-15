@@ -9,6 +9,7 @@ import {
   Bookmark,
   LayoutDashboard,
   ListChecks,
+  Package,
   Menu,
   MessageCircle,
   UserRound,
@@ -20,7 +21,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/components/AuthProvider';
 import { supabase } from '@/lib/supabase';
 
-type ProfileIdentity = { userId: string; username: string | null };
+type ProfileIdentity = { userId: string; username: string | null; hasCoachProfile: boolean };
 type NavItem = { href: string; label: string; icon: typeof LayoutDashboard };
 
 // ── Primary navigation ────────────────────────────────────────────────────────
@@ -43,9 +44,11 @@ export default function SiteNav() {
     },
     ...(accountType === 'coach'
       ? [{ href: '/coach-lists', label: 'Lists', icon: ListChecks }]
-      : [{ href: '/my-schools', label: 'My Schools', icon: Bookmark }]
-      ),
+      : [{ href: '/my-schools', label: 'My Schools', icon: Bookmark }]),
     { href: '/friends', label: 'Network', icon: UsersRound },
+    ...(profileIdentity?.userId === userId && profileIdentity?.hasCoachProfile
+      ? [{ href: '/equipment', label: 'Equipment', icon: Package }]
+      : []),
   ];
 
   useEffect(() => {
@@ -53,10 +56,22 @@ export default function SiteNav() {
     let active = true;
     const query =
       accountType === 'coach'
-        ? supabase.from('public_coach_profile_cards').select('username').eq('id', userId).maybeSingle()
+        ? supabase
+            .from('public_coach_profile_cards')
+            .select('username')
+            .eq('id', userId)
+            .maybeSingle()
         : supabase.from('public_profile_cards').select('username').eq('id', userId).maybeSingle();
-    void query.then(({ data }) => {
-      if (active) setProfileIdentity({ userId, username: data?.username ?? null });
+    void Promise.all([
+      query,
+      supabase.from('coachprofiles').select('id').eq('id', userId).maybeSingle(),
+    ]).then(([{ data }, coach]) => {
+      if (active)
+        setProfileIdentity({
+          userId,
+          username: data?.username ?? null,
+          hasCoachProfile: !coach.error && Boolean(coach.data),
+        });
     });
     return () => {
       active = false;
@@ -147,7 +162,10 @@ export default function SiteNav() {
                 <DesktopLink
                   key={item.href}
                   {...item}
-                  active={pathname === item.href}
+                  active={
+                    pathname === item.href ||
+                    (item.href === '/equipment' && pathname.startsWith('/equipment/'))
+                  }
                   collapsed={collapsed}
                 />
               ))}
@@ -273,7 +291,10 @@ function MobileNavigation({
                   <MobileLink
                     key={item.href}
                     {...item}
-                    active={pathname === item.href}
+                    active={
+                      pathname === item.href ||
+                      (item.href === '/equipment' && pathname.startsWith('/equipment/'))
+                    }
                     close={close}
                   />
                 ))}

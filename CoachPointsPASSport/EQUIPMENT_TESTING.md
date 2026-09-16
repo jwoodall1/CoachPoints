@@ -2,6 +2,12 @@
 
 Implemented in the native PASSport app. The Supabase migrations have been applied to CoachPoints (`lntgnxrsmelbcslffohq`). The web changes are local and need your normal web deployment to reach the hosted site.
 
+## Basic preview in Expo Go
+
+Install Expo Go compatible with SDK 57 on your phone. In `CoachPointsPASSport`, run `npm.cmd run start:go`, then scan the QR code. Use `npm.cmd run start:go -- --tunnel` if your phone cannot reach your computer over Wi-Fi. Sign in to your Expo account if Expo Go requests it.
+
+Basic screens, authentication, and inventory management can run in Expo Go. Push token registration is skipped, and NFC module loading is blocked there. Actual scanning still requires a custom native build. A simulated scan is not implemented.
+
 ## Install a fresh native build
 
 NFC is a native module: Expo Go, browser previews, simulators, and an old installed PASSport binary cannot test scanning. Use an NFC-capable physical Android phone or iPhone and a stable-UID tag, preferably an NTAG213/215/216 for the first test. The app reads the chip UID without writing data to the chip. Not all NFC chip technologies are supported.
@@ -24,7 +30,7 @@ Then start Metro and open its development server in the installed build:
 npx.cmd expo start --dev-client
 ```
 
-The pinned NFC manager v3 uses the legacy React Native architecture, so `newArchEnabled` is explicitly false for this Expo SDK 54 project. Revisit the NFC dependency when upgrading Expo beyond SDK 54. See the [NFC manager documentation](https://github.com/revtel/react-native-nfc-manager).
+The app now uses Expo SDK 57 and React Native's New Architecture. NFC manager is pinned to v4.0.0-beta.9 because v3 supports only the legacy architecture. Rebuild native development clients after upgrading, and test NFC on physical devices. See the [NFC manager documentation](https://github.com/revtel/react-native-nfc-manager).
 
 ## Acceptance test
 
@@ -58,10 +64,17 @@ The pinned NFC manager v3 uses the legacy React Native architecture, so `newArch
 
 ## Checks completed
 
+- Expo SDK reports 57.0.0, using the patched `expo@57.0.23` package, React Native 0.86.3, and React 19.2.3.
+- SDK 57 dependency validation passes. Expo Doctor passes 20/21 checks; the remaining React Native Directory warning labels NFC manager as untested on the New Architecture. The pinned v4 beta explicitly targets that architecture, but physical-device verification is still required.
+
 - Native and web TypeScript checks passed.
 - Equipment web ESLint checks passed; Next.js production build passed.
-- Android Metro/Hermes bundle export passed; Expo config inspection confirms Android NFC permission and iOS TAG entitlement.
+- SDK 57 iOS and Android Metro/Hermes bundle exports passed; Expo config inspection confirms Android NFC permission and iOS TAG entitlement.
 - `statcard/supabase/tests/equipment_access.sql` passed against the live database with all test writes rolled back: registration with assignment, rescan, return, duplicate rejection, denied raw UID access, denied direct mutation, unauthorized read/write/lookup, and anonymous RPC rejection.
 - Physical NFC reading and signed native builds require device testing; they were not performed in this workspace.
 
 For repeatable database checks, run the test SQL in a privileged SQL session. It requires an existing approved coach, sport, and athlete and ends with ROLLBACK. Do not remove the transaction wrapper.
+
+## Expo account change
+
+The local project owner is now `jonathanwoodall1`. Sign in to Expo CLI and Expo Go with that account. The previous EAS project link (`dd8c97b9-5f1e-4978-bc1c-2d42d71af635`, configured under `jonathanwoodall`) was removed locally; the remote project was not deleted or transferred. Expo Go previews do not need that link. Before the next EAS build or push-notification test, link an EAS project accessible to `jonathanwoodall1` using `npx.cmd eas-cli init`, or transfer the existing project through Expo and relink it.

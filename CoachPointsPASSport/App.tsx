@@ -1,10 +1,9 @@
-﻿// @ts-nocheck -- lucide-react-native's current peer typings lag React Native's Expo 54 types.
+﻿// @ts-nocheck -- Existing screen typings need a separate cleanup; new equipment modules are typechecked.
 import EquipmentScreen from './EquipmentScreen';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import * as Device from 'expo-device';
 import { LinearGradient } from 'expo-linear-gradient';
-import * as Notifications from 'expo-notifications';
 import { StatusBar } from 'expo-status-bar';
 import * as Clipboard from 'expo-clipboard';
 import { useEffect, useMemo, useState } from 'react';
@@ -19,17 +18,18 @@ const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '';
 const profileBaseUrl = process.env.EXPO_PUBLIC_PROFILE_BASE_URL ?? 'https://coachpoints.com';
 const supabase = createClient(supabaseUrl, supabaseAnonKey, { auth: { storage: AsyncStorage, autoRefreshToken: true, persistSession: true, detectSessionInUrl: false } });
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
-
 async function registerForPushNotificationsAsync(userId: string) {
-  if (Platform.OS === 'web' || !Device.isDevice) return null;
+  if (Platform.OS === 'web' || !Device.isDevice || Constants.executionEnvironment === 'storeClient') return null;
+  const Notifications = await import('expo-notifications');
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldPlaySound: true,
+      shouldSetBadge: true,
+      shouldShowBanner: true,
+      shouldShowList: true,
+    }),
+  });
+
   if (Platform.OS === 'android') await Notifications.setNotificationChannelAsync('default', { name: 'default', importance: Notifications.AndroidImportance.MAX, vibrationPattern: [0, 250, 250, 250], lightColor: '#2588d8' });
   const permissions = await Notifications.getPermissionsAsync();
   let finalStatus = permissions.status;

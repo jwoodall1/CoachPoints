@@ -1,13 +1,15 @@
+import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 
 // Lazy import keeps browser previews and devices without the native module usable.
 export async function cancelEquipmentScan() {
-  if (Platform.OS === 'web') return;
+  if (Platform.OS === 'web' || Constants.executionEnvironment === 'storeClient') return;
   try { const { default: manager } = await import('react-native-nfc-manager'); await manager.cancelTechnologyRequest(); } catch { /* Already closed. */ }
 }
 
 export async function scanEquipmentTag(): Promise<string> {
   if (Platform.OS === 'web') throw new Error('Open the installed PASSport app to scan equipment.');
+  if (Constants.executionEnvironment === 'storeClient') throw new Error('NFC scanning requires an installed PASSport development build, not Expo Go.');
   const { default: manager, NfcTech } = await import('react-native-nfc-manager');
   if (!(await manager.isSupported())) throw new Error('This phone does not support NFC.');
   await manager.start();

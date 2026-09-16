@@ -14,7 +14,8 @@
           "nfcPermission": "Scan equipment tags to register and assign institution equipment.",
           "includeNdefEntitlement": false
         }
-      ]
+      ],
+      "expo-status-bar"
     ],
     "ios": {
       "supportsTablet": true,
@@ -32,12 +33,7 @@
         "android.permission.NFC"
       ]
     },
-    "extra": {
-      "eas": {
-        "projectId": "dd8c97b9-5f1e-4978-bc1c-2d42d71af635"
-      }
-    },
-    "owner": "jonathanwoodall",
-    "newArchEnabled": false
+    "extra": {},
+    "owner": "jonathanwoodall1"
   }
 }

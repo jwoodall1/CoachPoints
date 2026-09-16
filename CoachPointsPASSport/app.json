@@ -18,13 +18,19 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.coachpoints.passport"
+      "bundleIdentifier": "com.coachpoints.passport",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.coachpoints.passport",
       "adaptiveIcon": {
         "backgroundColor": "#0b1220"
-      }
+      },
+      "permissions": [
+        "android.permission.NFC"
+      ]
     },
     "extra": {
       "eas": {

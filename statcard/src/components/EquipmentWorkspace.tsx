@@ -132,7 +132,7 @@ export default function EquipmentWorkspace({
             <h1 className="text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
               {mode === 'new' ? 'Add Equipment' : 'Equipment'}
             </h1>
-            <p className="mt-2 text-sm text-slate-500">Track team equipment and assignments.</p>
+            <p className="mt-2 text-sm text-slate-500">Track equipment separately for each approved sport within your institution.</p>
           </div>
           {mode === 'list' && teamId && !error && (
             <Link
@@ -146,7 +146,7 @@ export default function EquipmentWorkspace({
         </header>
         {teams.length > 0 && mode !== 'detail' && (
           <label className="mt-6 block max-w-md text-sm font-bold text-slate-700">
-            <span className="mb-2 block">Team</span>
+            <span className="mb-2 block">Institution / sport</span>
             <select
               className="input"
               value={teamId}
@@ -178,8 +178,8 @@ export default function EquipmentWorkspace({
           </p>
         ) : !teams.length ? (
           <EquipmentEmpty
-            title="No teams available"
-            description="You need access to an institution’s team before adding equipment. Contact your administrator."
+            title="No approved sports available"
+            description="Request institution and sport membership from your coach dashboard. Your institution administrator must approve your requested sport."
           />
         ) : mode === 'new' ? (
           <EquipmentForm key={teamId} teamId={teamId} />

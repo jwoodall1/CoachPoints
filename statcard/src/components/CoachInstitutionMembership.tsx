@@ -56,7 +56,7 @@ export default function CoachInstitutionMembership({
           </p>
           <p className="mt-2 text-sm text-slate-500">
             Your account is ready to use. An institution administrator must approve your membership
-            before you can access team equipment.
+            before you can access equipment for the requested sport.
           </p>
         </>
       )}
@@ -68,7 +68,7 @@ export default function CoachInstitutionMembership({
           </p>
           <p className="mt-2 text-sm text-slate-500">
             Your institution administrator manages your sports. Your primary sport is displayed on
-            your profile.
+            your profile. Equipment access is limited to the sports your administrator assigns.
           </p>
           <Link href="/equipment" className="btn-secondary mt-4">
             View team equipment

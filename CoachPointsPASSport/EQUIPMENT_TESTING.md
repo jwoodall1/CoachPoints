@@ -28,7 +28,7 @@ The pinned NFC manager v3 uses the legacy React Native architecture, so `newArch
 
 ## Acceptance test
 
-1. Sign in as a coach with an **approved** institution membership. On the profile dashboard tap **Equipment: Scan and manage**, then select the institution/team. Coaches without approved membership cannot register or view equipment.
+1. Sign in as a coach with an **approved** institution membership and an admin-assigned sport. On the profile dashboard tap **Equipment: Scan and manage**, then select an administrator-approved institution/sport. Coaches without approved membership cannot register or view equipment.
 2. Tap **Scan equipment NFC tag** and hold a blank tag near the phone's NFC antenna. The form should say “New equipment · tag scanned”; no raw chip ID should appear.
 3. Choose Helmet, a model, and a size. Optionally search an athlete by username, select the athlete, and add notes. Save. An `EQ-…` code appears in the inventory. Repeat with Shoulder pads and a different tag.
 4. Rescan the first tag. Its existing code and details must load. Assign a player if initially unassigned; save. Rescan once more and confirm the assignment persists and no duplicate item exists.
@@ -39,8 +39,18 @@ The pinned NFC manager v3 uses the legacy React Native architecture, so `newArch
 
 ## Database behavior
 
+### Sport approval test
+
+1. On the web coach dashboard, request membership for an institution and a specific sport. While the request is pending, that sport's equipment must be unavailable.
+2. An institution administrator opens **Institution coaches** and accepts the request. Reopen Equipment in PASSport or reload the web equipment page: only admin-assigned sports should appear.
+3. Register an item in the approved sport. Another coach at the same institution who is assigned only a different sport must not be able to view, scan, or edit that item.
+4. The administrator changes **Sports access** and saves. Reopen Equipment to refresh the selector. Removing a sport immediately blocks subsequent database reads, scans, and saves for that sport, even for equipment the coach created.
+5. Removing institution membership blocks all its sports. Existing equipment stays with its original institution and sport.
+
+`statcard/supabase/tests/equipment_sport_access.sql` verifies the actual request, admin approval, sport assignment, and revocation RPCs in a rollback-only transaction. This test passed against CoachPoints. The existing `team_id` field is the sport ID; no equipment records need moving or renaming.
+
 - `equipment_items.institution_id` is required and cannot be changed. `team_id` references an institution sport; the database prevents the sport and institution from diverging.
-- Approved coaches can manage inventory for sports within their institution. There is no personal-inventory fallback or creator-based access exception.
+- Approved coaches can manage inventory only for sports assigned to them by their institution administrator. There is no personal-inventory fallback or creator-based access exception.
 - `equipment_nfc_tags.original_id` retains the chip UID. Client roles cannot read or write this table. Authenticated RPCs validate institution membership before accessing private implementations; their responses contain equipment fields only.
 - Equipment registration and tag binding occur in one transaction. A unique tag constraint prevents duplicate registrations. Codes are database-generated and immutable.
 - Player assignment uses an existing athlete profile. There is no athlete institution-roster table in the current schema, so player lookup searches existing athlete profiles; the **equipment ownership** remains institution-locked.

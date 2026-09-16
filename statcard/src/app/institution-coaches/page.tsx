@@ -280,7 +280,7 @@ function CoachRow({
           </fieldset>
           <p className="mt-3 text-xs text-slate-500">
             The current profile sport stays selected if it remains assigned. Otherwise, the first
-            assigned sport becomes the profile sport.
+            assigned sport becomes the profile sport. These selections also control equipment access; removing a sport revokes access to its equipment.
           </p>
           <div className="mt-5 flex flex-wrap gap-3">
             <button

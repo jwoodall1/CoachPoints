@@ -4,7 +4,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  ChevronLeft,
   Compass,
   Bookmark,
   Building2,
@@ -35,9 +34,13 @@ type NavItem = { href: string; label: string; icon: typeof LayoutDashboard };
 /** Responsive navigation: desktop sidebar plus an isolated mobile menu. */
 export default function SiteNav() {
   const pathname = usePathname();
+  return <NavigationForPage key={pathname} pathname={pathname} />;
+}
+
+function NavigationForPage({ pathname }: { pathname: string }) {
   const { ready, user } = useAuth();
   const [profileIdentity, setProfileIdentity] = useState<ProfileIdentity | null>(null);
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
   const userId = user?.id ?? null;
   const accountType = user?.user_metadata.account_type === 'coach' ? 'coach' : 'athlete';
   const username = profileIdentity?.userId === userId ? profileIdentity.username : null;
@@ -122,17 +125,19 @@ export default function SiteNav() {
               />
             )}
           </Link>
-          {!collapsed && (
-            <button
-              type="button"
-              onClick={() => setCollapsed(true)}
-              className="grid size-9 place-items-center rounded-xl text-slate-400 hover:bg-slate-100 hover:text-slate-700"
-              aria-label="Collapse side navigation"
-            >
-              <ChevronLeft className="size-5" />
-            </button>
-          )}
+
         </div>
+        <button
+          type="button"
+          onClick={() => setCollapsed(value => !value)}
+          aria-expanded={!collapsed}
+          aria-controls="desktop-navigation"
+          aria-label={collapsed ? 'Open navigation' : 'Close navigation'}
+          className={`mx-3 mt-4 flex min-h-14 shrink-0 items-center justify-center gap-2 rounded-2xl bg-brand-700 font-bold text-white shadow-md transition hover:bg-brand-800 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-600 ${collapsed ? 'flex-col gap-0.5 py-2 text-[10px]' : 'px-4 text-sm'}`}
+        >
+          {collapsed ? <Menu className="size-6" /> : <X className="size-6" />}
+          <span>{collapsed ? 'Menu' : 'Close menu'}</span>
+        </button>
         <div className={`border-b border-slate-100 py-4 ${collapsed ? 'px-3' : 'px-5'}`}>
           {signedIn ? (
             <div
@@ -157,6 +162,8 @@ export default function SiteNav() {
           )}
         </div>
         <nav
+          id="desktop-navigation"
+          onClick={(event) => { if ((event.target as HTMLElement).closest('a')) setCollapsed(true); }}
           className={`flex-1 space-y-1 overflow-y-auto py-5 ${collapsed ? 'px-3' : 'px-4'}`}
           aria-label="Main navigation"
         >
@@ -208,16 +215,7 @@ export default function SiteNav() {
             </Link>
           )}
         </nav>
-        {collapsed && (
-          <button
-            type="button"
-            onClick={() => setCollapsed(false)}
-            className="mx-auto mb-5 grid size-9 place-items-center rounded-xl text-slate-400 hover:bg-slate-100 hover:text-slate-700"
-            aria-label="Expand side navigation"
-          >
-            <ChevronLeft className="size-5 rotate-180" />
-          </button>
-        )}
+
       </aside>
       <MobileNavigation
         pathname={pathname}
@@ -251,8 +249,8 @@ function MobileNavigation({
   const [open, setOpen] = useState(false);
   const close = () => setOpen(false);
   return (
-    <div className="w-full lg:hidden">
-      <header className="sticky top-0 z-40 flex h-16 w-full items-center justify-between border-b border-slate-200 bg-white/95 px-4 backdrop-blur">
+    <div className="sticky top-0 z-40 w-full lg:hidden">
+      <header className="flex h-16 w-full items-center justify-between border-b border-slate-200 bg-white px-4">
         <Link href="/" aria-label="CoachPoints home">
           <Image
             src="/coachpoints-logo.png"
@@ -274,19 +272,20 @@ function MobileNavigation({
           <button
             type="button"
             onClick={() => setOpen((value) => !value)}
-            className="grid size-10 place-items-center rounded-xl border border-slate-200 text-slate-700"
+            className="fixed right-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-50 flex min-h-14 items-center justify-center gap-2 rounded-full border-2 border-white bg-brand-700 px-5 text-base font-bold text-white shadow-xl ring-1 ring-brand-900/20 hover:bg-brand-800 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-600"
             aria-expanded={open}
             aria-controls="mobile-navigation"
             aria-label={open ? 'Close navigation' : 'Open navigation'}
           >
-            {open ? <X className="size-5" /> : <Menu className="size-5" />}
+            {open ? <X className="size-6" /> : <Menu className="size-6" />}
+            <span>{open ? 'Close menu' : 'Menu'}</span>
           </button>
         </div>
       </header>
       {open && (
         <div
           id="mobile-navigation"
-          className="fixed inset-x-0 top-16 z-30 max-h-[calc(100vh-4rem)] overflow-y-auto border-b border-slate-200 bg-white p-4 shadow-xl"
+          className="fixed inset-x-0 top-16 z-30 max-h-[calc(100dvh-10rem)] overflow-y-auto border-b border-slate-200 bg-white p-4 shadow-xl"
         >
           <nav className="grid gap-1" aria-label="Mobile navigation">
             <MobileLink
@@ -356,6 +355,7 @@ function DesktopLink({
     <Link
       href={href}
       aria-current={active ? 'page' : undefined}
+      aria-label={label}
       title={collapsed ? label : undefined}
       className={`flex min-h-11 items-center gap-3 rounded-xl text-sm font-bold transition ${collapsed ? 'justify-center px-2' : 'px-3.5'} ${active ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950'}`}
     >

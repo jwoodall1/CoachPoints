@@ -133,10 +133,11 @@ function NavigationForPage({ pathname }: { pathname: string }) {
           aria-expanded={!collapsed}
           aria-controls="desktop-navigation"
           aria-label={collapsed ? 'Open navigation' : 'Close navigation'}
-          className={`mx-3 mt-4 flex min-h-14 shrink-0 items-center justify-center gap-2 rounded-2xl bg-brand-700 font-bold text-white shadow-md transition hover:bg-brand-800 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-600 ${collapsed ? 'flex-col gap-0.5 py-2 text-[10px]' : 'px-4 text-sm'}`}
+          title={collapsed ? 'Open navigation' : 'Close navigation'}
+          className="mx-auto mt-4 grid size-9 shrink-0 place-items-center rounded-lg border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600"
         >
-          {collapsed ? <Menu className="size-6" /> : <X className="size-6" />}
-          <span>{collapsed ? 'Menu' : 'Close menu'}</span>
+          {collapsed ? <Menu className="size-4.5" /> : <X className="size-4.5" />}
+          <span className="sr-only">{collapsed ? 'Menu' : 'Close menu'}</span>
         </button>
         <div className={`border-b border-slate-100 py-4 ${collapsed ? 'px-3' : 'px-5'}`}>
           {signedIn ? (
@@ -272,13 +273,13 @@ function MobileNavigation({
           <button
             type="button"
             onClick={() => setOpen((value) => !value)}
-            className="fixed right-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-50 flex min-h-14 items-center justify-center gap-2 rounded-full border-2 border-white bg-brand-700 px-5 text-base font-bold text-white shadow-xl ring-1 ring-brand-900/20 hover:bg-brand-800 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-600"
+            className="fixed right-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-50 grid size-10 place-items-center rounded-full border border-slate-300 bg-white/95 text-slate-600 shadow-md backdrop-blur transition hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600"
             aria-expanded={open}
             aria-controls="mobile-navigation"
             aria-label={open ? 'Close navigation' : 'Open navigation'}
           >
-            {open ? <X className="size-6" /> : <Menu className="size-6" />}
-            <span>{open ? 'Close menu' : 'Menu'}</span>
+            {open ? <X className="size-5" /> : <Menu className="size-5" />}
+            <span className="sr-only">{open ? 'Close menu' : 'Menu'}</span>
           </button>
         </div>
       </header>

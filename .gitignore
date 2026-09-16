@@ -50,7 +50,9 @@ supabase/.temp/
 
 # Local assistant/tool state
 .qodo/
-/statcard/AGENTS.md
+**/AGENTS.md
+**/CLAUDE.md
+**/CALUDE.md
 
 # Operating system and editor metadata
 .DS_Store
@@ -59,3 +61,6 @@ Desktop.ini
 .idea/
 .vscode/*
 !.vscode/settings.json.example
+
+# Expo generated development and export state
+.expo/

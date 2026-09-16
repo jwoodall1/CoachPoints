@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ArrowUpRight, Dumbbell, ListChecks, LogOut, Pencil, Save, UsersRound } from 'lucide-react';
+import { ArrowUpRight, Dumbbell, ListChecks, LogOut, Package, Pencil, Save, UsersRound } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 import { useAuth } from '@/components/AuthProvider';
@@ -252,7 +252,7 @@ export default function CoachDashboardPage() {
           </div>
         </header>
 
-        <div className="mt-6 grid gap-4 sm:grid-cols-2">
+        <div className="mt-6 grid gap-4 sm:grid-cols-3">
           <Link
             href="/coach-lists"
             className="surface-card group flex items-center gap-4 p-5 transition hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-card-hover"
@@ -282,6 +282,19 @@ export default function CoachDashboardPage() {
               <span className="mt-0.5 block text-xs text-slate-500">Manage mutual connections</span>
             </span>
             <ArrowUpRight className="ml-auto size-4 text-slate-400 group-hover:text-brand-600" />
+          </Link>
+          <Link
+            href="/equipment"
+            className="surface-card group flex items-center gap-4 p-5 transition hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-card-hover"
+          >
+            <span className="grid size-11 place-items-center rounded-xl bg-emerald-50 text-emerald-700">
+              <Package className="size-5" />
+            </span>
+            <span>
+              <strong className="block text-sm font-extrabold text-slate-950">Equipment</strong>
+              <span className="mt-0.5 block text-xs text-slate-500">Scan, organize, and assign gear</span>
+            </span>
+            <ArrowUpRight className="ml-auto size-4 text-slate-400 group-hover:text-emerald-600" />
           </Link>
         </div>
         <ProfileReadinessPopup

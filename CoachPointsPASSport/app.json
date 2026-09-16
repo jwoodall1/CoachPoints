@@ -7,7 +7,14 @@
     "userInterfaceStyle": "light",
     "scheme": "coachpoints",
     "plugins": [
-      "expo-notifications"
+      "expo-notifications",
+      [
+        "react-native-nfc-manager",
+        {
+          "nfcPermission": "Scan equipment tags to register and assign institution equipment.",
+          "includeNdefEntitlement": false
+        }
+      ]
     ],
     "ios": {
       "supportsTablet": true,
@@ -24,6 +31,7 @@
         "projectId": "dd8c97b9-5f1e-4978-bc1c-2d42d71af635"
       }
     },
-    "owner": "jonathanwoodall"
+    "owner": "jonathanwoodall",
+    "newArchEnabled": false
   }
 }

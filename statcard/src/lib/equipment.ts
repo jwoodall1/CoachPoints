@@ -17,9 +17,12 @@ export type EquipmentItem = {
   status: EquipmentStatus;
   assigned_player_id: string | null;
   notes: string | null;
+  equipment_code?: string;
+  equipment_category?: 'Helmet' | 'Shoulder pads';
+  institution_id: string;
 };
 export type EquipmentTeam = { id: string; name: string };
-export const equipmentColumns = 'id, team_id, name, type, size, status, assigned_player_id, notes';
+export const equipmentColumns = 'id, team_id, name, type, size, status, assigned_player_id, notes, equipment_code, equipment_category, institution_id';
 
 export async function loadEquipmentTeams(): Promise<EquipmentTeam[]> {
   // The RPC uses the same program permissions as the database policies.
@@ -45,9 +48,3 @@ export async function loadPlayerNames(items: EquipmentItem[]) {
     ]),
   );
 }
-
-// TODO: Add NFC tag assignment.
-// TODO: Add QR backup code support.
-// TODO: Add player equipment checkout/return flow.
-// TODO: Add damaged/missing equipment reports.
-// TODO: Add CSV import/export.

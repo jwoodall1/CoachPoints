@@ -28,6 +28,8 @@ export default function EquipmentWorkspace({
   const [players, setPlayers] = useState(new Map<string, string>());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('All');
   const [editing, setEditing] = useState(false);
 
   useEffect(() => {
@@ -191,6 +193,7 @@ export default function EquipmentWorkspace({
                 onCancel={() => setEditing(false)}
                 onSaved={(updated) => {
                   setItems([updated]);
+                  void loadPlayerNames([updated]).then(setPlayers).catch(() => setError("Unable to refresh player name."));
                   setEditing(false);
                 }}
               />
@@ -205,6 +208,7 @@ export default function EquipmentWorkspace({
                 </div>
                 <dl className="mt-6 grid gap-5 sm:grid-cols-2">
                   {[
+                    ['Equipment code', item.equipment_code || 'Pending'],
                     ['Equipment Name', item.name],
                     ['Type', item.type || '—'],
                     ['Size', item.size || '—'],
@@ -230,6 +234,7 @@ export default function EquipmentWorkspace({
           />
         ) : (
           <div className="surface-card mt-6 overflow-x-auto">
+            <div className="flex gap-3 p-4"><input aria-label="Search equipment" className="input" placeholder="Search model, code or player" value={search} onChange={e => setSearch(e.target.value)} /><select aria-label="Filter status" className="input" value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>{['All','Available','Assigned','Damaged','Missing','Retired'].map(v => <option key={v}>{v}</option>)}</select></div>
             <table className="w-full text-left text-sm">
               <caption className="sr-only">Equipment for {team?.name}</caption>
               <thead className="border-b border-slate-200 bg-slate-50 text-xs font-extrabold uppercase tracking-wide text-slate-500">
@@ -244,14 +249,14 @@ export default function EquipmentWorkspace({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {items.map((item) => (
+                {items.filter(item => (statusFilter === 'All' || item.status === statusFilter) && `${item.name} ${item.equipment_code} ${assignedPlayer(item)}`.toLowerCase().includes(search.toLowerCase())).map((item) => (
                   <tr key={item.id}>
                     <th scope="row" className="min-w-48 px-5 py-4 font-bold">
                       <Link
                         className="text-brand-700 hover:underline"
                         href={`/equipment/${item.id}`}
                       >
-                        {item.name}
+                        {item.name}<span className="block text-xs text-slate-500">{item.equipment_code}</span>
                       </Link>
                     </th>
                     <td className="px-5 py-4">{item.type || '—'}</td>
